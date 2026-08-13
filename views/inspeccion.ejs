@@ -103,6 +103,41 @@
         .btn-submit:hover {
             background: #219653;
         }
+
+        /* ESTILOS NUEVOS: BOTONES DE AUTOCOMPLETADO */
+        .btn-magico {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #27ae60;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .btn-magico:hover {
+            background-color: #c3e6cb;
+        }
+        .btn-grupo-ok {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-grupo-ok:hover {
+            background-color: white;
+            color: #2c3e50;
+        }
         
         .form-container {
             padding: 15px;
@@ -259,6 +294,9 @@
             margin: 20px 0 10px;
             font-size: 1.1rem;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .chequeo-item {
@@ -439,30 +477,6 @@
         /* MEJORAS PARA MÓVILES */
         input, select, textarea, button {
             font-size: 16px !important;
-        }
-        
-        /* LOADING STATE */
-        .btn.loading {
-            position: relative;
-            color: transparent;
-        }
-        
-        .btn.loading::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            margin: -10px 0 0 -10px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
         
         /* DIAGRAMA DEL VEHÍCULO */
@@ -703,415 +717,460 @@
         <span style="color:#e74c3c;">❌ MAL ESTADO</span> | 
         <span style="color:#f39c12;">⏺️ N/A</span>
     </div>
-    
-    <div class="chequeo-categoria">NIVELES</div>
-    
-    <div class="chequeo-item">
-        <label>Líquido refrigerante de radiador</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_BUENO" name="nivel_refrigerante" value="BUENO" required><label for="nivel_refrigerante_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_MALO" name="nivel_refrigerante" value="MALO"><label for="nivel_refrigerante_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_NA" name="nivel_refrigerante" value="NA"><label for="nivel_refrigerante_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_nivel_refrigerante" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Líquido de frenos</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_BUENO" name="nivel_frenos" value="BUENO" required><label for="nivel_frenos_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_MALO" name="nivel_frenos" value="MALO"><label for="nivel_frenos_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_NA" name="nivel_frenos" value="NA"><label for="nivel_frenos_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_nivel_frenos" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Aceite motor</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_BUENO" name="nivel_aceite" value="BUENO" required><label for="nivel_aceite_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_MALO" name="nivel_aceite" value="MALO"><label for="nivel_aceite_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_NA" name="nivel_aceite" value="NA"><label for="nivel_aceite_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_nivel_aceite" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Nivel líquido hidráulico</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_BUENO" name="nivel_hidraulico" value="BUENO" required><label for="nivel_hidraulico_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_MALO" name="nivel_hidraulico" value="MALO"><label for="nivel_hidraulico_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_NA" name="nivel_hidraulico" value="NA"><label for="nivel_hidraulico_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_nivel_hidraulico" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Agua de limpiavidrios</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="nivel_agua_BUENO" name="nivel_agua" value="BUENO" required><label for="nivel_agua_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_agua_MALO" name="nivel_agua" value="MALO"><label for="nivel_agua_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="nivel_agua_NA" name="nivel_agua" value="NA"><label for="nivel_agua_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_nivel_agua" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-categoria">PEDALES</div>
-    
-    <div class="chequeo-item">
-        <label>Acelerador (Uniformidad)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_BUENO" name="pedal_acelerador" value="BUENO" required><label for="pedal_acelerador_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_MALO" name="pedal_acelerador" value="MALO"><label for="pedal_acelerador_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_NA" name="pedal_acelerador" value="NA"><label for="pedal_acelerador_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_pedal_acelerador" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Clutch (Cloche o embrague)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_BUENO" name="pedal_clutch" value="BUENO" required><label for="pedal_clutch_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_MALO" name="pedal_clutch" value="MALO"><label for="pedal_clutch_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_NA" name="pedal_clutch" value="NA"><label for="pedal_clutch_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_pedal_clutch" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Freno (Agarre)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="pedal_freno_BUENO" name="pedal_freno" value="BUENO" required><label for="pedal_freno_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="pedal_freno_MALO" name="pedal_freno" value="MALO"><label for="pedal_freno_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="pedal_freno_NA" name="pedal_freno" value="NA"><label for="pedal_freno_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_pedal_freno" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-categoria">LUCES</div>
-    
-    <div class="chequeo-item">
-        <label>Luces (Altas, medias, bajas)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_principales_BUENO" name="luz_principales" value="BUENO" required><label for="luz_principales_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_principales_MALO" name="luz_principales" value="MALO"><label for="luz_principales_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_principales_NA" name="luz_principales" value="NA"><label for="luz_principales_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_principales" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Direccionales</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_BUENO" name="luz_direccionales" value="BUENO" required><label for="luz_direccionales_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_MALO" name="luz_direccionales" value="MALO"><label for="luz_direccionales_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_NA" name="luz_direccionales" value="NA"><label for="luz_direccionales_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_direccionales" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Estacionarias</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_BUENO" name="luz_estacionarias" value="BUENO" required><label for="luz_estacionarias_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_MALO" name="luz_estacionarias" value="MALO"><label for="luz_estacionarias_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_NA" name="luz_estacionarias" value="NA"><label for="luz_estacionarias_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_estacionarias" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Stops (Frenos)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_stops_BUENO" name="luz_stops" value="BUENO" required><label for="luz_stops_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_stops_MALO" name="luz_stops" value="MALO"><label for="luz_stops_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_stops_NA" name="luz_stops" value="NA"><label for="luz_stops_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_stops" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Testigos del tablero</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_testigos_BUENO" name="luz_testigos" value="BUENO" required><label for="luz_testigos_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_testigos_MALO" name="luz_testigos" value="MALO"><label for="luz_testigos_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_testigos_NA" name="luz_testigos" value="NA"><label for="luz_testigos_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_testigos" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Luz de reversa</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_reversa_BUENO" name="luz_reversa" value="BUENO" required><label for="luz_reversa_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_reversa_MALO" name="luz_reversa" value="MALO"><label for="luz_reversa_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_reversa_NA" name="luz_reversa" value="NA"><label for="luz_reversa_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_reversa" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Luces internas</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="luz_internas_BUENO" name="luz_internas" value="BUENO" required><label for="luz_internas_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_internas_MALO" name="luz_internas" value="MALO"><label for="luz_internas_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="luz_internas_NA" name="luz_internas" value="NA"><label for="luz_internas_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_luz_internas" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-categoria">EQUIPO DE CARRETERA Y PREVENCIÓN</div>
 
-    <div class="chequeo-item">
-        <label>Extintor (BC - ABC)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_BUENO" name="equipo_extintor" value="BUENO" required><label for="equipo_extintor_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_MALO" name="equipo_extintor" value="MALO"><label for="equipo_extintor_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_NA" name="equipo_extintor" value="NA"><label for="equipo_extintor_NA" class="na">⏺️ N/A</label></div>
+    <!-- BOTÓN MÁGICO GLOBAL -->
+    <button type="button" class="btn-magico" onclick="marcarTodos('BUENO')">
+        <i class="fas fa-magic"></i> Marcar TODO el formulario como Bueno
+    </button>
+    
+    <!-- GRUPO NIVELES -->
+    <div id="grupo_niveles">
+        <div class="chequeo-categoria">
+            <span>NIVELES</span>
+            <button type="button" class="btn-grupo-ok" onclick="marcarGrupo('grupo_niveles')">
+                <i class="fas fa-check-double"></i> Todo Bueno
+            </button>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_extintor" placeholder="Observaciones..."></textarea></div>
+        
+        <div class="chequeo-item">
+            <label>Líquido refrigerante de radiador</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_BUENO" name="nivel_refrigerante" value="BUENO" required><label for="nivel_refrigerante_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_MALO" name="nivel_refrigerante" value="MALO"><label for="nivel_refrigerante_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_NA" name="nivel_refrigerante" value="NA"><label for="nivel_refrigerante_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_nivel_refrigerante" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Líquido de frenos</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_BUENO" name="nivel_frenos" value="BUENO" required><label for="nivel_frenos_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_MALO" name="nivel_frenos" value="MALO"><label for="nivel_frenos_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_NA" name="nivel_frenos" value="NA"><label for="nivel_frenos_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_nivel_frenos" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Aceite motor</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_BUENO" name="nivel_aceite" value="BUENO" required><label for="nivel_aceite_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_MALO" name="nivel_aceite" value="MALO"><label for="nivel_aceite_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_NA" name="nivel_aceite" value="NA"><label for="nivel_aceite_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_nivel_aceite" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Nivel líquido hidráulico</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_BUENO" name="nivel_hidraulico" value="BUENO" required><label for="nivel_hidraulico_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_MALO" name="nivel_hidraulico" value="MALO"><label for="nivel_hidraulico_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_NA" name="nivel_hidraulico" value="NA"><label for="nivel_hidraulico_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_nivel_hidraulico" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Agua de limpiavidrios</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="nivel_agua_BUENO" name="nivel_agua" value="BUENO" required><label for="nivel_agua_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_agua_MALO" name="nivel_agua" value="MALO"><label for="nivel_agua_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="nivel_agua_NA" name="nivel_agua" value="NA"><label for="nivel_agua_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_nivel_agua" placeholder="Observaciones..."></textarea></div>
+        </div>
     </div>
+    
+    <!-- GRUPO PEDALES -->
+    <div id="grupo_pedales">
+        <div class="chequeo-categoria">
+            <span>PEDALES</span>
+            <button type="button" class="btn-grupo-ok" onclick="marcarGrupo('grupo_pedales')">
+                <i class="fas fa-check-double"></i> Todo Bueno
+            </button>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Acelerador (Uniformidad)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_BUENO" name="pedal_acelerador" value="BUENO" required><label for="pedal_acelerador_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_MALO" name="pedal_acelerador" value="MALO"><label for="pedal_acelerador_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_NA" name="pedal_acelerador" value="NA"><label for="pedal_acelerador_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_pedal_acelerador" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Clutch (Cloche o embrague)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_BUENO" name="pedal_clutch" value="BUENO" required><label for="pedal_clutch_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_MALO" name="pedal_clutch" value="MALO"><label for="pedal_clutch_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_NA" name="pedal_clutch" value="NA"><label for="pedal_clutch_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_pedal_clutch" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Freno (Agarre)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="pedal_freno_BUENO" name="pedal_freno" value="BUENO" required><label for="pedal_freno_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="pedal_freno_MALO" name="pedal_freno" value="MALO"><label for="pedal_freno_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="pedal_freno_NA" name="pedal_freno" value="NA"><label for="pedal_freno_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_pedal_freno" placeholder="Observaciones..."></textarea></div>
+        </div>
+    </div>
+    
+    <!-- GRUPO LUCES -->
+    <div id="grupo_luces">
+        <div class="chequeo-categoria">
+            <span>LUCES</span>
+            <button type="button" class="btn-grupo-ok" onclick="marcarGrupo('grupo_luces')">
+                <i class="fas fa-check-double"></i> Todo Bueno
+            </button>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Luces (Altas, medias, bajas)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_principales_BUENO" name="luz_principales" value="BUENO" required><label for="luz_principales_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_principales_MALO" name="luz_principales" value="MALO"><label for="luz_principales_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_principales_NA" name="luz_principales" value="NA"><label for="luz_principales_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_principales" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Direccionales</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_BUENO" name="luz_direccionales" value="BUENO" required><label for="luz_direccionales_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_MALO" name="luz_direccionales" value="MALO"><label for="luz_direccionales_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_NA" name="luz_direccionales" value="NA"><label for="luz_direccionales_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_direccionales" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Estacionarias</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_BUENO" name="luz_estacionarias" value="BUENO" required><label for="luz_estacionarias_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_MALO" name="luz_estacionarias" value="MALO"><label for="luz_estacionarias_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_NA" name="luz_estacionarias" value="NA"><label for="luz_estacionarias_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_estacionarias" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Stops (Frenos)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_stops_BUENO" name="luz_stops" value="BUENO" required><label for="luz_stops_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_stops_MALO" name="luz_stops" value="MALO"><label for="luz_stops_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_stops_NA" name="luz_stops" value="NA"><label for="luz_stops_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_stops" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Testigos del tablero</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_testigos_BUENO" name="luz_testigos" value="BUENO" required><label for="luz_testigos_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_testigos_MALO" name="luz_testigos" value="MALO"><label for="luz_testigos_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_testigos_NA" name="luz_testigos" value="NA"><label for="luz_testigos_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_testigos" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Luz de reversa</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_reversa_BUENO" name="luz_reversa" value="BUENO" required><label for="luz_reversa_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_reversa_MALO" name="luz_reversa" value="MALO"><label for="luz_reversa_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_reversa_NA" name="luz_reversa" value="NA"><label for="luz_reversa_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_reversa" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Luces internas</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="luz_internas_BUENO" name="luz_internas" value="BUENO" required><label for="luz_internas_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_internas_MALO" name="luz_internas" value="MALO"><label for="luz_internas_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="luz_internas_NA" name="luz_internas" value="NA"><label for="luz_internas_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_luz_internas" placeholder="Observaciones..."></textarea></div>
+        </div>
+    </div>
+    
+    <!-- GRUPO EQUIPO -->
+    <div id="grupo_equipo">
+        <div class="chequeo-categoria">
+            <span>EQUIPO DE CARRETERA Y PREVENCIÓN</span>
+            <button type="button" class="btn-grupo-ok" onclick="marcarGrupo('grupo_equipo')">
+                <i class="fas fa-check-double"></i> Todo Bueno
+            </button>
+        </div>
 
-    <div class="chequeo-item">
-        <label>Fecha de vencimiento del extintor</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_BUENO" name="equipo_fecha_extintor" value="BUENO" required><label for="equipo_fecha_extintor_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_MALO" name="equipo_fecha_extintor" value="MALO"><label for="equipo_fecha_extintor_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_NA" name="equipo_fecha_extintor" value="NA"><label for="equipo_fecha_extintor_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Extintor (BC - ABC)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_BUENO" name="equipo_extintor" value="BUENO" required><label for="equipo_extintor_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_MALO" name="equipo_extintor" value="MALO"><label for="equipo_extintor_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_NA" name="equipo_extintor" value="NA"><label for="equipo_extintor_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_extintor" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_fecha_extintor" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Llanta de repuesto (2 mm de profundidad y aire)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_BUENO" name="equipo_llanta" value="BUENO" required><label for="equipo_llanta_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_MALO" name="equipo_llanta" value="MALO"><label for="equipo_llanta_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_NA" name="equipo_llanta" value="NA"><label for="equipo_llanta_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Fecha de vencimiento del extintor</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_BUENO" name="equipo_fecha_extintor" value="BUENO" required><label for="equipo_fecha_extintor_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_MALO" name="equipo_fecha_extintor" value="MALO"><label for="equipo_fecha_extintor_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_NA" name="equipo_fecha_extintor" value="NA"><label for="equipo_fecha_extintor_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_fecha_extintor" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_llanta" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Señales reflectivas en triángulo</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_senales_BUENO" name="equipo_senales" value="BUENO" required><label for="equipo_senales_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_senales_MALO" name="equipo_senales" value="MALO"><label for="equipo_senales_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_senales_NA" name="equipo_senales" value="NA"><label for="equipo_senales_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Llanta de repuesto (2 mm de profundidad y aire)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_BUENO" name="equipo_llanta" value="BUENO" required><label for="equipo_llanta_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_MALO" name="equipo_llanta" value="MALO"><label for="equipo_llanta_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_NA" name="equipo_llanta" value="NA"><label for="equipo_llanta_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_llanta" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_senales" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Caja de herramientas</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_BUENO" name="equipo_herramientas" value="BUENO" required><label for="equipo_herramientas_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_MALO" name="equipo_herramientas" value="MALO"><label for="equipo_herramientas_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_NA" name="equipo_herramientas" value="NA"><label for="equipo_herramientas_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Señales reflectivas en triángulo</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_senales_BUENO" name="equipo_senales" value="BUENO" required><label for="equipo_senales_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_senales_MALO" name="equipo_senales" value="MALO"><label for="equipo_senales_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_senales_NA" name="equipo_senales" value="NA"><label for="equipo_senales_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_senales" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_herramientas" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Botiquín primeros auxilios completo</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_BUENO" name="equipo_botiquin" value="BUENO" required><label for="equipo_botiquin_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_MALO" name="equipo_botiquin" value="MALO"><label for="equipo_botiquin_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_NA" name="equipo_botiquin" value="NA"><label for="equipo_botiquin_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Caja de herramientas</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_BUENO" name="equipo_herramientas" value="BUENO" required><label for="equipo_herramientas_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_MALO" name="equipo_herramientas" value="MALO"><label for="equipo_herramientas_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_NA" name="equipo_herramientas" value="NA"><label for="equipo_herramientas_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_herramientas" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_botiquin" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Kit de Carreteras</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_BUENO" name="equipo_carreteras" value="BUENO" required><label for="equipo_carreteras_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_MALO" name="equipo_carreteras" value="MALO"><label for="equipo_carreteras_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_NA" name="equipo_carreteras" value="NA"><label for="equipo_carreteras_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Botiquín primeros auxilios completo</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_BUENO" name="equipo_botiquin" value="BUENO" required><label for="equipo_botiquin_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_MALO" name="equipo_botiquin" value="MALO"><label for="equipo_botiquin_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_NA" name="equipo_botiquin" value="NA"><label for="equipo_botiquin_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_botiquin" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_carreteras" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Kit Ambiental</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_BUENO" name="equipo_ambiental" value="BUENO" required><label for="equipo_ambiental_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_MALO" name="equipo_ambiental" value="MALO"><label for="equipo_ambiental_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_NA" name="equipo_ambiental" value="NA"><label for="equipo_ambiental_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Kit de Carreteras</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_BUENO" name="equipo_carreteras" value="BUENO" required><label for="equipo_carreteras_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_MALO" name="equipo_carreteras" value="MALO"><label for="equipo_carreteras_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_NA" name="equipo_carreteras" value="NA"><label for="equipo_carreteras_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_carreteras" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_equipo_ambiental" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-categoria">VARIOS</div>
-    
-    <div class="chequeo-item">
-        <label>Llantas (Labrado 2 mm y aire)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_llantas_BUENO" name="varios_llantas" value="BUENO" required><label for="varios_llantas_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_llantas_MALO" name="varios_llantas" value="MALO"><label for="varios_llantas_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_llantas_NA" name="varios_llantas" value="NA"><label for="varios_llantas_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_llantas" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Batería (Borner, sin corrosión)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_bateria_BUENO" name="varios_bateria" value="BUENO" required><label for="varios_bateria_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_bateria_MALO" name="varios_bateria" value="MALO"><label for="varios_bateria_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_bateria_NA" name="varios_bateria" value="NA"><label for="varios_bateria_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_bateria" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Rines (sin golpes/fisuras)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_rines_BUENO" name="varios_rines" value="BUENO" required><label for="varios_rines_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_rines_MALO" name="varios_rines" value="MALO"><label for="varios_rines_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_rines_NA" name="varios_rines" value="NA"><label for="varios_rines_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_rines" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Cinturón de seguridad en todos los puestos</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_BUENO" name="varios_cinturones" value="BUENO" required><label for="varios_cinturones_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_MALO" name="varios_cinturones" value="MALO"><label for="varios_cinturones_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_NA" name="varios_cinturones" value="NA"><label for="varios_cinturones_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_cinturones" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Pito reversa (Vehículos operativos)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_BUENO" name="varios_pito_reversa" value="BUENO" required><label for="varios_pito_reversa_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_MALO" name="varios_pito_reversa" value="MALO"><label for="varios_pito_reversa_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_NA" name="varios_pito_reversa" value="NA"><label for="varios_pito_reversa_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_pito_reversa" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Pito</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_pito_BUENO" name="varios_pito" value="BUENO" required><label for="varios_pito_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_pito_MALO" name="varios_pito" value="MALO"><label for="varios_pito_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_pito_NA" name="varios_pito" value="NA"><label for="varios_pito_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_pito" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Freno de emergencia</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_BUENO" name="varios_freno_emergencia" value="BUENO" required><label for="varios_freno_emergencia_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_MALO" name="varios_freno_emergencia" value="MALO"><label for="varios_freno_emergencia_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_NA" name="varios_freno_emergencia" value="NA"><label for="varios_freno_emergencia_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_freno_emergencia" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Espejos laterales y cabina (sin fisuras)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_espejos_BUENO" name="varios_espejos" value="BUENO" required><label for="varios_espejos_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_espejos_MALO" name="varios_espejos" value="MALO"><label for="varios_espejos_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_espejos_NA" name="varios_espejos" value="NA"><label for="varios_espejos_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_espejos" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Estado carcasa luces</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_BUENO" name="varios_carcasa" value="BUENO" required><label for="varios_carcasa_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_MALO" name="varios_carcasa" value="MALO"><label for="varios_carcasa_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_NA" name="varios_carcasa" value="NA"><label for="varios_carcasa_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_carcasa" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Plumillas/limpiabrisas (no dejan marcas)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_BUENO" name="varios_plumillas" value="BUENO" required><label for="varios_plumillas_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_MALO" name="varios_plumillas" value="MALO"><label for="varios_plumillas_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_NA" name="varios_plumillas" value="NA"><label for="varios_plumillas_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_plumillas" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Tapizado</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_BUENO" name="varios_tapizado" value="BUENO" required><label for="varios_tapizado_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_MALO" name="varios_tapizado" value="MALO"><label for="varios_tapizado_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_NA" name="varios_tapizado" value="NA"><label for="varios_tapizado_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_tapizado" placeholder="Observaciones..."></textarea></div>
-    </div>
-    
-    <div class="chequeo-item">
-        <label>Panorámico (sin fisuras)</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_BUENO" name="varios_panoramico" value="BUENO" required><label for="varios_panoramico_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_MALO" name="varios_panoramico" value="MALO"><label for="varios_panoramico_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_NA" name="varios_panoramico" value="NA"><label for="varios_panoramico_NA" class="na">⏺️ N/A</label></div>
-        </div>
-        <div class="obs-input"><textarea name="obs_varios_panoramico" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Estado del Radiotelefono</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_BUENO" name="varios_radiotelefono" value="BUENO"><label for="varios_radiotelefono_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_MALO" name="varios_radiotelefono" value="MALO"><label for="varios_radiotelefono_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_NA" name="varios_radiotelefono" value="NA" checked><label for="varios_radiotelefono_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Kit Ambiental</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_BUENO" name="equipo_ambiental" value="BUENO" required><label for="equipo_ambiental_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_MALO" name="equipo_ambiental" value="MALO"><label for="equipo_ambiental_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_NA" name="equipo_ambiental" value="NA"><label for="equipo_ambiental_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_equipo_ambiental" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_varios_radiotelefono" placeholder="Observaciones sobre el radiotelefono..."></textarea></div>
     </div>
     
-    <div class="chequeo-item">
-        <label>Aire Acondicionado</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_aire_BUENO" name="varios_aire" value="BUENO" required><label for="varios_aire_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_aire_MALO" name="varios_aire" value="MALO"><label for="varios_aire_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_aire_NA" name="varios_aire" value="NA"><label for="varios_aire_NA" class="na">⏺️ N/A</label></div>
+    <!-- GRUPO VARIOS -->
+    <div id="grupo_varios">
+        <div class="chequeo-categoria">
+            <span>VARIOS</span>
+            <button type="button" class="btn-grupo-ok" onclick="marcarGrupo('grupo_varios')">
+                <i class="fas fa-check-double"></i> Todo Bueno
+            </button>
         </div>
-        <div class="obs-input"><textarea name="obs_varios_aire" placeholder="Observaciones..."></textarea></div>
-    </div>
+        
+        <div class="chequeo-item">
+            <label>Llantas (Labrado 2 mm y aire)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_llantas_BUENO" name="varios_llantas" value="BUENO" required><label for="varios_llantas_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_llantas_MALO" name="varios_llantas" value="MALO"><label for="varios_llantas_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_llantas_NA" name="varios_llantas" value="NA"><label for="varios_llantas_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_llantas" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Batería (Borner, sin corrosión)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_bateria_BUENO" name="varios_bateria" value="BUENO" required><label for="varios_bateria_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_bateria_MALO" name="varios_bateria" value="MALO"><label for="varios_bateria_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_bateria_NA" name="varios_bateria" value="NA"><label for="varios_bateria_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_bateria" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Rines (sin golpes/fisuras)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_rines_BUENO" name="varios_rines" value="BUENO" required><label for="varios_rines_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_rines_MALO" name="varios_rines" value="MALO"><label for="varios_rines_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_rines_NA" name="varios_rines" value="NA"><label for="varios_rines_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_rines" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Cinturón de seguridad en todos los puestos</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_BUENO" name="varios_cinturones" value="BUENO" required><label for="varios_cinturones_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_MALO" name="varios_cinturones" value="MALO"><label for="varios_cinturones_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_NA" name="varios_cinturones" value="NA"><label for="varios_cinturones_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_cinturones" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Pito reversa (Vehículos operativos)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_BUENO" name="varios_pito_reversa" value="BUENO" required><label for="varios_pito_reversa_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_MALO" name="varios_pito_reversa" value="MALO"><label for="varios_pito_reversa_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_NA" name="varios_pito_reversa" value="NA"><label for="varios_pito_reversa_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_pito_reversa" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Pito</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_pito_BUENO" name="varios_pito" value="BUENO" required><label for="varios_pito_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_pito_MALO" name="varios_pito" value="MALO"><label for="varios_pito_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_pito_NA" name="varios_pito" value="NA"><label for="varios_pito_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_pito" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Freno de emergencia</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_BUENO" name="varios_freno_emergencia" value="BUENO" required><label for="varios_freno_emergencia_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_MALO" name="varios_freno_emergencia" value="MALO"><label for="varios_freno_emergencia_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_NA" name="varios_freno_emergencia" value="NA"><label for="varios_freno_emergencia_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_freno_emergencia" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Espejos laterales y cabina (sin fisuras)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_espejos_BUENO" name="varios_espejos" value="BUENO" required><label for="varios_espejos_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_espejos_MALO" name="varios_espejos" value="MALO"><label for="varios_espejos_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_espejos_NA" name="varios_espejos" value="NA"><label for="varios_espejos_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_espejos" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Estado carcasa luces</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_BUENO" name="varios_carcasa" value="BUENO" required><label for="varios_carcasa_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_MALO" name="varios_carcasa" value="MALO"><label for="varios_carcasa_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_NA" name="varios_carcasa" value="NA"><label for="varios_carcasa_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_carcasa" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Plumillas/limpiabrisas (no dejan marcas)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_BUENO" name="varios_plumillas" value="BUENO" required><label for="varios_plumillas_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_MALO" name="varios_plumillas" value="MALO"><label for="varios_plumillas_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_NA" name="varios_plumillas" value="NA"><label for="varios_plumillas_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_plumillas" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Tapizado</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_BUENO" name="varios_tapizado" value="BUENO" required><label for="varios_tapizado_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_MALO" name="varios_tapizado" value="MALO"><label for="varios_tapizado_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_NA" name="varios_tapizado" value="NA"><label for="varios_tapizado_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_tapizado" placeholder="Observaciones..."></textarea></div>
+        </div>
+        
+        <div class="chequeo-item">
+            <label>Panorámico (sin fisuras)</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_BUENO" name="varios_panoramico" value="BUENO" required><label for="varios_panoramico_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_MALO" name="varios_panoramico" value="MALO"><label for="varios_panoramico_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_NA" name="varios_panoramico" value="NA"><label for="varios_panoramico_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_panoramico" placeholder="Observaciones..."></textarea></div>
+        </div>
 
-    <div class="chequeo-item">
-        <label>Vidrios Laterales</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_BUENO" name="varios_vidrios_laterales" value="BUENO" required><label for="varios_vidrios_laterales_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_MALO" name="varios_vidrios_laterales" value="MALO"><label for="varios_vidrios_laterales_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_NA" name="varios_vidrios_laterales" value="NA"><label for="varios_vidrios_laterales_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Estado del Radiotelefono</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_BUENO" name="varios_radiotelefono" value="BUENO"><label for="varios_radiotelefono_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_MALO" name="varios_radiotelefono" value="MALO"><label for="varios_radiotelefono_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_NA" name="varios_radiotelefono" value="NA" checked><label for="varios_radiotelefono_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_radiotelefono" placeholder="Observaciones sobre el radiotelefono..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_varios_vidrios_laterales" placeholder="Observaciones..."></textarea></div>
-    </div>
+        
+        <div class="chequeo-item">
+            <label>Aire Acondicionado</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_aire_BUENO" name="varios_aire" value="BUENO" required><label for="varios_aire_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_aire_MALO" name="varios_aire" value="MALO"><label for="varios_aire_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_aire_NA" name="varios_aire" value="NA"><label for="varios_aire_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_aire" placeholder="Observaciones..."></textarea></div>
+        </div>
 
-    <div class="chequeo-item">
-        <label>Vidrio Trasero</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_BUENO" name="varios_vidrio_trasero" value="BUENO" required><label for="varios_vidrio_trasero_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_MALO" name="varios_vidrio_trasero" value="MALO"><label for="varios_vidrio_trasero_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_NA" name="varios_vidrio_trasero" value="NA"><label for="varios_vidrio_trasero_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Vidrios Laterales</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_BUENO" name="varios_vidrios_laterales" value="BUENO" required><label for="varios_vidrios_laterales_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_MALO" name="varios_vidrios_laterales" value="MALO"><label for="varios_vidrios_laterales_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_NA" name="varios_vidrios_laterales" value="NA"><label for="varios_vidrios_laterales_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_vidrios_laterales" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_varios_vidrio_trasero" placeholder="Observaciones..."></textarea></div>
-    </div>
 
-    <div class="chequeo-item">
-        <label>Tercer Stop</label>
-        <div class="radio-group-responsive">
-            <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_BUENO" name="varios_tercer_stop" value="BUENO" required><label for="varios_tercer_stop_BUENO" class="bueno">✅ Bueno</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_MALO" name="varios_tercer_stop" value="MALO"><label for="varios_tercer_stop_MALO" class="malo">❌ Malo</label></div>
-            <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_NA" name="varios_tercer_stop" value="NA"><label for="varios_tercer_stop_NA" class="na">⏺️ N/A</label></div>
+        <div class="chequeo-item">
+            <label>Vidrio Trasero</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_BUENO" name="varios_vidrio_trasero" value="BUENO" required><label for="varios_vidrio_trasero_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_MALO" name="varios_vidrio_trasero" value="MALO"><label for="varios_vidrio_trasero_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_NA" name="varios_vidrio_trasero" value="NA"><label for="varios_vidrio_trasero_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_vidrio_trasero" placeholder="Observaciones..."></textarea></div>
         </div>
-        <div class="obs-input"><textarea name="obs_varios_tercer_stop" placeholder="Observaciones..."></textarea></div>
+
+        <div class="chequeo-item">
+            <label>Tercer Stop</label>
+            <div class="radio-group-responsive">
+                <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_BUENO" name="varios_tercer_stop" value="BUENO" required><label for="varios_tercer_stop_BUENO" class="bueno">✅ Bueno</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_MALO" name="varios_tercer_stop" value="MALO"><label for="varios_tercer_stop_MALO" class="malo">❌ Malo</label></div>
+                <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_NA" name="varios_tercer_stop" value="NA"><label for="varios_tercer_stop_NA" class="na">⏺️ N/A</label></div>
+            </div>
+            <div class="obs-input"><textarea name="obs_varios_tercer_stop" placeholder="Observaciones..."></textarea></div>
+        </div>
     </div>
 </div>
             
@@ -1185,6 +1244,25 @@
     </div>
     
 <script>
+// ============================================
+// FUNCIONES PARA AUTOCOMPLETAR BOTONES MÁGICOS
+// ============================================
+
+function marcarTodos(estado) {
+    const todosLosRadios = document.querySelectorAll(`input[type="radio"][value="${estado}"]`);
+    todosLosRadios.forEach(radio => radio.checked = true);
+    // Un toque de efecto visual para indicar que funcionó
+    alert("✅ Se han marcado todos los ítems como Bueno.");
+}
+
+function marcarGrupo(grupoId) {
+    const grupo = document.getElementById(grupoId);
+    if (grupo) {
+        const radiosDelGrupo = grupo.querySelectorAll('input[type="radio"][value="BUENO"]');
+        radiosDelGrupo.forEach(radio => radio.checked = true);
+    }
+}
+
 // ============================================
 // FUNCIONES DE VALIDACIÓN Y COLORES
 // ============================================

@@ -3,49 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - SST</title>
+    <title>Iniciar Sesión | OmegaGroup SAS</title>
+    <!-- Bootstrap 5 y FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { background-color: #f0f2f5; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .login-card { max-width: 400px; width: 100%; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: white; }
-        .login-header { text-align: center; margin-bottom: 30px; }
-        .login-header i { font-size: 3rem; color: #2c3e50; margin-bottom: 10px; }
+        body {
+            /* Imagen de fondo con una capa oscura (overlay) para resaltar la tarjeta */
+            background: linear-gradient(rgba(17, 17, 17, 0.75), rgba(17, 17, 17, 0.75)), url('/images/fondo_login.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 15px; /* Evita que choque en los bordes de celulares pequeños */
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95); /* Fondo blanco ligeramente transparente */
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            border: 2px solid #e50914; /* Borde rojo */
+        }
+
+        /* Encabezado Corporativo */
+        .login-header {
+            background: #eeecec; /* Fondo Gris Claro que elegiste */
+            padding: 35px 20px;
+            text-align: center;
+            color: #111111; /* Texto oscuro para que se lea sobre el gris claro */
+            border-bottom: 4px solid #e50914; /* Acento rojo */
+        }
+        .login-header img {
+            max-height: 120px; /* <--- Logo más grande */
+            max-width: 90%;    
+            margin-bottom: 12px;
+            object-fit: contain;
+        }
+
+        .company-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .company-text span {
+            color: #e50914; /* Letras rojas para resaltar */
+        }
+
+        .system-title {
+            font-size: 0.85rem;
+            color: #585858;
+            margin-top: 8px;
+            margin-bottom: 0;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        /* Cuerpo del formulario */
+        .login-body {
+            padding: 40px 30px 30px;
+        }
+
+        .input-icon-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-icon-wrapper .left-icon {
+            position: absolute;
+            top: 50%;
+            left: 18px;
+            transform: translateY(-50%);
+            color: #000000;
+            font-size: 1.2rem;
+            z-index: 10;
+            transition: color 0.3s;
+        }
+
+        /* Ojito para la contraseña */
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            color: #777;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: color 0.3s;
+            padding: 5px;
+        }
+
+        .toggle-password:hover {
+            color: #111;
+        }
+
+        .input-icon-wrapper .form-control {
+            padding-left: 50px;
+            padding-right: 45px; /* Espacio para el ojito */
+            height: 55px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            font-size: 16px;
+            color: #111;
+            transition: all 0.3s;
+        }
+
+        .input-icon-wrapper .form-control:focus {
+            background-color: #ffffff;
+            border-color: #e50914;
+            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.15); /* Sombra roja al enfocar */
+        }
+
+        .input-icon-wrapper .form-control:focus + .left-icon,
+        .input-icon-wrapper .form-control:not(:placeholder-shown) ~ .left-icon {
+            color: #e50914;
+        }
+
+        /* Botón de ingreso Rojo */
+        .btn-login {
+            background: #e50914;
+            color: white;
+            height: 55px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-login:hover {
+            background: #b20710;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        /* =========================================================
+           ESTILOS DEL BOTÓN DE DESCARGA APP
+           ========================================================= */
+        .download-app-section {
+            border-top: 1px solid #e0e0e0;
+            margin-top: 25px;
+            padding-top: 20px;
+        }
+
+        .btn-download {
+            background: #ffffff;
+            border: 2px solid #eeeeee;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .btn-download:hover {
+            border-color: #e50914; /* Borde rojo al pasar el mouse */
+            background: #f8f9fa;
+        }
+
+        .btn-download .app-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            margin-right: 15px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+
+        .btn-download .text-container {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .btn-download .text-sm {
+            font-size: 0.75rem;
+            color: #777777;
+        }
+
+        .btn-download .text-lg {
+            font-size: 1rem;
+            color: #111111;
+            font-weight: 700;
+        }
+
+        .btn-download .dl-icon {
+            margin-left: auto;
+            color: #e50914;
+            font-size: 1.3rem;
+        }
+
+        /* Footer */
+        .footer-text {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.85rem;
+            color: #cccccc;
+        }
+        
+        .footer-text strong {
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="login-header">
-            <i class="fas fa-shield-alt"></i>
-            <h3>Acceso al Sistema</h3>
-            <p class="text-muted">Transporte SST</p>
+
+    <div class="login-container">
+        <div class="login-card">
+            
+            <!-- ENCABEZADO CORPORATIVO -->
+            <div class="login-header">
+                <!-- Se intenta cargar el logo principal. -->
+                <img src="/images/logo.png" alt="Logo OmegaGroup" id="brandLogo" onerror="this.style.display='none'; document.getElementById('brandText').style.display='block';">
+                
+                <h1 id="brandText" class="company-text" style="display: none;">OMEGA<span>GROUP</span></h1>
+                <p class="system-title"><i class="fas fa-truck-moving me-1"></i> Control de Inspeccion</p>
+            </div>
+
+            <div class="login-body">
+                
+                <!-- ALERTA DE ERRORES -->
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" style="border-radius: 8px; font-size: 0.95rem; border-left: 4px solid #b20710;">
+                        <i class="fas fa-exclamation-triangle me-2 fs-5"></i>
+                        <div><%= error %></div>
+                    </div>
+                <% } %>
+
+                <form action="/login" method="POST">
+                    
+                    <!-- Campo Documento -->
+                    <div class="input-icon-wrapper">
+                        <input type="text" class="form-control" id="documento" name="documento" placeholder="Número de Documento" required autocomplete="off">
+                        <i class="fas fa-id-card left-icon"></i>
+                    </div>
+
+                    <!-- Campo Contraseña con Ojo -->
+                    <div class="input-icon-wrapper">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" required>
+                        <i class="fas fa-lock left-icon"></i>
+                        <i class="fas fa-eye toggle-password" id="togglePassword" title="Mostrar/Ocultar contraseña"></i>
+                    </div>
+
+                    <button type="submit" class="btn btn-login mt-2" id="submitBtn">
+                        INGRESAR <i class="fas fa-sign-in-alt"></i>
+                    </button>
+                </form>
+
+                <!-- ============================================== -->
+                <!-- NUEVA SECCIÓN: DESCARGAR APP                   -->
+                <!-- ============================================== -->
+                <div class="download-app-section">
+                    <p class="text-center text-muted mb-2" style="font-size: 0.8rem; font-weight: 600;">¿ACCEDES DESDE TU CELULAR?</p>
+                    <button type="button" class="btn-download" id="btnInstallApp">
+                        <!-- LOGO DE LA APP (logo-app.jpg) -->
+                        <img src="/images/logo-app.jpg" alt="Icono App" class="app-icon" onerror="this.src='https://via.placeholder.com/42/111111/e50914?text=APP'">
+                        
+                        <div class="text-container">
+                            <span class="text-sm">Descarga nuestra</span>
+                            <span class="text-lg">Aplicación Movil</span>
+                        </div>
+                        <i class="fas fa-download dl-icon"></i>
+                    </button>
+                </div>
+
+            </div>
         </div>
         
-        <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger p-2 text-center"><%= error %></div>
-        <% } %>
-
-        <form action="/login" method="POST">
-            <div class="mb-3">
-                <label class="form-label fw-bold">Número de Documento</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                    <input type="text" name="documento" class="form-control" required placeholder="Ej: 123456789">
-                </div>
-            </div>
-            
-            <div class="mb-4">
-                <label class="form-label fw-bold">Contraseña</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input type="password" name="password" class="form-control" required placeholder="••••••••">
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary w-100 fw-bold p-2">
-                <i class="fas fa-sign-in-alt"></i> INGRESAR
-            </button>
-        </form>
+        <div class="footer-text">
+            &copy; <%= new Date().getFullYear() %> <strong>OmegaGroup SAS</strong>.<br>Todos los derechos reservados.
+        </div>
     </div>
+
+    <script>
+        // ==========================================
+        // FUNCIONALIDAD DEL "OJITO" (CONTRASEÑA)
+        // ==========================================
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function () {
+            // Alternar el tipo de input (password <-> text)
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Alternar el ícono (ojo abierto <-> ojo cerrado)
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Estado de carga en el botón al enviar
+        document.querySelector('form').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INGRESANDO...';
+            btn.style.opacity = '0.9';
+            btn.style.pointerEvents = 'none'; // Evitar doble clic
+        });
+
+        // ==========================================
+        // FUNCIONALIDAD "DESCARGAR APP" (PWA)
+        // ==========================================
+        let deferredPrompt;
+        const btnInstallApp = document.getElementById('btnInstallApp');
+
+        // Escucha el evento que lanza el navegador cuando detecta que la web se puede instalar
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Evitar que aparezca el prompt automático
+            e.preventDefault();
+            // Guardar el evento para dispararlo cuando el usuario haga clic en nuestro botón
+            deferredPrompt = e;
+        });
+
+        // Al hacer clic en el botón de "Descargar Aplicación"
+        if(btnInstallApp) {
+            btnInstallApp.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    // Si el evento está disponible, mostrar el diálogo nativo de instalación
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    // Limpiar la variable
+                    deferredPrompt = null;
+                } else {
+                    // FALLBACK: Instrucciones manuales (Sirve para iPhones o si ya está instalada)
+                    alert(
+                        "📱 Para instalar la Aplicación:\n\n" +
+                        "🔹 En ANDROID (Chrome):\n" +
+                        "Toca el menú (⋮) arriba a la derecha y selecciona 'Agregar a la pantalla principal' o 'Instalar aplicación'.\n\n" +
+                        "🍎 En iPHONE (Safari):\n" +
+                        "Toca el ícono de 'Compartir' (el cuadrado con la flecha) en la parte inferior y selecciona 'Agregar a inicio'."
+                    );
+                }
+            });
+        }
+    </script>
 </body>
 </html>
