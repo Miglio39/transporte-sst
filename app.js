@@ -4,8 +4,8 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');               // <-- PARA EL PDF
-const puppeteer = require('puppeteer'); // <-- PARA EL PDF
+const fs = require('fs');               // <-- NUEVO PARA EL PDF
+const puppeteer = require('puppeteer'); // <-- NUEVO PARA EL PDF
 const ejs = require('ejs');
 
 const { PrismaClient } = require('./prisma/generated/client');
@@ -358,6 +358,7 @@ app.get('/admin/inspeccion/editar/:id', verificarRol(['admin']), async (req, res
     try {
         const insp = await prisma.inspeccion.findUnique({
             where: { id: parseInt(req.params.id) },
+            // 👇 AQUÍ ESTÁ EL ARREGLO: Agregamos "conductor: true" 👇
             include: { vehiculo: true, conductor: true } 
         });
         if (!insp) return res.redirect('/admin');
@@ -422,7 +423,7 @@ app.post('/admin/inspeccion/editar/:id', verificarRol(['admin']), async (req, re
 });
 
 // ==========================================
-// RUTA PARA EXPORTAR PDF 
+// RUTA PARA EXPORTAR PDF (ADAPTADA A TU NUEVO TEMPLATE Y CON FIRMA)
 // ==========================================
 app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) => {
     let browser = null; 
@@ -585,17 +586,12 @@ app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) =
             formatoCodigo: 'SST-F-01'
         });
 
-        // 🚨 AQUÍ ESTÁ EL ARREGLO ESTRELLA: 
-        // Cambiamos "headless: 'new'" por "true" y añadimos las banderas antimuros de Docker
         browser = await puppeteer.launch({
-            headless: true, 
+            headless: true, // Mantenlo en true
             args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox', 
-                '--disable-dev-shm-usage', 
-                '--disable-gpu',
-                '--single-process', // <-- Este es vital en contenedores ligeros
-                '--no-zygote'       // <-- Evita un error clásico de memoria en Linux
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage'
             ]
         });
         
