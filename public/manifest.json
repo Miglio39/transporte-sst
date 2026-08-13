@@ -1,0 +1,23 @@
+{
+  "name": "OmegaGroup SST",
+  "short_name": "Omega SST",
+  "description": "Control de Inspecciones de Transporte SST",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#e50914",
+  "icons": [
+    {
+      "src": "/images/logo-app.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo-app.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}
