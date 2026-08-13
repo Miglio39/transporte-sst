@@ -1,6 +1,6 @@
 {
-  "name": "OmegaGroup SST",
-  "short_name": "Omega SST",
+  "name": "OmegaGroup App",
+  "short_name": "Omega Control",
   "description": "Control de Inspecciones de Transporte SST",
   "start_url": "/",
   "display": "standalone",
