@@ -333,7 +333,9 @@
             this.classList.toggle('fa-eye-slash');
         });
 
+        // ==========================================
         // Estado de carga en el botón al enviar
+        // ==========================================
         document.querySelector('form').addEventListener('submit', function() {
             const btn = document.getElementById('submitBtn');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INGRESANDO...';
@@ -364,22 +366,15 @@
                     const { outcome } = await deferredPrompt.userChoice;
                     // Limpiar la variable
                     deferredPrompt = null;
-                } else {
-                    // FALLBACK: Instrucciones manuales (Sirve para iPhones o si ya está instalada)
-                    alert(
-                        "📱 Para instalar la Aplicación:\n\n" +
-                        "🔹 En ANDROID (Chrome):\n" +
-                        "Toca el menú (⋮) arriba a la derecha y selecciona 'Agregar a la pantalla principal' o 'Instalar aplicación'.\n\n" +
-                        "🍎 En iPHONE (Safari):\n" +
-                        "Toca el ícono de 'Compartir' (el cuadrado con la flecha) en la parte inferior y selecciona 'Agregar a inicio'."
-                    );
                 }
+                // Las instrucciones de texto/alerta se han eliminado. 
+                // Si deferredPrompt no existe (ej. iPhone), no hará nada al dar clic.
             });
         }
-    </script>
-</body>
-<script>
-        // Registrar el Service Worker para que el navegador habilite la instalación
+
+        // ==========================================
+        // Registrar el Service Worker
+        // ==========================================
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -388,4 +383,5 @@
             });
         }
     </script>
+</body>
 </html>
