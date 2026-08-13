@@ -25,14 +25,16 @@ RUN apt-get update && apt-get install -y \
 # 3. Crear la carpeta de tu app
 WORKDIR /app
 
-# 4. Instalar las dependencias de tu proyecto
+# 4. Copiar package.json Y la carpeta de la base de datos (Prisma)
 COPY package.json ./
+COPY prisma ./prisma/
+
+# 5. Instalar las dependencias (ahora sí encontrará a Prisma sin problemas)
 RUN npm install
 
-# 5. Copiar tu código y preparar la base de datos
+# 6. Copiar el resto de tu código
 COPY . .
-RUN npx prisma generate
 
-# 6. Exponer el puerto y encender
+# 7. Exponer el puerto y encender
 EXPOSE 3000
 CMD ["npm", "start"]
