@@ -1,12 +1,17 @@
-# 1. Usar un servidor de Linux con Node 22 (requerido por Puppeteer 25)
+# 1. Usar un servidor de Linux con Node 22
 FROM node:22-slim
 
-# 2. Instalar las librerías gráficas, UNZIP para Puppeteer y dependencias
+# 2. Instalar TODAS las librerías gráficas requeridas por Chrome/Puppeteer
 RUN apt-get update && apt-get install -y \
     openssl \
     wget \
     gnupg \
     unzip \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libxss1 \
+    libgtk-3-0 \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
@@ -29,7 +34,7 @@ WORKDIR /app
 COPY package.json ./
 COPY prisma ./prisma/
 
-# 5. Instalar las dependencias (ahora sí encontrará a Prisma sin problemas)
+# 5. Instalar las dependencias
 RUN npm install
 
 # 6. Copiar el resto de tu código
