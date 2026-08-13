@@ -664,7 +664,7 @@ app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (
     }
 });
 
-// Iniciar servidor
+// Iniciar servidor xd
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
