@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f6f9; padding: 20px; font-family: 'Segoe UI', sans-serif;}
+        .card-header { background: #2c3e50; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Navegación Superior -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <h2><i class="fas fa-chart-line text-primary"></i> Panel Administrativo</h2>
+            <div class="btn-group">
+                <a href="/admin/conductores" class="btn btn-outline-dark"><i class="fas fa-users"></i> Ver Conductores</a>
+                <a href="/admin/conductores/nuevo" class="btn btn-success"><i class="fas fa-user-plus"></i> Crear Conductor</a>
+                <a href="/inspeccion" class="btn btn-primary"><i class="fas fa-plus"></i> Hacer Inspección</a>
+                <a href="/logout" class="btn btn-danger"><i class="fas fa-power-off"></i></a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Historial de Inspecciones</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha y Hora</th>
+                                <th>Placa</th>
+                                <th>Conductor</th>
+                                <th>Km Entrada / Salida</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (inspecciones.length === 0) { %>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No hay inspecciones registradas.</td>
+                                </tr>
+                            <% } else { %>
+                                <% inspecciones.forEach(function(insp) { %>
+                                    <tr>
+                                        <td><strong>#<%= insp.id %></strong></td>
+                                        <td>
+                                            <%= new Date(insp.fecha_apertura).toLocaleDateString('es-ES') %><br>
+                                            <small class="text-muted"><%= new Date(insp.fecha_apertura).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) %></small>
+                                        </td>
+                                        <td><span class="badge bg-dark fs-6"><%= insp.vehiculo_placa %></span></td>
+                                        <td><i class="fas fa-user-circle text-secondary"></i> <%= insp.conductor.nombre %></td>
+                                        
+                                        <!-- KILOMETRAJES -->
+                                        <td>
+                                            <span class="text-primary fw-bold"><%= insp.km_inicio %></span> / 
+                                            <span class="text-danger fw-bold"><%= insp.km_fin %></span>
+                                        </td>
+                                        
+                                        <!-- BADGE DE ESTADO -->
+                                        <td>
+                                            <span class="badge <%= insp.badgeClass %> px-2 py-1 fs-6 shadow-sm">
+                                                <%= insp.estadoBadge %>
+                                            </span>
+                                        </td>
+                                        
+                                        <!-- ACCIONES CORRECTAMENTE ALINEADAS -->
+                                        <td class="text-nowrap">
+                                            <!-- 1. Botón PDF (Rojo) -->
+                                            <a href="/admin/inspeccion/pdf/<%= insp.id %>" class="btn btn-sm btn-danger text-white shadow-sm" title="Descargar PDF" target="_blank">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                            
+                                            <!-- 2. Botón Ver Detalle (Celeste) -->
+                                            <a href="/admin/inspeccion/detalle/<%= insp.id %>" class="btn btn-sm btn-info text-white shadow-sm" title="Ver Resumen">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            <!-- 3. Botón Editar (Azul) -->
+                                            <a href="/admin/inspeccion/editar/<%= insp.id %>" class="btn btn-sm btn-primary shadow-sm" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <!-- 4. Botón Cerrar (Amarillo, Solo si está en curso) -->
+                                            <% if (insp.estado === 'En curso') { %>
+                                                <a href="/inspeccion/cierre/<%= insp.id %>" class="btn btn-sm btn-warning fw-bold shadow-sm" title="Cerrar Jornada">
+                                                    <i class="fas fa-flag-checkered"></i>
+                                                </a>
+                                            <% } %>
+                                            
+                                            <!-- 5. Botón Eliminar (Gris Oscuro/Negro) -->
+                                            <form action="/admin/inspeccion/eliminar/<%= insp.id %>" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta inspección?');">
+                                                <button type="submit" class="btn btn-sm btn-dark shadow-sm" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

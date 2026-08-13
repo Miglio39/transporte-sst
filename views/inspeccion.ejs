@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- LIBRERÍA DE FIRMA DIGITAL -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title><%= title %> - <%= appName %></title>
+    <style>
+        /* RESET Y BASE RESPONSIVE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* CONTAINER RESPONSIVE */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        /* HEADER RESPONSIVE */
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+        
+        .header-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        /* BOTONES RESPONSIVE */
+        .btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            width: 100%;
+            margin: 5px 0;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-back {
+            background: #7f8c8d;
+        }
+        
+        .btn-back:hover {
+            background: #666;
+        }
+        
+        .btn-submit {
+            background: #27ae60;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .btn-submit:hover {
+            background: #219653;
+        }
+        
+        .form-container {
+            padding: 15px;
+        }
+        
+        /* INFORMACIÓN BÁSICA - RESPONSIVE */
+        .form-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+            font-size: 1.2rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            background: #fff;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .form-group select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 1em;
+            padding-right: 40px;
+        }
+        
+        /* SECCIÓN DEFECTOS - RESPONSIVE */
+        .defectos-section {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .defecto-descripcion {
+            width: 100%;
+        }
+
+        .defecto-descripcion textarea {
+            width: 100%;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .defectos-section h3 {
+            color: #721c24;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        @media (min-width: 480px) {
+            .checkbox-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .checkbox-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.3);
+            accent-color: #e74c3c;
+        }
+        
+        .defecto-descripcion {
+            margin-top: 15px;
+        }
+        
+        /* TABLAS DE CHEQUEO - RESPONSIVE */
+        .chequeo-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .chequeo-categoria {
+            background: #2c3e50;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 20px 0 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .chequeo-item {
+            background: white;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .chequeo-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-size: 14px;
+        }
+        
+        .radio-group-responsive {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .radio-option-responsive {
+            text-align: center;
+        }
+        
+        .radio-option-responsive input[type="radio"] {
+            display: none;
+        }
+        
+        .radio-option-responsive label {
+            display: block;
+            padding: 10px 5px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        
+        @media (min-width: 480px) {
+            .radio-option-responsive label {
+                font-size: 14px;
+                padding: 12px 5px;
+            }
+        }
+        
+        .radio-option-responsive input[type="radio"]:checked + label {
+            border-color: #3498db;
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .radio-option-responsive label.bueno {
+            border-color: #d4edda;
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .radio-option-responsive label.malo {
+            border-color: #f8d7da;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .radio-option-responsive label.na {
+            border-color: #fff3cd;
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .obs-input {
+            margin-top: 12px;
+        }
+        
+        .obs-input textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        /* NOTAS */
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .note strong {
+            color: #856404;
+        }
+        
+        /* DECLARACIÓN Y FIRMAS - RESPONSIVE */
+        .firmas-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        @media (min-width: 768px) {
+            .firmas-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .firma-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .firma-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        /* ESTILOS PANEL DE FIRMA */
+        .firma-contenedor {
+            position: relative;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        canvas#firma-pad {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            background-color: #ffffff;
+            width: 100%;
+            height: 200px;
+            cursor: crosshair;
+            touch-action: none; /* Bloquea el scroll táctil para poder dibujar */
+        }
+        
+        /* BOTONES FINALES - RESPONSIVE */
+        .buttons {
+            text-align: center;
+            margin: 30px 0 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        @media (min-width: 480px) {
+            .btn-group {
+                flex-direction: row;
+                justify-content: center;
+            }
+            
+            .btn-group .btn {
+                width: auto;
+                min-width: 150px;
+            }
+        }
+        
+        /* MEJORAS PARA MÓVILES */
+        input, select, textarea, button {
+            font-size: 16px !important;
+        }
+        
+        /* LOADING STATE */
+        .btn.loading {
+            position: relative;
+            color: transparent;
+        }
+        
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* DIAGRAMA DEL VEHÍCULO */
+        .vehiculo-diagrama {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        .diagrama-icono {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        
+        /* HELPERS */
+        .hidden-desktop {
+            display: none;
+        }
+        
+        @media (max-width: 767px) {
+            .hidden-mobile {
+                display: none;
+            }
+            
+            .hidden-desktop {
+                display: block;
+            }
+        }
+        
+        /* MEJORAS VISUALES */
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        /* SCROLL SUAVE PARA MÓVILES */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-clipboard-check"></i> NUEVA INSPECCIÓN - INICIO DE JORNADA</h1>
+            <p>REGISTRO DE INSPECCIÓN PREOPERACIONAL</p>
+            <div class="header-info">
+                <span><i class="fas fa-code"></i> <%= formatoCodigo %></span>
+                <span><i class="fas fa-calendar"></i> <%= new Date().toLocaleDateString('es-ES') %></span>
+                <span><i class="fas fa-sun"></i> Jornada Mañana</span>
+            </div>
+        </div>
+        
+        <form action="/inspeccion/inicio" method="POST" class="form-container" id="inspeccionInicioForm">
+
+<div class="form-section">
+    <h2><i class="fas fa-info-circle"></i> INFORMACIÓN DEL VEHÍCULO Y CONDUCTOR</h2>
+    
+    <div class="info-grid">
+        <div class="form-group">
+            <label>Fecha y Hora de Inspección:</label>
+            <div class="readonly-field">
+                <span id="fechaHoraActual" style="font-weight: bold; color: #2c3e50;">
+                    <%= new Date().toLocaleDateString('es-ES') %> - 
+                    <%= new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) %>
+                </span>
+                <input type="hidden" id="fecha_inspeccion" name="fecha_inspeccion" value="<%= new Date().toISOString().split('T')[0] %>">
+                <input type="hidden" id="hora_inspeccion" name="hora_inspeccion" value="<%= new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit', hour12: false}) %>">
+            </div>
+            <small style="color: #666; font-size: 12px;">(Generada automáticamente)</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="placa" class="required">Placa del vehículo:</label>
+            <input type="text" id="placa" name="placa" placeholder="Ej: ABC123" required 
+                   style="text-transform: uppercase;" maxlength="10">
+            <small style="color: #666; font-size: 12px;">Ingrese la placa completa</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="tipo_vehiculo">Tipo de vehículo:</label>
+            <select name="tipo_vehiculo" id="tipo_vehiculo">
+                <option value="">Seleccionar</option>
+                <option value="Automóvil">Automóvil</option>
+                <option value="Camioneta">Camioneta</option>
+                <option value="Camión">Camión</option>
+                <option value="Bus">Bus</option>
+                <option value="Motocicleta">Motocicleta</option>
+                <option value="Volqueta">Volqueta</option>
+                <option value="Grúa">Grúa</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="empresa" class="required">Empresa:</label>
+            <input type="text" id="empresa" name="empresa" placeholder="Nombre de la empresa" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="nombre_conductor" class="required">Nombre y apellidos del conductor:</label>
+            <input type="text" id="nombre_conductor" name="nombre_conductor" placeholder="Nombre completo" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="licencia_conductor" class="required">Número de Licencia de conducción:</label>
+            <input type="text" id="licencia_conductor" name="licencia_conductor" placeholder="Ej: 123456789" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="categoria_licencia" class="required">Categoría de licencia:</label>
+            <select name="categoria_licencia" id="categoria_licencia" required>
+                <option value="">Seleccionar</option>
+                <option value="A1">A1 - Motocicletas hasta 125cc</option>
+                <option value="A2">A2 - Motocicletas mayores a 125cc</option>
+                <option value="B1">B1 - Automóviles, motocarros, cuatrimotos, camperos, camionetas y microbuses de servicio particular</option>
+                <option value="B2">B2 - Camiones rígidos, busetas y buses de servicio particular.</option>
+                <option value="B3">B3 - Vehículos articulados de servicio particular</option>
+                <option value="C1">C1 - Automóviles, camperos, camionetas y microbuses de servicio público. Incluye taxi, escolar y transporte empresarial.</option>
+                <option value="C2">C2 - Camiones rígidos, busetas y buses de servicio público</option>
+                <option value="C3">C3 - Vehículos articulados de servicio público</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="vigencia_licencia" class="required">
+                Vigencia licencia de conducción:
+            </label>
+            <input type="date" id="vigencia_licencia" name="vigencia_licencia" required>
+        </div>
+
+        <div class="form-group">
+            <label for="modelo">Modelo del vehículo:</label>
+            <input type="text" id="modelo" name="modelo" placeholder="Ej: 2020">
+        </div>
+        
+        <div class="form-group">
+            <label for="fecha_revision">Fecha revisión técnico-mecánica:</label>
+            <input type="date" id="fecha_revision" name="fecha_revision">
+        </div>
+        
+        <div class="form-group">
+            <label for="fecha_vencimiento_soat">Fecha de vencimiento del SOAT:</label>
+            <input type="date" id="fecha_vencimiento_soat" name="fecha_vencimiento_soat">
+        </div>
+        
+        <div class="form-group">
+            <label for="fecha_cambio_aceite">Fecha último cambio de aceite:</label>
+            <input type="date" id="fecha_cambio_aceite" name="fecha_cambio_aceite">
+        </div>
+
+        <div class="form-group">
+            <label for="doc_licencia_transito">Licencia de Tránsito (Número):</label>
+            <input type="text" id="doc_licencia_transito" name="doc_licencia_transito" placeholder="Ej: 123456789">
+        </div>
+        <div class="form-group">
+            <label for="doc_poliza_rcc">Vencimiento Póliza RCC y RCE:</label>
+            <input type="date" id="doc_poliza_rcc" name="doc_poliza_rcc">
+        </div>
+        <div class="form-group">
+            <label for="doc_poliza_todo_riesgo">Vencimiento Póliza Todo Riesgo:</label>
+            <input type="date" id="doc_poliza_todo_riesgo" name="doc_poliza_todo_riesgo">
+        </div>
+        <div class="form-group">
+            <label for="doc_tarjeta_operacion">Vencimiento Tarjeta de Operación:</label>
+            <input type="date" id="doc_tarjeta_operacion" name="doc_tarjeta_operacion">
+        </div>
+        
+        <div class="form-group">
+            <label for="kilometraje_entrada" class="required">Kilometraje de entrada (INICIO JORNADA):</label>
+            <input type="number" id="kilometraje_entrada" name="kilometraje_entrada" 
+                   placeholder="Km al iniciar jornada" min="0" required step="0.1">
+            <small style="color: #666;">Registre el kilometraje al comenzar el día</small>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <div id="kilometrajeAlert" style="display: none; padding: 10px; background: #fff3cd; border-radius: 5px; margin-top: 10px;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="kilometrajeMessage"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="defectos-section">
+    <h3><i class="fas fa-exclamation-triangle"></i> PARTES DEFECTUOSAS DEL VEHÍCULO</h3>
+    <p>Seleccione las partes que presentan condiciones defectuosas:</p>
+    
+    <div class="vehiculo-diagrama">
+        <div class="diagrama-icono"></div>
+        <p class="hidden-desktop">Toque las partes defectuosas</p>
+        
+        <div class="checkbox-grid">
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_frontal"> <i class="fas fa-car-front"></i> Delantero</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_trasero"> <i class="fas fa-car-rear"></i> Trasero</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_lateral_izq"> <i class="fas fa-car-side"></i> Lateral Izq</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_lateral_der"> <i class="fas fa-car-side fa-flip-horizontal"></i> Lateral Der</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_techo"> <i class="fas fa-car-burst"></i> Techo</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_interior"> <i class="fas fa-chair"></i> Interior</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_motor"> <i class="fas fa-engine"></i> Motor</label>
+            </div>
+            <div class="checkbox-item">
+                <label><input type="checkbox" name="defecto_chasis"> <i class="fas fa-gears"></i> Chasis</label>
+            </div>
+        </div>
+        
+        <div class="defecto-descripcion">
+            <label for="descripcion_defecto">Descripción del defecto:</label>
+            <textarea id="descripcion_defecto" name="descripcion_defecto" rows="3" placeholder="Describa detalladamente el defecto encontrado..."></textarea>
+        </div>
+    </div>
+</div>
+            
+<div class="form-section">
+    <h2><i class="fas fa-clipboard-list"></i> LISTA DE CHEQUEO</h2>
+    
+    <div class="note">
+        <strong><i class="fas fa-info-circle"></i> NOTA:</strong> Para cada item, seleccione: 
+        <span style="color:#27ae60;">✅ BUEN ESTADO</span> | 
+        <span style="color:#e74c3c;">❌ MAL ESTADO</span> | 
+        <span style="color:#f39c12;">⏺️ N/A</span>
+    </div>
+    
+    <div class="chequeo-categoria">NIVELES</div>
+    
+    <div class="chequeo-item">
+        <label>Líquido refrigerante de radiador</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_BUENO" name="nivel_refrigerante" value="BUENO" required><label for="nivel_refrigerante_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_MALO" name="nivel_refrigerante" value="MALO"><label for="nivel_refrigerante_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_refrigerante_NA" name="nivel_refrigerante" value="NA"><label for="nivel_refrigerante_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_nivel_refrigerante" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Líquido de frenos</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_BUENO" name="nivel_frenos" value="BUENO" required><label for="nivel_frenos_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_MALO" name="nivel_frenos" value="MALO"><label for="nivel_frenos_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_frenos_NA" name="nivel_frenos" value="NA"><label for="nivel_frenos_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_nivel_frenos" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Aceite motor</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_BUENO" name="nivel_aceite" value="BUENO" required><label for="nivel_aceite_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_MALO" name="nivel_aceite" value="MALO"><label for="nivel_aceite_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_aceite_NA" name="nivel_aceite" value="NA"><label for="nivel_aceite_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_nivel_aceite" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Nivel líquido hidráulico</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_BUENO" name="nivel_hidraulico" value="BUENO" required><label for="nivel_hidraulico_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_MALO" name="nivel_hidraulico" value="MALO"><label for="nivel_hidraulico_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_hidraulico_NA" name="nivel_hidraulico" value="NA"><label for="nivel_hidraulico_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_nivel_hidraulico" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Agua de limpiavidrios</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="nivel_agua_BUENO" name="nivel_agua" value="BUENO" required><label for="nivel_agua_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_agua_MALO" name="nivel_agua" value="MALO"><label for="nivel_agua_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="nivel_agua_NA" name="nivel_agua" value="NA"><label for="nivel_agua_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_nivel_agua" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-categoria">PEDALES</div>
+    
+    <div class="chequeo-item">
+        <label>Acelerador (Uniformidad)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_BUENO" name="pedal_acelerador" value="BUENO" required><label for="pedal_acelerador_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_MALO" name="pedal_acelerador" value="MALO"><label for="pedal_acelerador_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="pedal_acelerador_NA" name="pedal_acelerador" value="NA"><label for="pedal_acelerador_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_pedal_acelerador" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Clutch (Cloche o embrague)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_BUENO" name="pedal_clutch" value="BUENO" required><label for="pedal_clutch_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_MALO" name="pedal_clutch" value="MALO"><label for="pedal_clutch_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="pedal_clutch_NA" name="pedal_clutch" value="NA"><label for="pedal_clutch_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_pedal_clutch" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Freno (Agarre)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="pedal_freno_BUENO" name="pedal_freno" value="BUENO" required><label for="pedal_freno_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="pedal_freno_MALO" name="pedal_freno" value="MALO"><label for="pedal_freno_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="pedal_freno_NA" name="pedal_freno" value="NA"><label for="pedal_freno_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_pedal_freno" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-categoria">LUCES</div>
+    
+    <div class="chequeo-item">
+        <label>Luces (Altas, medias, bajas)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_principales_BUENO" name="luz_principales" value="BUENO" required><label for="luz_principales_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_principales_MALO" name="luz_principales" value="MALO"><label for="luz_principales_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_principales_NA" name="luz_principales" value="NA"><label for="luz_principales_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_principales" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Direccionales</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_BUENO" name="luz_direccionales" value="BUENO" required><label for="luz_direccionales_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_MALO" name="luz_direccionales" value="MALO"><label for="luz_direccionales_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_direccionales_NA" name="luz_direccionales" value="NA"><label for="luz_direccionales_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_direccionales" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Estacionarias</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_BUENO" name="luz_estacionarias" value="BUENO" required><label for="luz_estacionarias_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_MALO" name="luz_estacionarias" value="MALO"><label for="luz_estacionarias_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_estacionarias_NA" name="luz_estacionarias" value="NA"><label for="luz_estacionarias_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_estacionarias" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Stops (Frenos)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_stops_BUENO" name="luz_stops" value="BUENO" required><label for="luz_stops_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_stops_MALO" name="luz_stops" value="MALO"><label for="luz_stops_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_stops_NA" name="luz_stops" value="NA"><label for="luz_stops_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_stops" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Testigos del tablero</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_testigos_BUENO" name="luz_testigos" value="BUENO" required><label for="luz_testigos_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_testigos_MALO" name="luz_testigos" value="MALO"><label for="luz_testigos_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_testigos_NA" name="luz_testigos" value="NA"><label for="luz_testigos_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_testigos" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Luz de reversa</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_reversa_BUENO" name="luz_reversa" value="BUENO" required><label for="luz_reversa_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_reversa_MALO" name="luz_reversa" value="MALO"><label for="luz_reversa_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_reversa_NA" name="luz_reversa" value="NA"><label for="luz_reversa_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_reversa" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Luces internas</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="luz_internas_BUENO" name="luz_internas" value="BUENO" required><label for="luz_internas_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_internas_MALO" name="luz_internas" value="MALO"><label for="luz_internas_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="luz_internas_NA" name="luz_internas" value="NA"><label for="luz_internas_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_luz_internas" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-categoria">EQUIPO DE CARRETERA Y PREVENCIÓN</div>
+
+    <div class="chequeo-item">
+        <label>Extintor (BC - ABC)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_BUENO" name="equipo_extintor" value="BUENO" required><label for="equipo_extintor_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_MALO" name="equipo_extintor" value="MALO"><label for="equipo_extintor_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_extintor_NA" name="equipo_extintor" value="NA"><label for="equipo_extintor_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_extintor" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Fecha de vencimiento del extintor</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_BUENO" name="equipo_fecha_extintor" value="BUENO" required><label for="equipo_fecha_extintor_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_MALO" name="equipo_fecha_extintor" value="MALO"><label for="equipo_fecha_extintor_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_fecha_extintor_NA" name="equipo_fecha_extintor" value="NA"><label for="equipo_fecha_extintor_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_fecha_extintor" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Llanta de repuesto (2 mm de profundidad y aire)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_BUENO" name="equipo_llanta" value="BUENO" required><label for="equipo_llanta_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_MALO" name="equipo_llanta" value="MALO"><label for="equipo_llanta_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_llanta_NA" name="equipo_llanta" value="NA"><label for="equipo_llanta_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_llanta" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Señales reflectivas en triángulo</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_senales_BUENO" name="equipo_senales" value="BUENO" required><label for="equipo_senales_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_senales_MALO" name="equipo_senales" value="MALO"><label for="equipo_senales_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_senales_NA" name="equipo_senales" value="NA"><label for="equipo_senales_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_senales" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Caja de herramientas</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_BUENO" name="equipo_herramientas" value="BUENO" required><label for="equipo_herramientas_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_MALO" name="equipo_herramientas" value="MALO"><label for="equipo_herramientas_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_herramientas_NA" name="equipo_herramientas" value="NA"><label for="equipo_herramientas_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_herramientas" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Botiquín primeros auxilios completo</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_BUENO" name="equipo_botiquin" value="BUENO" required><label for="equipo_botiquin_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_MALO" name="equipo_botiquin" value="MALO"><label for="equipo_botiquin_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_botiquin_NA" name="equipo_botiquin" value="NA"><label for="equipo_botiquin_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_botiquin" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Kit de Carreteras</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_BUENO" name="equipo_carreteras" value="BUENO" required><label for="equipo_carreteras_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_MALO" name="equipo_carreteras" value="MALO"><label for="equipo_carreteras_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_carreteras_NA" name="equipo_carreteras" value="NA"><label for="equipo_carreteras_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_carreteras" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Kit Ambiental</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_BUENO" name="equipo_ambiental" value="BUENO" required><label for="equipo_ambiental_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_MALO" name="equipo_ambiental" value="MALO"><label for="equipo_ambiental_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="equipo_ambiental_NA" name="equipo_ambiental" value="NA"><label for="equipo_ambiental_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_equipo_ambiental" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-categoria">VARIOS</div>
+    
+    <div class="chequeo-item">
+        <label>Llantas (Labrado 2 mm y aire)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_llantas_BUENO" name="varios_llantas" value="BUENO" required><label for="varios_llantas_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_llantas_MALO" name="varios_llantas" value="MALO"><label for="varios_llantas_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_llantas_NA" name="varios_llantas" value="NA"><label for="varios_llantas_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_llantas" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Batería (Borner, sin corrosión)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_bateria_BUENO" name="varios_bateria" value="BUENO" required><label for="varios_bateria_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_bateria_MALO" name="varios_bateria" value="MALO"><label for="varios_bateria_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_bateria_NA" name="varios_bateria" value="NA"><label for="varios_bateria_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_bateria" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Rines (sin golpes/fisuras)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_rines_BUENO" name="varios_rines" value="BUENO" required><label for="varios_rines_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_rines_MALO" name="varios_rines" value="MALO"><label for="varios_rines_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_rines_NA" name="varios_rines" value="NA"><label for="varios_rines_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_rines" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Cinturón de seguridad en todos los puestos</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_BUENO" name="varios_cinturones" value="BUENO" required><label for="varios_cinturones_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_MALO" name="varios_cinturones" value="MALO"><label for="varios_cinturones_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_cinturones_NA" name="varios_cinturones" value="NA"><label for="varios_cinturones_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_cinturones" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Pito reversa (Vehículos operativos)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_BUENO" name="varios_pito_reversa" value="BUENO" required><label for="varios_pito_reversa_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_MALO" name="varios_pito_reversa" value="MALO"><label for="varios_pito_reversa_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_pito_reversa_NA" name="varios_pito_reversa" value="NA"><label for="varios_pito_reversa_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_pito_reversa" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Pito</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_pito_BUENO" name="varios_pito" value="BUENO" required><label for="varios_pito_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_pito_MALO" name="varios_pito" value="MALO"><label for="varios_pito_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_pito_NA" name="varios_pito" value="NA"><label for="varios_pito_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_pito" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Freno de emergencia</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_BUENO" name="varios_freno_emergencia" value="BUENO" required><label for="varios_freno_emergencia_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_MALO" name="varios_freno_emergencia" value="MALO"><label for="varios_freno_emergencia_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_freno_emergencia_NA" name="varios_freno_emergencia" value="NA"><label for="varios_freno_emergencia_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_freno_emergencia" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Espejos laterales y cabina (sin fisuras)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_espejos_BUENO" name="varios_espejos" value="BUENO" required><label for="varios_espejos_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_espejos_MALO" name="varios_espejos" value="MALO"><label for="varios_espejos_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_espejos_NA" name="varios_espejos" value="NA"><label for="varios_espejos_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_espejos" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Estado carcasa luces</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_BUENO" name="varios_carcasa" value="BUENO" required><label for="varios_carcasa_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_MALO" name="varios_carcasa" value="MALO"><label for="varios_carcasa_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_carcasa_NA" name="varios_carcasa" value="NA"><label for="varios_carcasa_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_carcasa" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Plumillas/limpiabrisas (no dejan marcas)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_BUENO" name="varios_plumillas" value="BUENO" required><label for="varios_plumillas_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_MALO" name="varios_plumillas" value="MALO"><label for="varios_plumillas_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_plumillas_NA" name="varios_plumillas" value="NA"><label for="varios_plumillas_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_plumillas" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Tapizado</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_BUENO" name="varios_tapizado" value="BUENO" required><label for="varios_tapizado_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_MALO" name="varios_tapizado" value="MALO"><label for="varios_tapizado_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_tapizado_NA" name="varios_tapizado" value="NA"><label for="varios_tapizado_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_tapizado" placeholder="Observaciones..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Panorámico (sin fisuras)</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_BUENO" name="varios_panoramico" value="BUENO" required><label for="varios_panoramico_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_MALO" name="varios_panoramico" value="MALO"><label for="varios_panoramico_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_panoramico_NA" name="varios_panoramico" value="NA"><label for="varios_panoramico_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_panoramico" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Estado del Radiotelefono</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_BUENO" name="varios_radiotelefono" value="BUENO"><label for="varios_radiotelefono_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_MALO" name="varios_radiotelefono" value="MALO"><label for="varios_radiotelefono_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_radiotelefono_NA" name="varios_radiotelefono" value="NA" checked><label for="varios_radiotelefono_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_radiotelefono" placeholder="Observaciones sobre el radiotelefono..."></textarea></div>
+    </div>
+    
+    <div class="chequeo-item">
+        <label>Aire Acondicionado</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_aire_BUENO" name="varios_aire" value="BUENO" required><label for="varios_aire_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_aire_MALO" name="varios_aire" value="MALO"><label for="varios_aire_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_aire_NA" name="varios_aire" value="NA"><label for="varios_aire_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_aire" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Vidrios Laterales</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_BUENO" name="varios_vidrios_laterales" value="BUENO" required><label for="varios_vidrios_laterales_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_MALO" name="varios_vidrios_laterales" value="MALO"><label for="varios_vidrios_laterales_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_vidrios_laterales_NA" name="varios_vidrios_laterales" value="NA"><label for="varios_vidrios_laterales_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_vidrios_laterales" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Vidrio Trasero</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_BUENO" name="varios_vidrio_trasero" value="BUENO" required><label for="varios_vidrio_trasero_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_MALO" name="varios_vidrio_trasero" value="MALO"><label for="varios_vidrio_trasero_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_vidrio_trasero_NA" name="varios_vidrio_trasero" value="NA"><label for="varios_vidrio_trasero_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_vidrio_trasero" placeholder="Observaciones..."></textarea></div>
+    </div>
+
+    <div class="chequeo-item">
+        <label>Tercer Stop</label>
+        <div class="radio-group-responsive">
+            <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_BUENO" name="varios_tercer_stop" value="BUENO" required><label for="varios_tercer_stop_BUENO" class="bueno">✅ Bueno</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_MALO" name="varios_tercer_stop" value="MALO"><label for="varios_tercer_stop_MALO" class="malo">❌ Malo</label></div>
+            <div class="radio-option-responsive"><input type="radio" id="varios_tercer_stop_NA" name="varios_tercer_stop" value="NA"><label for="varios_tercer_stop_NA" class="na">⏺️ N/A</label></div>
+        </div>
+        <div class="obs-input"><textarea name="obs_varios_tercer_stop" placeholder="Observaciones..."></textarea></div>
+    </div>
+</div>
+            
+<div class="form-section">
+    <h2><i class="fas fa-comment-dots"></i> OBSERVACIONES ADICIONALES</h2>
+    <div class="form-group">
+        <label>Observaciones generales identificadas adicionales:</label>
+        <textarea name="observaciones_generales" rows="4" placeholder="Describa aquí cualquier observación adicional, recomendación o detalle importante de la inspección..."></textarea>
+    </div>
+</div>
+            
+<div class="form-section">
+    <h2><i class="fas fa-signature"></i> DECLARACIÓN Y FIRMA DEL CONDUCTOR</h2>
+    
+    <div class="note">
+        <strong><i class="fas fa-exclamation-circle"></i> DECLARACIÓN DEL CONDUCTOR:</strong> "Declaro que la información suministrada es certera y veraz, y que he recibido el vehículo en las condiciones descritas."
+    </div>
+    
+    <div class="firmas-grid">
+        <div class="firma-card">
+            <h4><i class="fas fa-id-card"></i> CONDUCTOR</h4>
+            
+            <div class="form-group">
+                <label for="nombre_firma_conductor" class="required">Nombre del conductor:</label>
+                <input type="text" id="nombre_firma_conductor" name="nombre_firma_conductor" placeholder="Nombre completo" required>
+            </div>
+            
+            <!-- PANEL DE FIRMA TÁCTIL INCORPORADO -->
+            <div class="form-group" style="margin-top: 15px;">
+                <label class="required">Firma digital:</label>
+                <div class="firma-contenedor">
+                    <canvas id="firma-pad"></canvas>
+                    <button type="button" id="btn-limpiar-firma" class="btn btn-back" style="padding: 8px 12px; font-size: 14px; margin-top: 5px; width: 100%;">
+                        <i class="fas fa-broom"></i> Limpiar Firma
+                    </button>
+                </div>
+                <!-- Input oculto para enviar la imagen al servidor -->
+                <input type="hidden" name="firma_conductor_base64" id="firma_conductor_base64">
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="cc_conductor" class="required">CC N°:</label>
+                <input type="text" id="cc_conductor" name="cc_conductor" placeholder="Número de documento" required>
+            </div>
+            <div class="checkbox-item" style="margin-top: 15px;">
+                <label><input type="checkbox" name="aceptacion_conductor" required> ✅ Declaro haber recibido el vehículo en las condiciones descritas</label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="note" style="background: #e7f3ff; border-color: #3498db;">
+        <strong><i class="fas fa-info-circle"></i> NOTA:</strong> La firma del coordinador/supervisor se realizará posteriormente en la vista de detalle de la inspección.
+    </div>
+</div>
+
+            <div class="buttons">
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-submit" id="submitBtn">
+                        <i class="fas fa-save"></i> REGISTRAR INICIO DE JORNADA
+                    </button>
+                
+                    <button type="reset" class="btn btn-back" id="resetBtn">
+                        <i class="fas fa-eraser"></i> LIMPIAR
+                    </button>
+                    <a href="/" class="btn btn-back">
+                        <i class="fas fa-times"></i> CANCELAR
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+<script>
+// ============================================
+// FUNCIONES DE VALIDACIÓN Y COLORES
+// ============================================
+
+function validarFormatoPlaca(placa) {
+    const patrones = [ /^[A-Z]{3}\d{3}$/, /^[A-Z]{3}\d{2}[A-Z]$/, /^[A-Z]{2}\d{4}[A-Z]$/, /^[A-Z]\d{5}$/, /^\d{3}[A-Z]{3}$/, /^[A-Z]{2}\d{3}[A-Z]{2}$/ ];
+    return patrones.some(patron => patron.test(placa));
+}
+
+// Función maestra para validar cualquier fecha de vencimiento
+function validarVencimiento(inputId, nombreDoc) {
+    const input = document.getElementById(inputId);
+    if (!input || !input.value) return;
+
+    const partes = input.value.split('-');
+    const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    const diasRestantes = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24));
+    
+    if (diasRestantes < 0) {
+        input.style.borderColor = '#e74c3c'; input.style.background = '#f8d7da';
+        input.title = `${nombreDoc} VENCIDO hace ${Math.abs(diasRestantes)} días`;
+    } else if (diasRestantes <= 30) {
+        input.style.borderColor = '#f39c12'; input.style.background = '#fff3cd';
+        input.title = `${nombreDoc} vence en ${diasRestantes} días`;
+    } else {
+        input.style.borderColor = '#27ae60'; input.style.background = '#d4edda';
+        input.title = `${nombreDoc} vigente por ${diasRestantes} días`;
+    }
+}
+
+function validarTodasLasFechas() {
+    validarVencimiento('fecha_vencimiento_soat', 'SOAT');
+    validarVencimiento('fecha_revision', 'Tecno-mecánica');
+    validarVencimiento('doc_poliza_rcc', 'Póliza RCC');
+    validarVencimiento('doc_poliza_todo_riesgo', 'Póliza Todo Riesgo');
+    validarVencimiento('doc_tarjeta_operacion', 'Tarjeta de Operación');
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+document.getElementById('placa').addEventListener('input', function() {
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (this.value.length >= 3) {
+        if (!validarFormatoPlaca(this.value)) { this.style.borderColor = '#ff9800'; this.title = 'Formato de placa no reconocido'; } 
+        else { this.style.borderColor = '#4caf50'; this.title = 'Formato de placa válido'; }
+    }
+});
+
+// Asignar eventos de cambio a todas las fechas
+['fecha_vencimiento_soat', 'fecha_revision', 'doc_poliza_rcc', 'doc_poliza_todo_riesgo', 'doc_tarjeta_operacion'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => validarVencimiento(id, 'Documento'));
+});
+
+document.getElementById('tipo_vehiculo').addEventListener('change', function() {
+    const sugerencias = { 'Motocicleta': 'A2', 'Automóvil': 'B1', 'Camioneta': 'B1', 'Camión': 'C1', 'Volqueta': 'C1', 'Grúa': 'C1', 'Bus': 'B3' };
+    if (sugerencias[this.value]) document.getElementById('categoria_licencia').value = sugerencias[this.value];
+});
+
+// ============================================
+// INICIALIZACIÓN DE SIGNATURE PAD Y WINDOW LOAD
+// ============================================
+let signaturePad;
+
+window.addEventListener('load', function() {
+    document.getElementById('placa').focus();
+    
+    // CORRECCIÓN: Solo el aceite y la fecha de inspección no pueden ser del futuro
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_inspeccion').max = today;
+    document.getElementById('fecha_cambio_aceite').max = today;
+    
+    validarTodasLasFechas();
+
+    // INICIALIZAR EL CANVAS PARA LA FIRMA
+    const canvas = document.getElementById('firma-pad');
+    
+    // Función para mantener la nitidez en pantallas móviles
+    function resizeCanvas() {
+        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+        
+        // Si ya había una firma antes de girar la pantalla, la limpiaremos para evitar deformaciones
+        if(signaturePad) signaturePad.clear();
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Configurar la tinta y el color
+    signaturePad = new SignaturePad(canvas, {
+        penColor: "rgb(0, 0, 128)", // Tinta azul
+        backgroundColor: "rgb(255, 255, 255)"
+    });
+
+    // Acción del botón Limpiar Firma
+    document.getElementById('btn-limpiar-firma').addEventListener('click', function () {
+        signaturePad.clear();
+    });
+
+    // Al resetear todo el formulario, también limpiar la firma
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        setTimeout(() => { signaturePad.clear(); }, 10);
+    });
+});
+
+// Reloj en tiempo real
+setInterval(() => {
+    const ahora = new Date();
+    const span = document.getElementById('fechaHoraActual');
+    if (span) span.textContent = `${ahora.toLocaleDateString('es-ES')} - ${ahora.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}`;
+}, 60000);
+
+// ============================================
+// MANEJO DE ENVÍO Y VALIDACIÓN FINAL
+// ============================================
+document.getElementById('inspeccionInicioForm').addEventListener('submit', function(e) {
+    const placa = document.getElementById('placa').value.trim();
+    if (!validarFormatoPlaca(placa)) { alert('❌ Formato de placa no válido.'); e.preventDefault(); return false; }
+    
+    const kmEntrada = parseFloat(document.getElementById('kilometraje_entrada').value) || 0;
+    if (kmEntrada <= 0) { alert('❌ Debe ingresar un kilometraje de entrada válido'); e.preventDefault(); return false; }
+    
+    const camposObligatorios = ['empresa', 'nombre_conductor', 'licencia_conductor', 'categoria_licencia', 'vigencia_licencia', 'nombre_firma_conductor', 'cc_conductor'];
+    for (const id of camposObligatorios) {
+        const el = document.getElementById(id);
+        if (!el || !el.value.trim()) { alert(`❌ Un campo obligatorio está vacío.`); el.focus(); e.preventDefault(); return false; }
+    }
+    
+    if (!document.querySelector('input[name="aceptacion_conductor"]').checked) { alert('❌ Debe aceptar la declaración.'); e.preventDefault(); return false; }
+    
+    // --> VALIDAR QUE EL CONDUCTOR HAYA DIBUJADO SU FIRMA <--
+    if (signaturePad.isEmpty()) {
+        alert('⚠️ Atención: Es obligatorio dibujar su firma en el cuadro antes de enviar.');
+        e.preventDefault();
+        return false;
+    } else {
+        // Extraer la firma como texto Base64 y guardarla en el input oculto
+        document.getElementById('firma_conductor_base64').value = signaturePad.toDataURL('image/png');
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> REGISTRANDO...';
+    submitBtn.disabled = true;
+    return true;
+});
+</script>
+
+<style>
+    @keyframes slideDown {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+</body>
+</html>

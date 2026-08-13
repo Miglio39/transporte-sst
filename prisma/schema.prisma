@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabla de Usuarios (Admin y Conductores)
+model Usuario {
+  id           Int          @id @default(autoincrement())
+  nombre       String
+  documento    String       @unique
+  password     String
+  rol          String       @default("conductor") // "admin" o "conductor"
+  inspecciones Inspeccion[]
+}
+
+// Tabla de Vehículos
+model Vehiculo {
+  placa        String       @id
+  tipo         String
+  modelo       String?
+  inspecciones Inspeccion[]
+}
+
+// Tabla de Inspecciones (Guardará el JSON dinámico de la lista de chequeo)
+model Inspeccion {
+  id                 Int       @id @default(autoincrement())
+  fecha_apertura     DateTime  @default(now())
+  fecha_cierre       DateTime?
+  estado             String    @default("En curso") // "En curso" o "Finalizada"
+  kilometraje_salida Int?
+  novedades_cierre   String?
+  
+  // Aquí guardaremos todo el formulario largo (luces, pedales, líquidos)
+  datos_chequeo      Json? 
+
+  eliminado          Boolean   @default(false)    
+  
+  // Relaciones
+  conductor_id       Int
+  conductor          Usuario   @relation(fields: [conductor_id], references: [id])
+  vehiculo_placa     String
+  vehiculo           Vehiculo  @relation(fields: [vehiculo_placa], references: [placa])
+}

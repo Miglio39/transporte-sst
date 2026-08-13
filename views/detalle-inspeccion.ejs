@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style> body { background-color: #f4f6f9; padding: 20px; } label { font-size: 0.85rem; font-weight: bold; color: #555; } </style>
+</head>
+<body>
+    <div class="container max-w-4xl">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-edit text-primary"></i> Edición Completa - Inspección #<%= insp.id %></h2>
+            <a href="/admin" class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</a>
+        </div>
+
+        <form action="/admin/inspeccion/editar/<%= insp.id %>" method="POST">
+            
+            <!-- SECCIÓN 1: INFORMACIÓN Y DOCUMENTOS -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white"><i class="fas fa-folder-open"></i> Información y Documentos</div>
+                <div class="card-body row">
+                    <div class="col-md-4 mb-3">
+                        <label>Empresa</label>
+                        <input type="text" class="form-control" name="empresa" value="<%= insp.datos_chequeo?.empresa || '' %>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Categoría Licencia</label>
+                        <input type="text" class="form-control" name="categoria_licencia" value="<%= insp.datos_chequeo?.categoria_licencia || '' %>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Vigencia Licencia</label>
+                        <input type="date" class="form-control" name="vigencia_licencia" value="<%= insp.datos_chequeo?.vigencia_licencia || '' %>">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Kilometraje Salida (Mañana)</label>
+                        <input type="number" class="form-control" name="kilometraje_salida" value="<%= insp.kilometraje_salida %>">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Kilometraje Llegada (Fin turno)</label>
+                        <input type="number" class="form-control" name="kilometraje_final" value="<%= insp.datos_chequeo?.kilometraje_final || '' %>">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: DEFECTOS Y OBSERVACIONES -->
+            <div class="card shadow-sm mb-4 border-warning">
+                <div class="card-header bg-warning text-dark fw-bold"><i class="fas fa-comment-dots"></i> Observaciones y Defectos</div>
+                <div class="card-body row">
+                    <div class="col-md-6 mb-3">
+                        <label>Defectos en carrocería/vehículo (Opcional)</label>
+                        <textarea class="form-control border-warning" name="descripcion_defecto" rows="4"><%= insp.datos_chequeo?.descripcion_defecto || '' %></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Observaciones Generales</label>
+                        <textarea class="form-control border-info" name="observaciones_generales" rows="4"><%= insp.datos_chequeo?.observaciones_generales || '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: LISTA DE CHEQUEO -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white"><i class="fas fa-list-check"></i> Lista de Chequeo (Niveles, Pedales, Luces, Equipo)</div>
+                <div class="card-body row">
+                    <% 
+                       const items = insp.datos_chequeo?.chequeo_items || {};
+                       for(let key in items) { 
+                           let nombreLimpio = key.replace(/_/g, ' ').toUpperCase();
+                    %>
+                       <div class="col-md-3 col-sm-6 mb-3">
+                           <label class="text-truncate d-block" title="<%= nombreLimpio %>"><%= nombreLimpio %></label>
+                           <select name="<%= key %>" class="form-select form-select-sm border-<%= items[key] === 'MALO' ? 'danger' : (items[key] === 'BUENO' ? 'success' : 'secondary') %>">
+                               <option value="BUENO" <%= items[key] === 'BUENO' ? 'selected' : '' %>>✅ BUENO</option>
+                               <option value="MALO" <%= items[key] === 'MALO' ? 'selected' : '' %>>❌ MALO</option>
+                               <option value="NA" <%= items[key] === 'NA' ? 'selected' : '' %>>⏺️ N/A</option>
+                           </select>
+                       </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100 mb-5 fw-bold shadow"><i class="fas fa-save"></i> GUARDAR TODOS LOS CAMBIOS</button>
+        </form>
+    </div>
+</body>
+</html>
