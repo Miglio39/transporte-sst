@@ -1,11 +1,12 @@
-# 1. Usar un servidor de Linux con Node 20 preinstalado
-FROM node:20-slim
+# 1. Usar un servidor de Linux con Node 22 (requerido por Puppeteer 25)
+FROM node:22-slim
 
-# 2. Instalar las librerías gráficas para los PDF (Puppeteer) y OpenSSL (Prisma)
+# 2. Instalar las librerías gráficas, UNZIP para Puppeteer y dependencias
 RUN apt-get update && apt-get install -y \
     openssl \
     wget \
     gnupg \
+    unzip \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
