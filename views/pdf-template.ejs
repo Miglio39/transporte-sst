@@ -58,7 +58,7 @@
             return '<span class="val-na">- NA</span>';
         }
         
-        // 🆕 Lógica blindada para formato DD/MM/YYYY
+        // Lógica blindada para formato DD/MM/YYYY
         function formatDate(dateInput) {
             if (!dateInput) return '';
             
@@ -70,7 +70,7 @@
             
             // Si es un objeto Date
             const d = new Date(dateInput);
-            if (isNaN(d.getTime())) return dateInput; // Si no es fecha válida, devuelve el texto
+            if (isNaN(d.getTime())) return dateInput; 
             
             const dia = String(d.getDate()).padStart(2, '0');
             const mes = String(d.getMonth() + 1).padStart(2, '0');
@@ -233,7 +233,12 @@
                 Firma del Conductor (CC: <%= inspeccion.cc_conductor %>)
             </td>
             <td>
-                <div class="linea-firma"></div>
+                <!-- AQUÍ INYECTAMOS LA FIRMA DEL ADMIN SI EXISTE -->
+                <% if (inspeccion.firma_coordinador_img) { %>
+                    <img src="<%= inspeccion.firma_coordinador_img %>" style="max-height: 60px; margin-bottom: 5px;"><br>
+                <% } else { %>
+                    <div class="linea-firma"></div>
+                <% } %>
                 <strong><%= inspeccion.firma_coordinador || 'Pendiente de firma' %></strong><br>
                 Firma Coordinador/Supervisor (CC: <%= inspeccion.cc_coordinador || '---' %>)
             </td>

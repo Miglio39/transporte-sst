@@ -182,17 +182,80 @@
             <textarea class="form-control" name="observaciones_generales" rows="4"><%= insp.datos_chequeo?.observaciones_generales || '' %></textarea>
         </div>
 
+        <!-- ============================================== -->
+        <!-- NUEVA ZONA DE FIRMA DEL ADMINISTRADOR -->
+        <!-- ============================================== -->
+        <hr class="my-4">
+        <div class="mb-4">
+            <label class="form-label fw-bold text-primary" style="font-size: 1.2rem;">Firma del Coordinador / Supervisor</label>
+            <p class="text-muted small">Al dibujar su firma, usted aprueba la revisión de esta inspección.</p>
+            
+            <div style="border: 2px dashed #bdc3c7; background: #fff; width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden;">
+                <!-- Si ya había firmado antes, se muestra el recuadro, pero puede firmar de nuevo para reemplazarla -->
+                <canvas id="firmaAdminPad" width="400" height="150" style="touch-action: none; width: 100%; cursor: crosshair;"></canvas>
+            </div>
+            
+            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="limpiarFirmaAdmin">
+                <i class="fas fa-eraser"></i> Limpiar Firma
+            </button>
+            <input type="hidden" name="firma_coordinador_base64" id="firma_coordinador_base64">
+        </div>
+
         <div class="row mt-4">
             <div class="col-md-6 mb-2">
                 <a href="/admin" class="btn btn-outline-secondary w-100 p-3 fw-bold">Cancelar y Volver</a>
             </div>
             <div class="col-md-6 mb-2">
-                <button type="submit" class="btn-submit m-0">💾 Guardar Cambios</button>
+                <button type="submit" class="btn-submit m-0">💾 Guardar Cambios y Firmar</button>
             </div>
         </div>
 
     </form>
 </div>
+
+<!-- ============================================== -->
+<!-- SCRIPT DE LA PIZARRA DE FIRMA -->
+<!-- ============================================== -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var canvas = document.getElementById('firmaAdminPad');
+        if(canvas) {
+            var signaturePad = new SignaturePad(canvas, { 
+                backgroundColor: 'rgb(255, 255, 255)',
+                penColor: 'rgb(0, 0, 0)'
+            });
+            
+            // Ajustar el tamaño del lienzo para celulares y pantallas de alta densidad
+            function resizeCanvas() {
+                var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+                var prevData = signaturePad.toData(); // Guardar el dibujo si cambia de tamaño
+                
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                
+                signaturePad.fromData(prevData);
+            }
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            // Botón para limpiar
+            document.getElementById('limpiarFirmaAdmin').addEventListener('click', function () {
+                signaturePad.clear();
+            });
+
+            // Capturar el garabato al momento de enviar el formulario
+            var form = canvas.closest('form');
+            form.addEventListener('submit', function(e) {
+                if (!signaturePad.isEmpty()) {
+                    // Guardamos la imagen en el campo oculto
+                    document.getElementById('firma_coordinador_base64').value = signaturePad.toDataURL();
+                }
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

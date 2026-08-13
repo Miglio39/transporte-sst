@@ -4,8 +4,8 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');               // <-- NUEVO PARA EL PDF
-const puppeteer = require('puppeteer'); // <-- NUEVO PARA EL PDF
+const fs = require('fs');               // <-- PARA EL PDF
+const puppeteer = require('puppeteer'); // <-- PARA EL PDF
 const ejs = require('ejs');
 
 const { PrismaClient } = require('./prisma/generated/client');
@@ -79,17 +79,38 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// RUTA SECRETA PARA CREAR EL PRIMER ADMINISTRADOR (Úsala una vez y luego bórrala)
+// RUTA SECRETA PARA CREAR LOS ADMINISTRADORES REALES
 app.get('/setup-admin', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash('admin123', salt);
+    // Encriptamos la nueva contraseña segura (es la misma para ambos)
+    const hash = await bcrypt.hash('Omega2026*', salt);
     
+    // Crear a Yeison
     await prisma.usuario.upsert({
-        where: { documento: '999999999' },
-        update: {},
-        create: { nombre: 'Administrador Principal', documento: '999999999', password: hash, rol: 'admin' }
+        where: { documento: '1122141007' },
+        // Si el usuario ya existe, le actualizamos la contraseña por si acaso
+        update: { password: hash }, 
+        create: { nombre: 'Yeison Uriel Vargas Vesga', documento: '1122141007', password: hash, rol: 'admin' }
     });
-    res.send('✅ Admin creado. Documento: 999999999 | Contraseña: admin123 <br><br> <a href="/login">Ir a Iniciar Sesión</a>');
+
+    // Crear a Maria Fernanda
+    await prisma.usuario.upsert({
+        where: { documento: '1123087694' },
+        // Si el usuario ya existe, le actualizamos la contraseña por si acaso
+        update: { password: hash },
+        create: { nombre: 'Maria Fernanda Ladino Vega', documento: '1123087694', password: hash, rol: 'admin' }
+    });
+
+    res.send(`
+        <div style="text-align: center; padding: 50px; font-family: Arial;">
+            <h1 style="color: #27ae60;">✅ Cuentas de Administrador Configuradas</h1>
+            <p><strong>Yeison:</strong> Doc: 1122141007</p>
+            <p><strong>Maria F:</strong> Doc: 1123087694</p>
+            <p><small>La contraseña para ambos ha sido establecida como secreta.</small></p>
+            <br>
+            <a href="/login" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Ir a Iniciar Sesión</a>
+        </div>
+    `);
 });
 
 
@@ -377,12 +398,13 @@ app.post('/admin/inspeccion/editar/:id', verificarRol(['admin']), async (req, re
         const inspActual = await prisma.inspeccion.findUnique({ where: { id } });
         let datos = inspActual.datos_chequeo || {};
         
-        // 1. Extraer TODOS los documentos explícitamente para que no se mezclen
+        // 1. Extraer TODOS los documentos y la FIRMA DEL ADMIN
         const { 
             empresa, licencia_conductor, categoria_licencia, vigencia_licencia, 
             doc_licencia_transito, fecha_vencimiento_soat, doc_poliza_rcc, 
             doc_poliza_todo_riesgo, doc_tarjeta_operacion, fecha_revision, fecha_cambio_aceite,
             kilometraje_salida, kilometraje_final, observaciones_generales, descripcion_defecto, 
+            firma_coordinador_base64, // <-- NUEVO: Atrapamos la firma del admin
             ...chequeo_items 
         } = body;
         
@@ -406,6 +428,13 @@ app.post('/admin/inspeccion/editar/:id', verificarRol(['admin']), async (req, re
         
         // 4. Guardar SOLO los items de calificación (Buenos/Malos) en la lista
         datos.chequeo_items = { ...datos.chequeo_items, ...chequeo_items };
+
+        // Si el administrador dibujó su firma, la guardamos junto con su nombre
+        if (firma_coordinador_base64) {
+            datos.firma_coordinador_img = firma_coordinador_base64;
+            datos.nombre_coordinador = req.usuario.nombre;
+            datos.cc_coordinador = req.usuario.documento;
+        }
 
         await prisma.inspeccion.update({
             where: { id },
@@ -507,8 +536,9 @@ app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) =
             firma_conductor: datos.firma_conductor, 
             
             nombre_firma_conductor: datos.nombre_firma_conductor || insp.conductor.nombre,
-            firma_coordinador: req.usuario.nombre, // Tu nombre como admin que descarga
-            cc_coordinador: req.usuario.documento
+            firma_coordinador_img: datos.firma_coordinador_img || null,
+            firma_coordinador: datos.nombre_coordinador || req.usuario.nombre, 
+            cc_coordinador: datos.cc_coordinador || req.usuario.documento
         };
 
         // 5. Crear las categorías que pide tu código
