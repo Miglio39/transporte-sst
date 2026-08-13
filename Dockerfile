@@ -1,6 +1,12 @@
 # 1. Usar un servidor de Linux con Node 22
 FROM node:22-slim
 
+
+# 1.1. --- NUEVO: CONFIGURAR HORA EXACTA DE COLOMBIA ---
+ENV TZ="America/Bogota"
+RUN apt-get update && apt-get install -y tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # 2. Instalar TODAS las librerías gráficas requeridas por Chrome/Puppeteer
 RUN apt-get update && apt-get install -y \
     openssl \
