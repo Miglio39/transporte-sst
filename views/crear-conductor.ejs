@@ -4,49 +4,197 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title><%= title %> | OmegaGroup</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f4f6f9; padding: 20px; }
-        .card { max-width: 500px; margin: 40px auto; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .card-header { background: #2c3e50; color: white; border-radius: 8px 8px 0 0 !important; }
+        /* =========================================================
+           DISEÑO EMPRESARIAL - OMEGAGROUP SAS
+           ========================================================= */
+        :root {
+            --surface-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #334155;
+            --omega-dark: #0f172a;
+            --omega-red: #e50914;
+        }
+
+        body {
+            background-color: var(--surface-bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .form-wrapper {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        /* TARJETA PRINCIPAL */
+        .card-omega {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .card-header-omega {
+            background: var(--omega-dark);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--omega-red);
+        }
+
+        .card-header-omega h4 { margin: 0; font-weight: 700; letter-spacing: 0.5px; font-size: 1.25rem; }
+        .card-body-omega { padding: 30px 25px; }
+
+        /* CAMPOS DEL FORMULARIO */
+        .form-label {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group-text {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-right: none;
+            color: #94a3b8;
+            transition: all 0.2s;
+        }
+
+        .form-control {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-left: none;
+            padding: 0.7rem 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--omega-red);
+            box-shadow: none;
+            background-color: #ffffff;
+        }
+        
+        .input-group:focus-within .input-group-text {
+            border-color: var(--omega-red);
+            background-color: #ffffff;
+            color: var(--omega-red);
+        }
+
+        /* BOTONES */
+        .btn-omega {
+            background: var(--omega-dark);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-omega:hover {
+            background: #1e293b;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(15, 23, 42, 0.2);
+        }
+
+        .btn-outline-omega {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-outline-omega:hover {
+            background: #f1f5f9;
+            color: var(--omega-dark);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="card-header p-3 text-center">
-                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Registrar Nuevo Conductor</h4>
+    <div class="form-wrapper">
+        <div class="card-omega">
+            
+            <div class="card-header-omega">
+                <h4><i class="fas fa-user-plus me-2" style="color: var(--omega-red);"></i> Registrar Conductor</h4>
+                <p class="mb-0 mt-2 small opacity-75" style="font-size: 0.85rem; font-weight: 400;">Cree un nuevo usuario para el sistema de operaciones</p>
             </div>
-            <div class="card-body p-4">
+            
+            <div class="card-body-omega">
                 
-                <% if (typeof error !== 'undefined') { %>
-                    <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <%= error %></div>
+                <!-- ALERTA DE ERRORES -->
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger shadow-sm d-flex align-items-center mb-4" role="alert" style="border-left: 4px solid #dc2626; border-radius: 6px;">
+                        <i class="fas fa-exclamation-triangle fs-5 me-3"></i>
+                        <div style="font-size: 0.9rem; font-weight: 500;"><%= error %></div>
+                    </div>
                 <% } %>
 
                 <form action="/admin/conductores/nuevo" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre Completo</label>
-                        <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez">
-                    </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Número de Documento (CC)</label>
-                        <input type="text" name="documento" class="form-control" required placeholder="Será su usuario para iniciar sesión">
+                    <div class="mb-4">
+                        <label class="form-label">Nombre Completo</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez">
+                        </div>
                     </div>
                     
                     <div class="mb-4">
-                        <label class="form-label fw-bold">Contraseña</label>
-                        <input type="password" name="password" class="form-control" required placeholder="Cree una contraseña segura">
+                        <label class="form-label">Número de Documento (CC)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                            <input type="text" name="documento" class="form-control" required placeholder="Será su usuario de acceso">
+                        </div>
                     </div>
                     
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success fw-bold p-2"><i class="fas fa-save"></i> GUARDAR CONDUCTOR</button>
-                        <a href="/admin" class="btn btn-secondary">Cancelar</a>
+                    <div class="mb-4">
+                        <label class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" name="password" class="form-control" required placeholder="Cree una contraseña segura">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-3 mt-5">
+                        <button type="submit" class="btn btn-omega w-100 fs-6">
+                            <i class="fas fa-save me-2"></i> GUARDAR CONDUCTOR
+                        </button>
+                        <!-- He ajustado el enlace para que lo regrese directamente a la tabla de conductores -->
+                        <a href="/admin/conductores" class="btn btn-outline-omega w-100">
+                            <i class="fas fa-arrow-left me-2"></i> Cancelar y Volver
+                        </a>
                     </div>
                 </form>
+                
             </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">&copy; <%= new Date().getFullYear() %> OmegaGroup SAS | Gestión Operativa</span>
         </div>
     </div>
 </body>
