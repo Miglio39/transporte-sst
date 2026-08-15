@@ -1,216 +1,326 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Inspección | OmegaGroup</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <meta charset="UTF-8">
-    <title>Editar Inspección - Transporte SST</title>
+    
     <style>
-        body { background-color: #f0f2f5; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 30px; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f39c12; padding-bottom: 15px; }
-        .header h1 { color: #2c3e50; font-weight: bold; }
-        .section-title { background: #2c3e50; color: white; padding: 10px 15px; border-radius: 6px; margin: 25px 0 15px 0; font-size: 1.1rem; }
+        /* =========================================================
+           DISEÑO EMPRESARIAL - OMEGAGROUP SAS
+           ========================================================= */
+        :root {
+            --surface-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #334155;
+            --omega-dark: #0f172a;
+            --omega-red: #e50914;
+        }
+
+        body { 
+            background-color: var(--surface-bg); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            padding-bottom: 40px;
+        }
+
+        .container-box { 
+            max-width: 1000px; 
+            margin: 30px auto; 
+        }
+
+        .page-header {
+            background: var(--omega-dark);
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 4px solid var(--omega-red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
-        .form-group { margin-bottom: 15px; }
-        .form-group label { font-weight: 600; color: #34495e; margin-bottom: 5px; display: block; }
-        .form-control { border-radius: 6px; border: 1px solid #ced4da; padding: 10px; }
+        .page-header h4 { margin: 0; font-weight: 700; letter-spacing: 0.5px; }
+        .ticket-badge { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 4px; font-family: monospace; font-size: 1.1rem; }
+
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+
+        .section-title { 
+            color: var(--omega-dark); 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-size: 0.9rem;
+            margin: 30px 0 20px 0; 
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-title:first-child { margin-top: 0; }
+
+        .form-label { font-weight: 600; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        .form-control { border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.95rem; }
+        .form-control:focus { border-color: var(--omega-red); box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.1); }
+        .form-control.bg-light { background-color: #f1f5f9 !important; color: #64748b; }
+
+        /* =========================================================
+           LISTA DE CHEQUEO - BOTONES MODERNOS
+           ========================================================= */
+        .chequeo-item { 
+            background: #ffffff; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .chequeo-item:hover { border-color: #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .chequeo-label { font-weight: 600; color: var(--text-main); margin-bottom: 10px; display: block; font-size: 0.95rem; }
         
-        .chequeo-item { background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #3498db; margin-bottom: 15px; }
-        .radio-group-responsive { display: flex; gap: 10px; margin: 10px 0; }
+        .radio-group-responsive { display: flex; gap: 8px; margin-bottom: 10px; }
         .radio-option-responsive { flex: 1; }
         .radio-option-responsive input[type="radio"] { display: none; }
-        .radio-option-responsive label { display: block; padding: 8px; border: 2px solid #ddd; border-radius: 6px; text-align: center; cursor: pointer; transition: 0.3s; }
         
-        .radio-option-responsive input[type="radio"]:checked + label.bueno { background: #d4edda; border-color: #27ae60; color: #155724; font-weight: bold; }
-        .radio-option-responsive input[type="radio"]:checked + label.malo { background: #f8d7da; border-color: #c0392b; color: #721c24; font-weight: bold; }
-        .radio-option-responsive input[type="radio"]:checked + label.na { background: #fff3cd; border-color: #f39c12; color: #856404; font-weight: bold; }
+        .radio-option-responsive label { 
+            display: block; 
+            padding: 8px 5px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+            background: #f8fafc;
+        }
         
-        .btn-submit { background: #27ae60; color: white; padding: 12px 30px; font-weight: bold; font-size: 1.1rem; width: 100%; border: none; border-radius: 6px; margin-top: 20px; }
-        .btn-submit:hover { background: #219653; }
+        .radio-option-responsive input[type="radio"]:checked + label.bueno { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: 700; }
+        .radio-option-responsive input[type="radio"]:checked + label.malo { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: 700; }
+        .radio-option-responsive input[type="radio"]:checked + label.na { background: #fef9c3; border-color: #eab308; color: #854d0e; font-weight: 700; }
         
-        /* Helper para parsear fechas de la BD al input type="date" */
+        /* BOTONES DE ACCIÓN */
+        .btn-omega { background: var(--omega-dark); color: white; border: none; font-weight: 600; transition: all 0.2s; }
+        .btn-omega:hover { background: #1e293b; color: white; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-outline-cancel { border: 1px solid var(--border-color); color: var(--text-main); font-weight: 500; background: white; transition: all 0.2s; }
+        .btn-outline-cancel:hover { background-color: #f1f5f9; color: var(--omega-dark); }
+        
+        /* FIRMA PAD */
+        .signature-wrapper { border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 8px; overflow: hidden; }
+
+        /* =========================================================
+           FUNCIÓN "BLINDADA" PARA PARSEAR FECHAS DE LA BASE DE DATOS
+           ========================================================= */
         <% 
         function toInputDate(dateVal) {
             if (!dateVal) return '';
-            if (typeof dateVal === 'string' && dateVal.includes('T')) return dateVal.split('T')[0];
-            const d = new Date(dateVal);
-            if (isNaN(d.getTime())) return dateVal;
-            return d.toISOString().split('T')[0];
+            
+            // Si ya viene en formato limpio YYYY-MM-DD
+            if (typeof dateVal === 'string' && dateVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateVal;
+            }
+            
+            // Si viene con formato ISO completo (contiene la 'T')
+            if (typeof dateVal === 'string' && dateVal.includes('T')) {
+                return dateVal.split('T')[0];
+            }
+            
+            // Si es un objeto fecha o string raro, forzamos la conversión
+            try {
+                const d = new Date(dateVal);
+                if (isNaN(d.getTime())) return '';
+                return d.toISOString().split('T')[0];
+            } catch(e) {
+                return '';
+            }
         }
         %>
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1><i class="fas fa-edit"></i> Editar Inspección: <%= insp.vehiculo_placa %></h1>
-        <p class="text-muted">ID Registro: #<%= insp.id %></p>
+<div class="container container-box">
+    
+    <!-- ENCABEZADO -->
+    <div class="page-header">
+        <div>
+            <h4><i class="fas fa-edit me-2" style="color: var(--omega-red);"></i> Edición de Inspección</h4>
+            <span class="small opacity-75">Placa: <%= insp.vehiculo_placa %> | Conductor: <%= insp.conductor.nombre %></span>
+        </div>
+        <div class="ticket-badge">#<%= String(insp.id).padStart(4, '0') %></div>
     </div>
 
-    <form action="/admin/inspeccion/editar/<%= insp.id %>" method="POST">
-        
-        <div class="section-title"><i class="fas fa-car"></i> Información y Documentos</div>
-        <div class="row">
-            <div class="col-md-4 form-group">
-                <label>Placa:</label>
-                <input type="text" class="form-control" value="<%= insp.vehiculo_placa %>" readonly title="No editable desde aquí">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Conductor:</label>
-                <input type="text" class="form-control" value="<%= insp.conductor.nombre %>" readonly title="No editable desde aquí">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Empresa:</label>
-                <input type="text" class="form-control" name="empresa" value="<%= insp.datos_chequeo?.empresa || '' %>">
-            </div>
+    <!-- CUERPO DEL FORMULARO -->
+    <div class="form-card">
+        <form action="/admin/inspeccion/editar/<%= insp.id %>" method="POST">
             
-            <div class="col-md-4 form-group">
-                <label>Licencia (Número):</label>
-                <input type="text" class="form-control" name="licencia_conductor" value="<%= insp.datos_chequeo?.licencia_conductor || '' %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Cat. Licencia:</label>
-                <input type="text" class="form-control" name="categoria_licencia" value="<%= insp.datos_chequeo?.categoria_licencia || '' %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Vence Licencia:</label>
-                <input type="date" class="form-control" name="vigencia_licencia" value="<%= toInputDate(insp.datos_chequeo?.vigencia_licencia) %>">
-            </div>
-
-            <div class="col-md-4 form-group">
-                <label>Licencia de Tránsito:</label>
-                <input type="text" class="form-control" name="doc_licencia_transito" value="<%= insp.datos_chequeo?.doc_licencia_transito || '' %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Vencimiento SOAT:</label>
-                <input type="date" class="form-control" name="fecha_vencimiento_soat" value="<%= toInputDate(insp.datos_chequeo?.fecha_vencimiento_soat) %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Póliza RCC/RCE:</label>
-                <input type="date" class="form-control" name="doc_poliza_rcc" value="<%= toInputDate(insp.datos_chequeo?.doc_poliza_rcc) %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Póliza Todo Riesgo:</label>
-                <input type="date" class="form-control" name="doc_poliza_todo_riesgo" value="<%= toInputDate(insp.datos_chequeo?.doc_poliza_todo_riesgo) %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Tarjeta Operación:</label>
-                <input type="date" class="form-control" name="doc_tarjeta_operacion" value="<%= toInputDate(insp.datos_chequeo?.doc_tarjeta_operacion) %>">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Tecno-mecánica:</label>
-                <input type="date" class="form-control" name="fecha_revision" value="<%= toInputDate(insp.datos_chequeo?.fecha_revision) %>">
-            </div>
+            <!-- SECCIÓN 1: DOCUMENTOS -->
+            <div class="section-title"><i class="fas fa-file-signature me-2"></i> Documentos y Fechas de Vencimiento</div>
             
-            <div class="col-md-4 form-group">
-                <label>Km Salida (Inicio Jornada):</label>
-                <input type="number" class="form-control" name="kilometraje_salida" value="<%= insp.kilometraje_salida %>" step="0.1">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Km Llegada (Fin Jornada):</label>
-                <input type="number" class="form-control" name="kilometraje_final" value="<%= insp.datos_chequeo?.kilometraje_final || '' %>" step="0.1">
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Estado Actual:</label>
-                <!-- El estado se calcula automáticamente en base a los defectos, por eso es readonly -->
-                <input type="text" class="form-control bg-light" value="<%= insp.estado %>" readonly>
-            </div>
-        </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Empresa / Propietario</label>
+                    <input type="text" class="form-control" name="empresa" value="<%= insp.datos_chequeo?.empresa || '' %>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Número de Licencia</label>
+                    <input type="text" class="form-control" name="licencia_conductor" value="<%= insp.datos_chequeo?.licencia_conductor || '' %>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Cat. Licencia</label>
+                    <input type="text" class="form-control" name="categoria_licencia" value="<%= insp.datos_chequeo?.categoria_licencia || '' %>">
+                </div>
 
-        <div class="section-title"><i class="fas fa-list-check"></i> Lista de Chequeo Detallada</div>
-        
-        <% 
-        const camposEdit = {
-            niveles: [
-                { id: 'nivel_refrigerante', label: 'Líquido refrigerante de radiador' }, { id: 'nivel_frenos', label: 'Líquido de frenos' }, { id: 'nivel_aceite', label: 'Aceite motor' }, { id: 'nivel_hidraulico', label: 'Líquido hidráulico' }, { id: 'nivel_agua', label: 'Agua limpiavidrios' }
-            ],
-            pedales: [
-                { id: 'pedal_acelerador', label: 'Acelerador (Uniformidad)' }, { id: 'pedal_clutch', label: 'Clutch/Embrague' }, { id: 'pedal_freno', label: 'Freno (Agarre)' }
-            ],
-            luces: [
-                { id: 'luz_principales', label: 'Luces (Altas, medias, bajas)' }, { id: 'luz_direccionales', label: 'Direccionales' }, { id: 'luz_estacionarias', label: 'Estacionarias' }, { id: 'luz_stops', label: 'Stops (Frenos)' }, { id: 'luz_testigos', label: 'Testigos del tablero' }, { id: 'luz_reversa', label: 'Luz de reversa' }, { id: 'luz_internas', label: 'Luces internas' }
-            ],
-            equipo: [
-                { id: 'equipo_extintor', label: 'Extintor (BC - ABC)' }, { id: 'equipo_fecha_extintor', label: 'Fecha de vencimiento del extintor' }, { id: 'equipo_llanta', label: 'Llanta de repuesto' }, { id: 'equipo_senales', label: 'Señales reflectivas' }, { id: 'equipo_herramientas', label: 'Caja de herramientas' }, { id: 'equipo_botiquin', label: 'Botiquín primeros auxilios' }, { id: 'equipo_carreteras', label: 'Kit de Carreteras' }, { id: 'equipo_ambiental', label: 'Kit Ambiental' }
-            ],
-            varios: [
-                { id: 'varios_llantas', label: 'Llantas (Labrado 2 mm y aire)' }, { id: 'varios_bateria', label: 'Batería (Borner, sin corrosión)' }, { id: 'varios_rines', label: 'Rines (sin golpes/fisuras)' }, { id: 'varios_cinturones', label: 'Cinturón de seguridad' }, { id: 'varios_pito_reversa', label: 'Pito reversa' }, { id: 'varios_pito', label: 'Pito' }, { id: 'varios_freno_emergencia', label: 'Freno de emergencia' }, { id: 'varios_espejos', label: 'Espejos laterales y cabina' }, { id: 'varios_carcasa', label: 'Estado carcasa luces' }, { id: 'varios_plumillas', label: 'Plumillas/limpiabrisas' }, { id: 'varios_tapizado', label: 'Tapizado' }, { id: 'varios_panoramico', label: 'Panorámico' }, { id: 'varios_radiotelefono', label: 'Radioteléfono' }, { id: 'varios_aire', label: 'Aire Acondicionado' }, { id: 'varios_vidrios_laterales', label: 'Vidrios Laterales' }, { id: 'varios_vidrio_trasero', label: 'Vidrio Trasero' }, { id: 'varios_tercer_stop', label: 'Tercer Stop' }
-            ]
-        };
-        const titlesEdit = { niveles: 'NIVELES', pedales: 'PEDALES', luces: 'LUCES', equipo: 'EQUIPO DE PREVENCIÓN', varios: 'VARIOS' };
-        
-        // Extraemos los ítems guardados en la BD
-        const items = insp.datos_chequeo?.chequeo_items || {};
-        %>
+                <div class="col-md-4">
+                    <label class="form-label text-danger">Vencimiento Licencia</label>
+                    <input type="date" class="form-control" name="vigencia_licencia" value="<%= toInputDate(insp.datos_chequeo?.vigencia_licencia) %>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Licencia de Tránsito</label>
+                    <input type="text" class="form-control" name="doc_licencia_transito" value="<%= insp.datos_chequeo?.doc_licencia_transito || '' %>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-danger">Vencimiento SOAT</label>
+                    <input type="date" class="form-control" name="fecha_vencimiento_soat" value="<%= toInputDate(insp.datos_chequeo?.fecha_vencimiento_soat) %>">
+                </div>
 
-        <% for(let cat in camposEdit) { %>
-            <h4 class="mt-4 mb-3 text-secondary"><%= titlesEdit[cat] %></h4>
-            <% camposEdit[cat].forEach(item => { %>
-                <div class="chequeo-item">
-                    <label><%= item.label %></label>
-                    <div class="radio-group-responsive">
-                        <div class="radio-option-responsive">
-                            <input type="radio" id="<%= item.id %>_B" name="<%= item.id %>" value="BUENO" <%= items[item.id] === 'BUENO' ? 'checked' : '' %>>
-                            <label for="<%= item.id %>_B" class="bueno">✅ Bueno</label>
-                        </div>
-                        <div class="radio-option-responsive">
-                            <input type="radio" id="<%= item.id %>_M" name="<%= item.id %>" value="MALO" <%= items[item.id] === 'MALO' ? 'checked' : '' %>>
-                            <label for="<%= item.id %>_M" class="malo">❌ Malo</label>
-                        </div>
-                        <div class="radio-option-responsive">
-                            <input type="radio" id="<%= item.id %>_NA" name="<%= item.id %>" value="NA" <%= (!items[item.id] || items[item.id] === 'NA') ? 'checked' : '' %>>
-                            <label for="<%= item.id %>_NA" class="na">⏺️ N/A</label>
+                <div class="col-md-4">
+                    <label class="form-label text-danger">Tecno-mecánica</label>
+                    <input type="date" class="form-control" name="fecha_revision" value="<%= toInputDate(insp.datos_chequeo?.fecha_revision) %>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-danger">Póliza RCC/RCE</label>
+                    <input type="date" class="form-control" name="doc_poliza_rcc" value="<%= toInputDate(insp.datos_chequeo?.doc_poliza_rcc) %>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-danger">Póliza Todo Riesgo</label>
+                    <input type="date" class="form-control" name="doc_poliza_todo_riesgo" value="<%= toInputDate(insp.datos_chequeo?.doc_poliza_todo_riesgo) %>">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-danger">Tarjeta Operación</label>
+                    <input type="date" class="form-control" name="doc_tarjeta_operacion" value="<%= toInputDate(insp.datos_chequeo?.doc_tarjeta_operacion) %>">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">Km Inicio Jornada</label>
+                    <input type="number" class="form-control fw-bold text-primary" name="kilometraje_salida" value="<%= insp.kilometraje_salida %>" step="0.1">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Km Fin Jornada</label>
+                    <input type="number" class="form-control fw-bold text-secondary" name="kilometraje_final" value="<%= insp.datos_chequeo?.kilometraje_final || '' %>" step="0.1">
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: LISTA DE CHEQUEO -->
+            <div class="section-title"><i class="fas fa-list-check me-2"></i> Lista de Chequeo Detallada</div>
+            
+            <% 
+            const camposEdit = {
+                niveles: [
+                    { id: 'nivel_refrigerante', label: 'Líquido refrigerante de radiador' }, { id: 'nivel_frenos', label: 'Líquido de frenos' }, { id: 'nivel_aceite', label: 'Aceite motor' }, { id: 'nivel_hidraulico', label: 'Líquido hidráulico' }, { id: 'nivel_agua', label: 'Agua limpiavidrios' }
+                ],
+                pedales: [
+                    { id: 'pedal_acelerador', label: 'Acelerador (Uniformidad)' }, { id: 'pedal_clutch', label: 'Clutch/Embrague' }, { id: 'pedal_freno', label: 'Freno (Agarre)' }
+                ],
+                luces: [
+                    { id: 'luz_principales', label: 'Luces (Altas, medias, bajas)' }, { id: 'luz_direccionales', label: 'Direccionales' }, { id: 'luz_estacionarias', label: 'Estacionarias' }, { id: 'luz_stops', label: 'Stops (Frenos)' }, { id: 'luz_testigos', label: 'Testigos del tablero' }, { id: 'luz_reversa', label: 'Luz de reversa' }, { id: 'luz_internas', label: 'Luces internas' }
+                ],
+                equipo: [
+                    { id: 'equipo_extintor', label: 'Extintor (BC - ABC)' }, { id: 'equipo_fecha_extintor', label: 'Fecha de vencimiento del extintor' }, { id: 'equipo_llanta', label: 'Llanta de repuesto' }, { id: 'equipo_senales', label: 'Señales reflectivas' }, { id: 'equipo_herramientas', label: 'Caja de herramientas' }, { id: 'equipo_botiquin', label: 'Botiquín primeros auxilios' }, { id: 'equipo_carreteras', label: 'Kit de Carreteras' }, { id: 'equipo_ambiental', label: 'Kit Ambiental' }
+                ],
+                varios: [
+                    { id: 'varios_llantas', label: 'Llantas (Labrado 2 mm y aire)' }, { id: 'varios_bateria', label: 'Batería (Borner, sin corrosión)' }, { id: 'varios_rines', label: 'Rines (sin golpes/fisuras)' }, { id: 'varios_cinturones', label: 'Cinturón de seguridad' }, { id: 'varios_pito_reversa', label: 'Pito reversa' }, { id: 'varios_pito', label: 'Pito' }, { id: 'varios_freno_emergencia', label: 'Freno de emergencia' }, { id: 'varios_espejos', label: 'Espejos laterales y cabina' }, { id: 'varios_carcasa', label: 'Estado carcasa luces' }, { id: 'varios_plumillas', label: 'Plumillas/limpiabrisas' }, { id: 'varios_tapizado', label: 'Tapizado' }, { id: 'varios_panoramico', label: 'Panorámico' }, { id: 'varios_radiotelefono', label: 'Radioteléfono' }, { id: 'varios_aire', label: 'Aire Acondicionado' }, { id: 'varios_vidrios_laterales', label: 'Vidrios Laterales' }, { id: 'varios_vidrio_trasero', label: 'Vidrio Trasero' }, { id: 'varios_tercer_stop', label: 'Tercer Stop' }
+                ]
+            };
+            const titlesEdit = { niveles: 'Niveles', pedales: 'Pedales', luces: 'Luces', equipo: 'Equipo de Prevención', varios: 'Varios' };
+            const items = insp.datos_chequeo?.chequeo_items || {};
+            %>
+
+            <div class="row">
+            <% for(let cat in camposEdit) { %>
+                <div class="col-12 mt-3 mb-2">
+                    <h6 class="fw-bold" style="color: #64748b;"><%= titlesEdit[cat] %></h6>
+                </div>
+                <% camposEdit[cat].forEach(item => { %>
+                    <div class="col-md-6">
+                        <div class="chequeo-item">
+                            <span class="chequeo-label"><%= item.label %></span>
+                            <div class="radio-group-responsive">
+                                <div class="radio-option-responsive">
+                                    <input type="radio" id="<%= item.id %>_B" name="<%= item.id %>" value="BUENO" <%= items[item.id] === 'BUENO' ? 'checked' : '' %>>
+                                    <label for="<%= item.id %>_B" class="bueno"><i class="fas fa-check-circle mb-1"></i><br>Bueno</label>
+                                </div>
+                                <div class="radio-option-responsive">
+                                    <input type="radio" id="<%= item.id %>_M" name="<%= item.id %>" value="MALO" <%= items[item.id] === 'MALO' ? 'checked' : '' %>>
+                                    <label for="<%= item.id %>_M" class="malo"><i class="fas fa-times-circle mb-1"></i><br>Malo</label>
+                                </div>
+                                <div class="radio-option-responsive">
+                                    <input type="radio" id="<%= item.id %>_NA" name="<%= item.id %>" value="NA" <%= (!items[item.id] || items[item.id] === 'NA') ? 'checked' : '' %>>
+                                    <label for="<%= item.id %>_NA" class="na"><i class="fas fa-minus-circle mb-1"></i><br>N/A</label>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control form-control-sm mt-2" name="obs_<%= item.id %>" placeholder="Observaciones de este ítem..." value="<%= items['obs_' + item.id] || '' %>">
                         </div>
                     </div>
-                    <!-- Cargamos las observaciones de cada ítem (si existen) -->
-                    <textarea class="form-control mt-2" name="obs_<%= item.id %>" placeholder="Observaciones..." rows="1"><%= items['obs_' + item.id] || '' %></textarea>
+                <% }) %>
+            <% } %>
+            </div>
+
+            <!-- SECCIÓN 3: DAÑOS Y DEFECTOS -->
+            <div class="section-title mt-5"><i class="fas fa-comment-dots me-2"></i> Reporte de Daños y Observaciones</div>
+            
+            <div class="mb-3">
+                <label class="form-label">Descripción de daños de carrocería (Si aplica):</label>
+                <textarea class="form-control" name="descripcion_defecto" rows="2"><%= insp.datos_chequeo?.descripcion_defecto || '' %></textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Observaciones generales de la inspección:</label>
+                <textarea class="form-control" name="observaciones_generales" rows="3"><%= insp.datos_chequeo?.observaciones_generales || '' %></textarea>
+            </div>
+
+            <!-- SECCIÓN 4: FIRMA -->
+            <div class="section-title mt-5"><i class="fas fa-pen-nib me-2"></i> Aprobación y Cierre Administrativo</div>
+            
+            <div class="mb-4">
+                <p class="text-muted small">Por favor, firme en el recuadro inferior para dar validez y aprobación a esta inspección preoperacional.</p>
+                
+                <div class="signature-wrapper" style="width: 100%; max-width: 450px;">
+                    <canvas id="firmaAdminPad" height="150" style="touch-action: none; width: 100%; cursor: crosshair; display: block;"></canvas>
                 </div>
-            <% }) %>
-        <% } %>
-
-        <div class="section-title"><i class="fas fa-comment-dots"></i> Observaciones Generales y Defectos</div>
-        
-        <div class="form-group mt-3">
-            <label>Descripción de daños de carrocería (Si aplica):</label>
-            <textarea class="form-control" name="descripcion_defecto" rows="2"><%= insp.datos_chequeo?.descripcion_defecto || '' %></textarea>
-        </div>
-        
-        <div class="form-group mt-3">
-            <label>Observaciones generales de la inspección:</label>
-            <textarea class="form-control" name="observaciones_generales" rows="4"><%= insp.datos_chequeo?.observaciones_generales || '' %></textarea>
-        </div>
-
-        <!-- ============================================== -->
-        <!-- NUEVA ZONA DE FIRMA DEL ADMINISTRADOR -->
-        <!-- ============================================== -->
-        <hr class="my-4">
-        <div class="mb-4">
-            <label class="form-label fw-bold text-primary" style="font-size: 1.2rem;">Firma del Coordinador / Supervisor</label>
-            <p class="text-muted small">Al dibujar su firma, usted aprueba la revisión de esta inspección.</p>
-            
-            <div style="border: 2px dashed #bdc3c7; background: #fff; width: 100%; max-width: 400px; border-radius: 8px; overflow: hidden;">
-                <!-- Si ya había firmado antes, se muestra el recuadro, pero puede firmar de nuevo para reemplazarla -->
-                <canvas id="firmaAdminPad" width="400" height="150" style="touch-action: none; width: 100%; cursor: crosshair;"></canvas>
+                
+                <button type="button" class="btn btn-sm btn-outline-danger mt-3" id="limpiarFirmaAdmin">
+                    <i class="fas fa-eraser me-1"></i> Limpiar Pizarra
+                </button>
+                <input type="hidden" name="firma_coordinador_base64" id="firma_coordinador_base64">
             </div>
-            
-            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="limpiarFirmaAdmin">
-                <i class="fas fa-eraser"></i> Limpiar Firma
-            </button>
-            <input type="hidden" name="firma_coordinador_base64" id="firma_coordinador_base64">
-        </div>
 
-        <div class="row mt-4">
-            <div class="col-md-6 mb-2">
-                <a href="/admin" class="btn btn-outline-secondary w-100 p-3 fw-bold">Cancelar y Volver</a>
+            <!-- BOTONES DE GUARDADO -->
+            <hr class="my-4" style="border-color: var(--border-color);">
+            <div class="row g-2">
+                <div class="col-md-6 order-2 order-md-1">
+                    <a href="/admin" class="btn btn-outline-cancel w-100 py-3 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-arrow-left me-2"></i> Cancelar y Volver
+                    </a>
+                </div>
+                <div class="col-md-6 order-1 order-md-2">
+                    <button type="submit" class="btn btn-omega w-100 py-3 d-flex align-items-center justify-content-center" style="font-size: 1.1rem;">
+                        <i class="fas fa-save me-2"></i> Actualizar y Firmar PDF
+                    </button>
+                </div>
             </div>
-            <div class="col-md-6 mb-2">
-                <button type="submit" class="btn-submit m-0">💾 Guardar Cambios y Firmar</button>
-            </div>
-        </div>
 
-    </form>
+        </form>
+    </div>
 </div>
 
 <!-- ============================================== -->
@@ -222,14 +332,14 @@
         var canvas = document.getElementById('firmaAdminPad');
         if(canvas) {
             var signaturePad = new SignaturePad(canvas, { 
-                backgroundColor: 'rgb(255, 255, 255)',
-                penColor: 'rgb(0, 0, 0)'
+                backgroundColor: 'rgb(248, 250, 252)', // Igual al fondo del recuadro
+                penColor: 'rgb(15, 23, 42)' // Tinta azul corporativa
             });
             
-            // Ajustar el tamaño del lienzo para celulares y pantallas de alta densidad
+            // Ajustar el tamaño del lienzo de forma responsiva
             function resizeCanvas() {
                 var ratio =  Math.max(window.devicePixelRatio || 1, 1);
-                var prevData = signaturePad.toData(); // Guardar el dibujo si cambia de tamaño
+                var prevData = signaturePad.toData(); 
                 
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
@@ -240,17 +350,16 @@
             window.addEventListener("resize", resizeCanvas);
             resizeCanvas();
 
-            // Botón para limpiar
+            // Botón limpiar
             document.getElementById('limpiarFirmaAdmin').addEventListener('click', function () {
                 signaturePad.clear();
             });
 
-            // Capturar el garabato al momento de enviar el formulario
+            // Capturar la firma en base64 antes de guardar
             var form = canvas.closest('form');
             form.addEventListener('submit', function(e) {
                 if (!signaturePad.isEmpty()) {
-                    // Guardamos la imagen en el campo oculto
-                    document.getElementById('firma_coordinador_base64').value = signaturePad.toDataURL();
+                    document.getElementById('firma_coordinador_base64').value = signaturePad.toDataURL('image/png');
                 }
             });
         }

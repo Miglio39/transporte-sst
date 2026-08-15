@@ -1,251 +1,573 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | OmegaGroup SAS</title>
+    <title>Panel Administrativo | OmegaGroup SAS</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
     <!-- Bootstrap 5 y FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { 
-            background-color: #f4f6f9; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-bottom: 30px;
+        /* =========================================================
+           DISEÑO EMPRESARIAL - OMEGAGROUP SAS
+           ========================================================= */
+        :root {
+            --surface-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --omega-dark: #0f172a;
+            --omega-red: #e50914;
         }
 
-        /* Navbar personalizada CORPORATIVA */
+        body { 
+            background-color: var(--surface-bg); 
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding-bottom: 40px;
+        }
+
+        /* NAVBAR CORPORATIVO Y BOTONES DE CABECERA */
         .navbar-custom {
-            background-color: #1a252f; /* Un azul marino más oscuro y elegante */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-            border-bottom: 3px solid #f39c12; /* Línea de acento naranja/dorada corporativa */
+            background-color: var(--omega-dark);
+            border-bottom: 3px solid var(--omega-red);
+            padding: 0.8rem 1.5rem;
         }
         
-        .navbar-brand img {
-            border-radius: 4px;
-            background-color: white; /* Fondo blanco por si el logo tiene letras oscuras */
-            padding: 2px;
-            object-fit: contain;
-        }
+        .navbar-brand img { border-radius: 4px; background-color: white; padding: 3px; object-fit: contain; }
 
-        .card-header-custom { 
-            background: linear-gradient(135deg, #2c3e50, #34495e); 
-            color: white; 
-            border-radius: 8px 8px 0 0 !important;
+        .nav-btn {
+            font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; padding: 0.5rem 1rem;
+            border-radius: 6px; color: #f8fafc; background: rgba(255, 255, 255, 0.08); 
+            border: 1px solid transparent; transition: all 0.2s ease;
         }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        .nav-btn-danger { color: #fca5a5; background: rgba(239, 68, 68, 0.15); }
+        .nav-btn-danger:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
+        .navbar-toggler { border: 1px solid rgba(255,255,255,0.2) !important; padding: 0.5rem 0.75rem; }
+        .navbar-toggler i { color: #ffffff; font-size: 1.5rem; }
 
-        /* Estilo general de la tabla */
-        .table > :not(caption) > * > * {
-            padding: 1rem 0.75rem;
+        /* TARJETAS DE INDICADORES (KPIs) Y GRÁFICOS */
+        .kpi-card, .chart-card {
+            background: #ffffff;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
         }
+        .kpi-card:hover, .chart-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        
+        .kpi-blue { border-left: 4px solid #3b82f6; }
+        .kpi-red { border-left: 4px solid #ef4444; }
+        .kpi-orange { border-left: 4px solid #f97316; }
 
-        /* =========================================================
-           LA MAGIA RESPONSIVE: TABLA A TARJETAS EN MÓVILES
-           ========================================================= */
+        .kpi-title { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-value { color: var(--omega-dark); font-size: 1.8rem; font-weight: 800; line-height: 1.2; }
+        .kpi-icon-wrapper { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .icon-blue { background: #eff6ff; color: #3b82f6; }
+        .icon-red { background: #fef2f2; color: #ef4444; }
+        .icon-orange { background: #fff7ed; color: #f97316; }
+
+        /* TÍTULOS DE GRÁFICOS */
+        .chart-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--omega-dark);
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .chart-body { padding: 1rem; position: relative; height: 260px; width: 100%; }
+
+        /* TABLA DE DATOS */
+        .data-card { background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; }
+        .data-card-header { background: #ffffff; border-bottom: 1px solid var(--border-color); padding: 1rem 1.25rem; color: var(--omega-dark); }
+        .table > :not(caption) > * > * { padding: 0.85rem 1rem; border-bottom-color: #f1f5f9; vertical-align: middle; }
+        .table thead th { background-color: #f8fafc; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; border-bottom: 1px solid var(--border-color); }
+        .table tbody td { font-size: 0.85rem; color: var(--text-main); }
+        .table-hover tbody tr:hover { background-color: #f8fafc; }
+
+        /* SOBRESCRIBIR BADGES */
+        .badge { border-radius: 4px; padding: 0.4em 0.6em; font-weight: 600; letter-spacing: 0.02em; }
+        .bg-success { background: #dcfce7 !important; color: #166534 !important; border: 1px solid #bbf7d0; }
+        .bg-danger { background: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fecaca; }
+        .bg-warning { background: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fef08a; }
+        .bg-dark { background: #f1f5f9 !important; color: var(--text-main) !important; border: 1px solid var(--border-color); }
+        .bg-info { background: #e0f2fe !important; color: #075985 !important; border: 1px solid #bae6fd; }
+
+        /* BOTONES DE ACCIÓN (Ghost) */
+        .btn-action { border-radius: 4px; font-size: 0.8rem; font-weight: 500; padding: 0.35rem 0.6rem; background: #ffffff; border: 1px solid var(--border-color); color: var(--text-muted); transition: all 0.2s; }
+        .btn-action:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-action.pdf:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+        .btn-action.view:hover { background: #e0f2fe; border-color: #7dd3fc; color: #0284c7; }
+        .btn-action.edit:hover { background: #f3e8ff; border-color: #d8b4fe; color: #9333ea; }
+        .btn-action.close-btn:hover { background: #fffbeb; border-color: #fcd34d; color: #d97706; }
+        .btn-action.delete:hover { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+
+        /* MODO MÓVIL (TARJETAS) */
         @media (max-width: 767px) {
-            .mobile-cards thead { 
-                display: none; 
-            }
-            .mobile-cards tbody, .mobile-cards tr, .mobile-cards td {
-                display: block;
-                width: 100%;
-            }
-            .mobile-cards tr {
-                margin-bottom: 1rem;
-                background-color: #ffffff;
-                border-radius: 10px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-                border: 1px solid #e9ecef;
-                padding: 10px;
-            }
-            .mobile-cards td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                text-align: right;
-                border-bottom: 1px solid #f1f3f5;
-                padding: 10px 5px;
-            }
-            .mobile-cards td:last-child {
-                border-bottom: none;
-                flex-direction: column;
-                align-items: stretch;
-                padding-top: 15px;
-            }
-            /* Insertar los títulos como etiquetas visuales */
-            .mobile-cards td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: #6c757d;
-                text-align: left;
-                text-transform: uppercase;
-                font-size: 0.8rem;
-                flex-basis: 45%;
-            }
-            
-            /* Optimización de botones para los pulgares en móvil */
-            .action-buttons {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                width: 100%;
-            }
-            .action-buttons .btn {
-                width: 100%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 5px;
-            }
+            .mobile-cards thead { display: none; }
+            .mobile-cards tbody, .mobile-cards tr, .mobile-cards td { display: block; width: 100%; }
+            .mobile-cards tr { margin-bottom: 1rem; background-color: #ffffff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border-color); padding: 0.5rem; }
+            .mobile-cards td { display: flex; justify-content: space-between; align-items: center; text-align: right; border-bottom: 1px solid #f1f5f9; padding: 0.75rem 0.5rem; }
+            .mobile-cards td:last-child { border-bottom: none; flex-direction: column; align-items: stretch; padding-top: 1rem; }
+            .mobile-cards td::before { content: attr(data-label); font-weight: 600; color: var(--text-muted); text-align: left; text-transform: uppercase; font-size: 0.7rem; flex-basis: 40%; }
+            .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+            .action-buttons .btn { width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; }
             .action-buttons form { margin: 0; width: 100%; }
-            .btn-text-mobile { display: inline-block; } 
+            .btn-text-mobile { display: inline-block; font-weight: 600; } 
         }
-
         @media (min-width: 768px) {
             .btn-text-mobile { display: none; }
-            .action-buttons { display: flex; gap: 5px; justify-content: center; }
+            .action-buttons { display: flex; gap: 6px; justify-content: flex-end; }
+            .text-end-md { text-align: right; }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVEGACIÓN CORPORATIVA OMEGA GROUP SAS -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4 py-2">
+    <!-- NAVEGACIÓN EMPRESARIAL -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="/admin">
-                <!-- LOGOTIPO DE LA EMPRESA -->
-                <!-- El atributo 'onerror' oculta la imagen rota si aún no has subido el logo -->
-                <img src="/images/logo.png" alt="Logo OmegaGroup" height="40" class="me-2 shadow-sm" onerror="this.style.display='none'">
-                <span style="letter-spacing: 1px;">OMEGAGROUP SAS</span>
+                <img src="/images/logo.png" alt="Logo OmegaGroup" height="35" class="me-3 shadow-sm" onerror="this.style.display='none'">
+                <span style="letter-spacing: 1px; font-size: 1.1rem; color: #ffffff;">OMEGAGROUP <span style="color: #94a3b8; font-weight: 400;">| Operaciones</span></span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
+                <i class="fas fa-bars"></i>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarAdmin">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-2 mt-3 mt-lg-0">
-                    <li class="nav-item">
-                        <a href="/admin/conductores" class="btn btn-outline-light w-100 text-start text-lg-center"><i class="fas fa-users"></i> Conductores</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/admin/conductores/nuevo" class="btn btn-success w-100 text-start text-lg-center"><i class="fas fa-user-plus"></i> Crear Conductor</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/inspeccion" class="btn btn-primary w-100 text-start text-lg-center"><i class="fas fa-plus"></i> Hacer Inspección</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/logout" class="btn btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off"></i> Salir</a>
-                    </li>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
+                    <li class="nav-item"><a href="/admin/conductores" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-users me-1"></i> Conductores</a></li>
+                    <li class="nav-item"><a href="/admin/conductores/nuevo" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-user-plus me-1"></i> Nuevo Conductor</a></li>
+                    <li class="nav-item"><a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;"><i class="fas fa-plus me-1"></i> Inspección</a></li>
+                    <li class="nav-item"><a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off me-1"></i> Salir</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header card-header-custom d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i> Historial de Inspecciones Vehiculares</h5>
+    <!-- ==============================================================
+         LÓGICA EJS: MOTOR ANALÍTICO DE DATOS Y GRÁFICOS
+         ============================================================== -->
+    <% 
+        const vehiculosMap = new Map();
+        if (inspecciones && inspecciones.length > 0) {
+            inspecciones.forEach(insp => {
+                if (!vehiculosMap.has(insp.vehiculo_placa)) {
+                    vehiculosMap.set(insp.vehiculo_placa, insp);
+                } else {
+                    const existente = vehiculosMap.get(insp.vehiculo_placa);
+                    if (new Date(insp.fecha_apertura) > new Date(existente.fecha_apertura)) {
+                        vehiculosMap.set(insp.vehiculo_placa, insp);
+                    }
+                }
+            });
+        }
+        const flotaActiva = Array.from(vehiculosMap.values());
+
+        // 1. CÁLCULO DE KPIS DE DOCUMENTOS
+        let docsVencidos = [];
+        let docsPorVencer = [];
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+
+        // 2. CÁLCULO ESTADÍSTICO (ESTADOS Y FALLAS) PARA CHART.JS
+        let conteoEstados = {};
+        let conteoFallas = {};
+
+        flotaActiva.forEach(veh => {
+            // --> SOLUCIÓN APLICADA: Acceder al objeto JSON "datos_chequeo" para leer las fechas <--
+            const datos = veh.datos_chequeo || {};
+            
+            // A. Verificación de Vencimientos
+            const documentos = [
+                { nombre: 'SOAT', fecha: datos.fecha_vencimiento_soat },
+                { nombre: 'Tecnomecánica', fecha: datos.fecha_revision },
+                { nombre: 'Póliza RCC', fecha: datos.doc_poliza_rcc },
+                { nombre: 'Todo Riesgo', fecha: datos.doc_poliza_todo_riesgo },
+                { nombre: 'Tarj. Operación', fecha: datos.doc_tarjeta_operacion }
+            ];
+
+            documentos.forEach(doc => {
+                if (doc.fecha) {
+                    const partes = doc.fecha.split('-');
+                    if(partes.length === 3) {
+                        const fechaDoc = new Date(partes[0], partes[1] - 1, partes[2]);
+                        const diferencia = fechaDoc - hoy;
+                        const diasRestantes = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
+                        if (diasRestantes < 0) { docsVencidos.push({ placa: veh.vehiculo_placa, doc: doc.nombre, dias: Math.abs(diasRestantes) }); } 
+                        else if (diasRestantes <= 30) { docsPorVencer.push({ placa: veh.vehiculo_placa, doc: doc.nombre, dias: diasRestantes }); }
+                    }
+                }
+            });
+
+            // B. Agrupación de Estados (Para Gráfico Circular)
+            let estadoVehiculo = veh.estado || 'No Definido';
+            conteoEstados[estadoVehiculo] = (conteoEstados[estadoVehiculo] || 0) + 1;
+
+            // C. Conteo de Piezas en Mal Estado (Para Gráfico de Barras)
+            let items = veh.datos_chequeo?.chequeo_items || {};
+            for(let key in items) {
+                if(!key.startsWith('obs_') && items[key] === 'MALO') {
+                    let nombreLimpio = key.replace(/^[a-z]+_/, '').replace(/_/g, ' ').toUpperCase();
+                    conteoFallas[nombreLimpio] = (conteoFallas[nombreLimpio] || 0) + 1;
+                }
+            }
+        });
+
+        let topFallasArray = Object.entries(conteoFallas).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        
+        let labelsEstados = Object.keys(conteoEstados);
+        let dataEstados = Object.values(conteoEstados);
+        
+        let labelsFallas = topFallasArray.map(f => f[0]);
+        let dataFallas = topFallasArray.map(f => f[1]);
+
+        if(labelsFallas.length === 0) {
+            labelsFallas = ['Flota al 100% Sin Fallas'];
+            dataFallas = [0];
+        }
+    %>
+
+    <div class="container-fluid px-lg-4 mb-4">
+        
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-chart-line me-2 text-muted"></i> Tablero Estratégico</h5>
+        </div>
+
+        <!-- 1. FILA DE KPIS (3 Tarjetas) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card kpi-card kpi-blue h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Flota Monitoreada</div>
+                            <div class="kpi-value"><%= flotaActiva.length %></div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Últimos reportes únicos</div>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-blue"><i class="fas fa-truck-moving"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card kpi-card kpi-red h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Docs. Vencidos</div>
+                            <div class="kpi-value"><%= docsVencidos.length %></div>
+                            <% if(docsVencidos.length > 0) { %>
+                                <a href="#" class="text-danger fw-bold" style="font-size: 0.75rem; text-decoration: none;" data-bs-toggle="modal" data-bs-target="#modalVencidos">Revisar Casos <i class="fas fa-arrow-right"></i></a>
+                            <% } else { %>
+                                <div class="text-muted" style="font-size: 0.75rem;">Operación legal al día</div>
+                            <% } %>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-red"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card kpi-card kpi-orange h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Por Vencer (30d)</div>
+                            <div class="kpi-value"><%= docsPorVencer.length %></div>
+                            <% if(docsPorVencer.length > 0) { %>
+                                <a href="#" class="text-warning text-darken fw-bold" style="font-size: 0.75rem; text-decoration: none; color: #b45309;" data-bs-toggle="modal" data-bs-target="#modalPorVencer">Gestionar Alertas <i class="fas fa-arrow-right"></i></a>
+                            <% } else { %>
+                                <div class="text-muted" style="font-size: 0.75rem;">Sin alertas próximas</div>
+                            <% } %>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-orange"><i class="fas fa-calendar-alt"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FILA DE GRÁFICOS (CHART.JS) -->
+        <div class="row g-3 mb-4">
+            <!-- Gráfico de Dona -->
+            <div class="col-md-5">
+                <div class="chart-card h-100">
+                    <div class="chart-header"><i class="fas fa-adjust me-2 text-muted"></i> Estado de la Flota</div>
+                    <div class="chart-body d-flex justify-content-center align-items-center">
+                        <canvas id="donutChart"></canvas>
+                    </div>
+                </div>
             </div>
             
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped align-middle mb-0 mobile-cards">
-                        <thead class="table-light">
+            <!-- Gráfico de Barras -->
+            <div class="col-md-7">
+                <div class="chart-card h-100">
+                    <div class="chart-header"><i class="fas fa-wrench me-2 text-muted"></i> Top 5: Fallas Comunes Recientes</div>
+                    <div class="chart-body">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- =========================================================
+             NUEVA SECCIÓN: GENERADOR DE REPORTE MAESTRO
+             ========================================================= -->
+        <div class="data-card mb-4" style="background: #fffbeb; border-color: #fde68a;">
+            <div class="data-card-header bg-transparent d-flex align-items-center">
+                <h6 class="mb-0 fw-bold" style="color: #92400e;"><i class="fas fa-file-export me-2"></i> Exportar Reporte Consolidado (Auditoría)</h6>
+            </div>
+            <div class="card-body p-3">
+                <form action="/admin/inspeccion/reporte-maestro" method="GET" target="_blank" class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: bold;">Fecha Inicio</label>
+                        <input type="date" name="fechaInicio" class="form-control form-control-sm border-warning" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: bold;">Fecha Fin</label>
+                        <input type="date" name="fechaFin" class="form-control form-control-sm border-warning" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: bold;">Filtro por Placa</label>
+                        <select name="placa" class="form-select form-select-sm border-warning">
+                            <option value="TODAS">Todas las Placas de la Flota</option>
+                            <% flotaActiva.forEach(veh => { %>
+                                <option value="<%= veh.vehiculo_placa %>"><%= veh.vehiculo_placa %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-sm btn-danger w-100 fw-bold shadow-sm py-2">
+                            <i class="fas fa-file-pdf me-1"></i> Generar Reporte Maestro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. TABLA EMPRESARIAL HISTÓRICA -->
+        <div class="data-card">
+            <div class="data-card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Registro General de Inspecciones</h6>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 mobile-cards">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Ticket</th>
+                            <th>Fecha</th>
+                            <th>Vehículo</th>
+                            <th>Conductor</th>
+                            <th>Km Ent / Sal</th>
+                            <th>Estado</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (inspecciones.length === 0) { %>
                             <tr>
-                                <th>ID</th>
-                                <th>Fecha y Hora</th>
-                                <th>Placa</th>
-                                <th>Conductor</th>
-                                <th>Km Ent. / Sal.</th>
-                                <th>Estado</th>
-                                <th class="text-center">Acciones</th>
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-inbox fs-2 mb-2 opacity-50"></i>
+                                        <p class="mb-0 small">No hay registros de inspección disponibles.</p>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <% if (inspecciones.length === 0) { %>
+                        <% } else { %>
+                            <% inspecciones.forEach(function(insp) { %>
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
-                                        <i class="fas fa-folder-open fs-1 mb-3 opacity-50"></i><br>
-                                        No hay inspecciones registradas en el sistema.
+                                    <td data-label="Ticket:" class="ps-md-4">
+                                        <span class="text-muted fw-bold">#<%= String(insp.id).padStart(4, '0') %></span>
+                                    </td>
+                                    
+                                    <td data-label="Fecha:">
+                                        <div class="d-flex flex-column text-end text-md-start">
+                                            <span class="fw-semibold"><%= new Date(insp.fecha_apertura).toLocaleDateString('es-ES') %></span>
+                                            <span class="text-muted" style="font-size: 0.75rem;"><%= new Date(insp.fecha_apertura).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) %></span>
+                                        </div>
+                                    </td>
+                                    
+                                    <td data-label="Vehículo:">
+                                        <span class="badge bg-dark px-2"><i class="fas fa-car-side me-1 opacity-50"></i> <%= insp.vehiculo_placa %></span>
+                                    </td>
+                                    
+                                    <td data-label="Conductor:">
+                                        <div class="d-flex align-items-center justify-content-end justify-content-md-start">
+                                            <span class="fw-medium text-dark"><%= insp.conductor.nombre %></span>
+                                        </div>
+                                    </td>
+                                    
+                                    <td data-label="Kilometraje:">
+                                        <span class="fw-bold" style="color: #475569;"><%= insp.kilometraje_salida %></span> 
+                                        <span class="text-muted mx-1">→</span> 
+                                        <span class="fw-bold" style="color: #94a3b8;"><%= insp.kilometraje_final || '-' %></span>
+                                    </td>
+                                    
+                                    <td data-label="Estado:">
+                                        <span class="badge <%= insp.badgeClass %> shadow-sm">
+                                            <%= insp.estadoBadge %>
+                                        </span>
+                                    </td>
+                                    
+                                    <td data-label="Acciones:" class="text-end-md pe-md-4">
+                                        <div class="action-buttons">
+                                            <a href="/admin/inspeccion/pdf/<%= insp.id %>" class="btn btn-action pdf" title="Descargar PDF" target="_blank">
+                                                <i class="fas fa-file-pdf"></i> <span class="btn-text-mobile">PDF</span>
+                                            </a>
+                                            <a href="/admin/inspeccion/detalle/<%= insp.id %>" class="btn btn-action view" title="Ver Detalles">
+                                                <i class="fas fa-eye"></i> <span class="btn-text-mobile">Detalle</span>
+                                            </a>
+                                            <a href="/admin/inspeccion/editar/<%= insp.id %>" class="btn btn-action edit" title="Editar / Firmar">
+                                                <i class="fas fa-pen"></i> <span class="btn-text-mobile">Editar</span>
+                                            </a>
+                                            <% if (insp.estado === 'En curso') { %>
+                                                <a href="/inspeccion/cierre/<%= insp.id %>" class="btn btn-action close-btn" title="Cerrar Jornada">
+                                                    <i class="fas fa-flag-checkered"></i> <span class="btn-text-mobile">Cerrar</span>
+                                                </a>
+                                            <% } %>
+                                            <form action="/admin/inspeccion/eliminar/<%= insp.id %>" method="POST" onsubmit="return confirm('¿Confirma la eliminación de este registro?');" style="display:inline;">
+                                                <button type="submit" class="btn btn-action delete" title="Eliminar Registro">
+                                                    <i class="fas fa-trash-alt"></i> <span class="btn-text-mobile">Borrar</span>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
-                            <% } else { %>
-                                <% inspecciones.forEach(function(insp) { %>
-                                    <tr>
-                                        <td data-label="ID Ticket:"><strong>#<%= insp.id %></strong></td>
-                                        
-                                        <td data-label="Fecha de Apertura:">
-                                            <span class="fw-bold"><%= new Date(insp.fecha_apertura).toLocaleDateString('es-ES') %></span><br class="d-none d-md-block">
-                                            <small class="text-muted"><i class="far fa-clock"></i> <%= new Date(insp.fecha_apertura).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) %></small>
-                                        </td>
-                                        
-                                        <td data-label="Placa Vehículo:">
-                                            <span class="badge bg-dark fs-6 px-3 py-2"><%= insp.vehiculo_placa %></span>
-                                        </td>
-                                        
-                                        <td data-label="Conductor a cargo:">
-                                            <i class="fas fa-user-circle text-secondary me-1"></i> <%= insp.conductor.nombre %>
-                                        </td>
-                                        
-                                        <td data-label="Kilometraje (Ent/Sal):">
-                                            <span class="text-primary fw-bold"><%= insp.km_inicio %></span> 
-                                            <span class="text-muted mx-1">/</span> 
-                                            <span class="text-danger fw-bold"><%= insp.km_fin %></span>
-                                        </td>
-                                        
-                                        <td data-label="Estado Final:">
-                                            <span class="badge <%= insp.badgeClass %> px-2 py-2 fs-6 shadow-sm">
-                                                <%= insp.estadoBadge %>
-                                            </span>
-                                        </td>
-                                        
-                                        <td data-label="Acciones de la Inspección:">
-                                            <div class="action-buttons">
-                                                <a href="/admin/inspeccion/pdf/<%= insp.id %>" class="btn btn-sm btn-danger shadow-sm" title="Descargar PDF" target="_blank">
-                                                    <i class="fas fa-file-pdf"></i> <span class="btn-text-mobile">PDF</span>
-                                                </a>
-                                                
-                                                <a href="/admin/inspeccion/detalle/<%= insp.id %>" class="btn btn-sm btn-info text-white shadow-sm" title="Ver Resumen">
-                                                    <i class="fas fa-eye"></i> <span class="btn-text-mobile">Ver</span>
-                                                </a>
-                                                
-                                                <a href="/admin/inspeccion/editar/<%= insp.id %>" class="btn btn-sm btn-primary shadow-sm" title="Editar / Firmar">
-                                                    <i class="fas fa-edit"></i> <span class="btn-text-mobile">Editar</span>
-                                                </a>
-                                                
-                                                <% if (insp.estado === 'En curso') { %>
-                                                    <a href="/inspeccion/cierre/<%= insp.id %>" class="btn btn-sm btn-warning shadow-sm" title="Cerrar Jornada">
-                                                        <i class="fas fa-flag-checkered"></i> <span class="btn-text-mobile">Cerrar</span>
-                                                    </a>
-                                                <% } %>
-                                                
-                                                <form action="/admin/inspeccion/eliminar/<%= insp.id %>" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta inspección?');">
-                                                    <button type="submit" class="btn btn-sm btn-dark shadow-sm" title="Eliminar">
-                                                        <i class="fas fa-trash"></i> <span class="btn-text-mobile">Borrar</span>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            <% } %>
-                        </tbody>
-                    </table>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid mt-2 mb-4">
+        <div class="text-center" style="font-size: 0.75rem; color: #94a3b8;">
+            <p>&copy; <%= new Date().getFullYear() %> OmegaGroup SAS. Plataforma Asegurada.</p>
+        </div>
+    </div>
+
+    <!-- MODALES DE ALERTAS -->
+    <div class="modal fade" id="modalVencidos" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="border: none; border-radius: 8px;">
+                <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
+                    <h6 class="modal-title text-danger fw-bold"><i class="fas fa-exclamation-triangle me-2"></i> Documentos Críticos (Vencidos)</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <% docsVencidos.forEach(item => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div><strong class="text-dark"><%= item.placa %></strong><br><span class="text-muted small"><%= item.doc %></span></div>
+                                <span class="badge bg-danger">Vencido hace <%= item.dias %> días</span>
+                            </li>
+                        <% }) %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalPorVencer" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="border: none; border-radius: 8px;">
+                <div class="modal-header" style="background: #fffbeb; border-bottom: 1px solid #fef3c7;">
+                    <h6 class="modal-title fw-bold" style="color: #b45309;"><i class="fas fa-calendar-alt me-2"></i> Próximos a Vencer (30 Días)</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <% docsPorVencer.forEach(item => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div><strong class="text-dark"><%= item.placa %></strong><br><span class="text-muted small"><%= item.doc %></span></div>
+                                <span class="badge bg-warning text-dark">En <%= item.dias %> días</span>
+                            </li>
+                        <% }) %>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PIE DE PÁGINA CORPORATIVO -->
-    <div class="container-fluid mt-4">
-        <div class="text-center text-muted small">
-            <p>&copy; <%= new Date().getFullYear() %> <strong>OmegaGroup SAS</strong>. Todos los derechos reservados.<br>
-            Plataforma de Control y Gestión de Transporte.</p>
-        </div>
-    </div>
-
-    <!-- Script necesario para que el menú de hamburguesa funcione en celulares -->
+    <!-- ==============================================================
+         LIBRERÍAS JS Y CONFIGURACIÓN DE GRÁFICOS (CHART.JS)
+         ============================================================== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const dataEstadosArray = <%- JSON.stringify(dataEstados) %>;
+        const labelsEstadosArray = <%- JSON.stringify(labelsEstados) %>;
+        
+        const dataFallasArray = <%- JSON.stringify(dataFallas) %>;
+        const labelsFallasArray = <%- JSON.stringify(labelsFallas) %>;
+
+        const backgroundColors = labelsEstadosArray.map(label => {
+            let str = label.toLowerCase();
+            if (str.includes('rechazado') || str.includes('crítico') || str.includes('defectos')) return '#e50914'; 
+            if (str.includes('curso') || str.includes('falla')) return '#f59e0b'; 
+            if (str.includes('completado') || str.includes('aprobado') || str.includes('finalizada')) return '#10b981'; 
+            return '#3b82f6'; 
+        });
+
+        // 1. DIBUJAR GRÁFICO DE DONA (ESTADO DE LA FLOTA)
+        const ctxDonut = document.getElementById('donutChart').getContext('2d');
+        new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: labelsEstadosArray,
+                datasets: [{
+                    data: dataEstadosArray,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8, font: { family: "'Segoe UI', sans-serif" } } }
+                }
+            }
+        });
+
+        // 2. DIBUJAR GRÁFICO DE BARRAS (TOP 5 FALLAS)
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: labelsFallasArray,
+                datasets: [{
+                    label: 'Cantidad de Reportes',
+                    data: dataFallasArray,
+                    backgroundColor: '#e50914', 
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false } 
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1, font: { family: "'Segoe UI', sans-serif" } },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    x: {
+                        ticks: { font: { family: "'Segoe UI', sans-serif", size: 10 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

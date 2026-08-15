@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Consolidado | OmegaGroup</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; margin: 0; padding: 20px; font-size: 12px; }
+        
+        /* Cabecera con Logo */
+        .header-table { width: 100%; border-bottom: 3px solid #e50914; padding-bottom: 15px; margin-bottom: 25px; }
+        .header-table td { border: none; padding: 0; vertical-align: middle; }
+        .logo-container img { max-height: 65px; max-width: 200px; object-fit: contain; }
+        .title-container { text-align: right; }
+        .title-container h1 { margin: 0; font-size: 20px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
+        .title-container p { margin: 5px 0 0 0; color: #64748b; font-size: 12px; }
+        
+        /* Cajas de Resumen */
+        .summary-box { display: flex; justify-content: space-between; margin-bottom: 25px; }
+        .box { width: 30%; background: #f8fafc; border: 1px solid #cbd5e1; padding: 15px; border-radius: 6px; text-align: center; }
+        .box h3 { margin: 0; font-size: 28px; color: #0f172a; }
+        .box span { font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+        .box.red { border-left: 5px solid #e50914; }
+        .box.green { border-left: 5px solid #10b981; }
+        .box.blue { border-left: 5px solid #3b82f6; }
+
+        /* Tabla Ejecutiva */
+        h2 { font-size: 14px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-top: 30px; text-transform: uppercase; }
+        .main-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .main-table th, .main-table td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+        .main-table th { background-color: #0f172a; color: white; font-size: 11px; text-transform: uppercase; }
+        .main-table td { font-size: 11px; }
+        .estado-APROBADO { color: #166534; font-weight: bold; background: #dcfce7; text-align: center; }
+        .estado-CON { color: #991b1b; font-weight: bold; background: #fee2e2; text-align: center; }
+        .estado-EN { color: #854d0e; font-weight: bold; background: #fef9c3; text-align: center; }
+
+        /* Salto de página para los detalles */
+        .page-break { page-break-before: always; }
+        
+        /* Detalles de Novedades */
+        .falla-card { background: #fff5f5; border: 1px solid #fecaca; padding: 15px; margin-bottom: 15px; border-radius: 6px; page-break-inside: avoid; }
+        .falla-card h4 { margin: 0 0 10px 0; color: #991b1b; font-size: 14px; border-bottom: 1px dashed #fca5a5; padding-bottom: 5px; }
+        .falla-item { margin-bottom: 8px; font-size: 12px; }
+        .falla-item strong { color: #0f172a; }
+        
+        .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- PÁGINA 1: RESUMEN EJECUTIVO -->
+    <table class="header-table">
+        <tr>
+            <td class="logo-container" width="30%">
+                <!-- BLINDAJE: Verificamos que la variable exista antes de usarla -->
+                <% if (typeof logoSrc !== 'undefined' && logoSrc) { %>
+                    <img src="<%= logoSrc %>" alt="Logo OmegaGroup">
+                <% } else { %>
+                    <h2 style="margin:0; color:#e50914;">OMEGAGROUP</h2>
+                <% } %>
+            </td>
+            <td class="title-container" width="70%">
+                <h1>Reporte Consolidado de Operaciones</h1>
+                <p><strong>Periodo:</strong> <%= fechaInicio %> al <%= fechaFin %> | <strong>Vehículo:</strong> <%= placaSeleccionada %></p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="summary-box">
+        <div class="box blue">
+            <h3><%= total %></h3>
+            <span>Total Inspecciones</span>
+        </div>
+        <div class="box green">
+            <h3 style="color: #10b981;"><%= aprobadas %></h3>
+            <span>Operación Óptima</span>
+        </div>
+        <div class="box red">
+            <h3 style="color: #e50914;"><%= conDefectos %></h3>
+            <span>Con Averías o Daños</span>
+        </div>
+    </div>
+
+    <h2>1. Historial Ejecutivo de Despachos</h2>
+    <table class="main-table">
+        <thead>
+            <tr>
+                <th>Ticket</th>
+                <th>Fecha</th>
+                <th>Placa</th>
+                <th>Conductor</th>
+                <th>Km Inicial</th>
+                <th>Km Final</th>
+                <th style="text-align: center;">Estado Final</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% tablaEjecutiva.forEach(fila => { %>
+                <tr>
+                    <td>#<%= String(fila.ticket).padStart(4, '0') %></td>
+                    <td><%= fila.fecha %></td>
+                    <td><strong><%= fila.placa %></strong></td>
+                    <td><%= fila.conductor %></td>
+                    <td><%= fila.km_salida %></td>
+                    <td><%= fila.km_llegada %></td>
+                    <!-- Extraemos solo la primera palabra para aplicar la clase CSS correctamente (APROBADO, CON, EN) -->
+                    <td class="estado-<%= fila.estado.split(' ')[0] %>"><%= fila.estado %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Generado por la plataforma tecnológica de OmegaGroup SAS | Fecha de impresión: <%= fechaImpresion %>
+    </div>
+
+    <!-- PÁGINAS SIGUIENTES: SOLO SE MUESTRAN SI HUBO FALLAS -->
+    <% if (typeof inspeccionesConDefectos !== 'undefined' && inspeccionesConDefectos.length > 0) { %>
+        <div class="page-break"></div>
+        
+        <table class="header-table">
+            <tr>
+                <td class="logo-container" width="30%">
+                    <% if (typeof logoSrc !== 'undefined' && logoSrc) { %>
+                        <img src="<%= logoSrc %>" alt="Logo OmegaGroup">
+                    <% } %>
+                </td>
+                <td class="title-container" width="70%">
+                    <h1>Anexo: Detalle de Novedades Críticas</h1>
+                    <p>Vehículos que presentaron averías en el periodo seleccionado.</p>
+                </td>
+            </tr>
+        </table>
+
+        <% inspeccionesConDefectos.forEach(falla => { %>
+            <div class="falla-card">
+                <h4>Ticket #<%= String(falla.id).padStart(4, '0') %> | Fecha: <%= falla.fecha %> | Placa: <%= falla.placa %></h4>
+                <p style="margin-top:0; font-size: 11px;"><strong>Conductor Responsable:</strong> <%= falla.conductor %></p>
+                
+                <% if(falla.descripcion_defecto && falla.descripcion_defecto.trim() !== '') { %>
+                    <div style="background: #ffffff; border: 1px solid #fca5a5; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                        <strong><span style="color:#e50914;">⚠ Reporte General del Conductor:</span></strong> <%= falla.descripcion_defecto %>
+                    </div>
+                <% } %>
+
+                <% if(falla.fallas && falla.fallas.length > 0) { %>
+                    <p style="margin-bottom: 5px; color:#e50914; font-weight:bold; font-size: 11px;">Componentes reprobados en la lista de chequeo:</p>
+                    <ul style="margin-top: 0; padding-left: 20px;">
+                        <% falla.fallas.forEach(item => { %>
+                            <li class="falla-item">
+                                <strong><%= item.nombre %>:</strong> <%= item.obs %>
+                            </li>
+                        <% }) %>
+                    </ul>
+                <% } %>
+            </div>
+        <% }) %>
+
+        <div class="footer">
+            Reporte de Auditoría SST - Detalle de Averías
+        </div>
+    <% } %>
+
+</body>
+</html>

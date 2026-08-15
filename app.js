@@ -379,7 +379,6 @@ app.get('/admin/inspeccion/editar/:id', verificarRol(['admin']), async (req, res
     try {
         const insp = await prisma.inspeccion.findUnique({
             where: { id: parseInt(req.params.id) },
-            // 👇 AQUÍ ESTÁ EL ARREGLO: Agregamos "conductor: true" 👇
             include: { vehiculo: true, conductor: true } 
         });
         if (!insp) return res.redirect('/admin');
@@ -452,7 +451,7 @@ app.post('/admin/inspeccion/editar/:id', verificarRol(['admin']), async (req, re
 });
 
 // ==========================================
-// RUTA PARA EXPORTAR PDF (ADAPTADA A TU NUEVO TEMPLATE Y CON FIRMA)
+// RUTA PARA EXPORTAR PDF
 // ==========================================
 app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) => {
     let browser = null; 
@@ -647,6 +646,143 @@ app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) =
     }
 });
 
+// ==========================================
+// NUEVA RUTA: REPORTE MAESTRO CONSOLIDADO
+// ==========================================
+app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req, res) => {
+    let browser = null;
+    try {
+        const { fechaInicio, fechaFin, placa } = req.query;
+        if (!fechaInicio || !fechaFin) return res.status(400).send("Debe seleccionar las fechas.");
+
+        // 1. Configurar los límites de tiempo (Desde las 00:00 hasta las 23:59)
+        const startDate = new Date(fechaInicio + 'T00:00:00');
+        const endDate = new Date(fechaFin + 'T23:59:59');
+
+        // 2. Construir la consulta a la Base de Datos
+        let whereClause = { 
+            eliminado: false,
+            fecha_apertura: { gte: startDate, lte: endDate }
+        };
+        if (placa && placa !== 'TODAS') {
+            whereClause.vehiculo_placa = placa;
+        }
+
+        const inspecciones = await prisma.inspeccion.findMany({
+            where: whereClause,
+            include: { conductor: true, vehiculo: true },
+            orderBy: { fecha_apertura: 'asc' } // Orden cronológico
+        });
+
+        if(inspecciones.length === 0) {
+            return res.send('<h2 style="text-align:center; margin-top:50px; font-family:sans-serif;">No hay registros en estas fechas.</h2>');
+        }
+
+        // 3. Procesar los datos matemáticamente
+        let total = inspecciones.length;
+        let aprobadas = 0;
+        let conDefectos = 0;
+        let tablaEjecutiva = [];
+        let inspeccionesConDefectos = [];
+
+        inspecciones.forEach(insp => {
+            const datos = insp.datos_chequeo || {};
+            const items = datos.chequeo_items || {};
+            
+            // Buscar si hay items malos
+            let fallasExtraidas = [];
+            for (const key in items) {
+                if (items[key] === 'MALO' && !key.startsWith('obs_')) {
+                    fallasExtraidas.push({
+                        nombre: key.replace(/^[a-z]+_/, '').replace(/_/g, ' ').toUpperCase(),
+                        obs: items['obs_' + key] || 'Sin observación'
+                    });
+                }
+            }
+            
+            let tieneFallas = fallasExtraidas.length > 0 || (datos.descripcion_defecto && datos.descripcion_defecto.trim() !== '');
+            let estadoLegible = 'En Curso';
+
+            if (insp.estado === 'Finalizada') {
+                if (tieneFallas) {
+                    conDefectos++;
+                    estadoLegible = 'CON DEFECTOS';
+                    // Guardamos la inspección completa para las hojas de detalles posteriores
+                    inspeccionesConDefectos.push({
+                        id: insp.id,
+                        fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
+                        placa: insp.vehiculo_placa,
+                        conductor: insp.conductor.nombre,
+                        descripcion_defecto: datos.descripcion_defecto,
+                        fallas: fallasExtraidas
+                    });
+                } else {
+                    aprobadas++;
+                    estadoLegible = 'APROBADO';
+                }
+            }
+
+            // Agregamos a la tabla de la Primera Hoja (Todas van aquí)
+            tablaEjecutiva.push({
+                ticket: insp.id,
+                fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
+                placa: insp.vehiculo_placa,
+                conductor: insp.conductor.nombre,
+                km_salida: insp.kilometraje_salida,
+                km_llegada: datos.kilometraje_final || '-',
+                estado: estadoLegible
+            });
+        });
+
+        // 4. Cargar el Logo (si existe) para inyectarlo en el PDF Maestro
+        let logoSrc = '';
+        try {
+            const logoPath = path.join(__dirname, 'public/images/logo.png');
+            if (fs.existsSync(logoPath)) {
+                const logoBuffer = fs.readFileSync(logoPath);
+                logoSrc = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+            }
+        } catch (logoError) {
+            console.warn('No se pudo cargar el logo para el PDF maestro:', logoError.message);
+        }
+
+        // 5. Renderizar el nuevo EJS y pasarlo a PDF
+        const templatePath = path.join(__dirname, 'views/pdf-maestro.ejs');
+        const html = await ejs.renderFile(templatePath, {
+            fechaInicio, fechaFin, placaSeleccionada: placa,
+            total, aprobadas, conDefectos, 
+            tablaEjecutiva, inspeccionesConDefectos,
+            logoSrc: logoSrc, 
+            fechaImpresion: new Date().toLocaleString('es-CO')
+        });
+
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        });
+        
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+        const pdfBytes = await page.pdf({
+            format: 'Letter',
+            printBackground: true,
+            margin: { top: '15px', right: '15px', bottom: '15px', left: '15px' }
+        });
+
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="Auditoria_OmegaGroup_${fechaInicio}_al_${fechaFin}.pdf"`);
+        res.end(Buffer.from(pdfBytes));
+
+    } catch (error) {
+        if (browser) await browser.close(); 
+        console.error('🔥 Error crítico Reporte Maestro:', error);
+        res.status(500).send('Error generando el Reporte Maestro: ' + error.message);
+    }
+});
+
 // 4. Soft Delete (Eliminar ocultando)
 app.post('/admin/inspeccion/eliminar/:id', verificarRol(['admin']), async (req, res) => {
     try {
@@ -698,7 +834,153 @@ app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (
     }
 });
 
-// Iniciar servidor xd
+// ==============================================================
+// RUTA TEMPORAL PARA SEMBRAR DATOS FICTICIOS (100% REALISTA)
+// ==============================================================
+app.get('/generar-prueba', verificarRol(['admin']), async (req, res) => {
+    try {
+        const flota = [
+            { placa: 'OMG-001', doc: '10000001', nombre: 'Carlos Ruiz', tipo: 'Camión' },
+            { placa: 'OME-002', doc: '10000002', nombre: 'Luis Martínez', tipo: 'Camión' },
+            { placa: 'MGA-003', doc: '10000003', nombre: 'Andrés Gómez', tipo: 'Automóvil' },
+            { placa: 'SST-004', doc: '10000004', nombre: 'Jorge Silva', tipo: 'Camioneta' },
+            { placa: 'TRP-005', doc: '10000005', nombre: 'Miguel Rojas', tipo: 'Bus' },
+            { placa: 'LOG-006', doc: '10000006', nombre: 'David Ramírez', tipo: 'Camión' },
+            { placa: 'FLT-007', doc: '10000007', nombre: 'Pedro Castro', tipo: 'Volqueta' },
+            { placa: 'VHC-008', doc: '10000008', nombre: 'José Vargas', tipo: 'Camioneta' },
+            { placa: 'MVD-009', doc: '10000009', nombre: 'Héctor Ospina', tipo: 'Automóvil' },
+            { placa: 'RUT-010', doc: '10000010', nombre: 'Diego León', tipo: 'Bus' }
+        ];
+
+        // Lista de absolutamente todos los campos del chequeo
+        const todosLosItems = [
+            'nivel_refrigerante', 'nivel_frenos', 'nivel_aceite', 'nivel_hidraulico', 'nivel_agua',
+            'pedal_acelerador', 'pedal_clutch', 'pedal_freno',
+            'luz_principales', 'luz_direccionales', 'luz_estacionarias', 'luz_stops', 'luz_testigos', 'luz_reversa', 'luz_internas',
+            'equipo_extintor', 'equipo_fecha_extintor', 'equipo_llanta', 'equipo_senales', 'equipo_herramientas', 'equipo_botiquin', 'equipo_carreteras', 'equipo_ambiental',
+            'varios_llantas', 'varios_bateria', 'varios_rines', 'varios_cinturones', 'varios_pito_reversa', 'varios_pito', 'varios_freno_emergencia', 'varios_espejos', 'varios_carcasa', 'varios_plumillas', 'varios_tapizado', 'varios_panoramico', 'varios_radiotelefono', 'varios_aire', 'varios_vidrios_laterales', 'varios_vidrio_trasero', 'varios_tercer_stop'
+        ];
+
+        const fallasPosibles = ['nivel_aceite', 'luz_principales', 'luz_stops', 'varios_llantas', 'pedal_freno', 'equipo_extintor', 'varios_pito', 'varios_espejos', 'equipo_botiquin'];
+        
+        const salt = await bcrypt.genSalt(10);
+        const pwdGenerica = await bcrypt.hash('123456', salt); 
+
+        // Crear/Actualizar conductores y vehículos
+        for (let vehiculo of flota) {
+            const conductorDB = await prisma.usuario.upsert({
+                where: { documento: vehiculo.doc },
+                update: {},
+                create: { nombre: vehiculo.nombre, documento: vehiculo.doc, password: pwdGenerica, rol: 'conductor' }
+            });
+            vehiculo.conductor_id = conductorDB.id;
+
+            await prisma.vehiculo.upsert({
+                where: { placa: vehiculo.placa },
+                update: {},
+                create: { placa: vehiculo.placa, tipo: vehiculo.tipo, modelo: '2023' }
+            });
+        }
+
+        // LIMPIEZA TOTAL: Borramos para no duplicar ni generar basura
+        await prisma.inspeccion.deleteMany(); 
+
+        let creadas = 0;
+        const hoy = new Date();
+
+        // Generador de fechas aleatorias
+        const randomDate = (baseDate, offsetDays) => {
+            let d = new Date(baseDate);
+            d.setDate(d.getDate() + offsetDays);
+            return d.toISOString().split('T')[0];
+        };
+
+        for (let i = 0; i < 30; i++) {
+            const fechaSimulada = new Date(hoy);
+            fechaSimulada.setDate(fechaSimulada.getDate() - i); 
+
+            for (let vehiculo of flota) {
+                const esFalla = Math.random() < 0.15; // 15% de los reportes tendrán daños
+                let chequeo_items = {};
+                let descripcion = "";
+
+                // 1. LLENAR TODOS LOS ÍTEMS COMO "BUENO" Y PONERLES OBSERVACIÓN
+                for(let item of todosLosItems) {
+                    chequeo_items[item] = 'BUENO';
+                    chequeo_items['obs_' + item] = 'Inspeccionado, funcionando en óptimas condiciones.';
+                }
+
+                // 2. SI EL CARRO FALLA, CAMBIAR DE 1 A 3 ÍTEMS A "MALO"
+                if (esFalla) {
+                    let numFallas = Math.floor(Math.random() * 3) + 1;
+                    for(let j=0; j<numFallas; j++) {
+                        let fallaAlAzar = fallasPosibles[Math.floor(Math.random() * fallasPosibles.length)];
+                        chequeo_items[fallaAlAzar] = 'MALO';
+                        chequeo_items['obs_' + fallaAlAzar] = '❌ Presenta desgaste o mal funcionamiento, requiere revisión técnica.';
+                    }
+                    descripcion = "Se identificaron componentes en mal estado durante la inspección visual. Solicito mantenimiento preventivo.";
+                }
+
+                // 3. GENERAR TODAS LAS FECHAS DE LOS DOCUMENTOS
+                const diasSoat = (vehiculo.placa === 'OMG-001') ? -5 : Math.floor(Math.random() * 300) + 10; 
+                const diasTecno = (vehiculo.placa === 'OME-002') ? 15 : Math.floor(Math.random() * 300) + 10;
+                
+                const vigenciaLicencia = randomDate(hoy, 365 + Math.floor(Math.random() * 500));
+                const polizaRcc = randomDate(hoy, Math.floor(Math.random() * 300) + 20);
+                const polizaRiesgo = randomDate(hoy, Math.floor(Math.random() * 300) + 20);
+                const tarjetaOp = randomDate(hoy, Math.floor(Math.random() * 200) + 15);
+                const cambioAceite = randomDate(hoy, -Math.floor(Math.random() * 60)); // Fecha en el pasado
+
+                const kmSalida = Math.floor(Math.random() * 50000) + 10000 + ((30 - i) * 150); 
+
+                // INYECTAR EN BD CON TODOS LOS CAMPOS LLENOS AL 100%
+                await prisma.inspeccion.create({
+                    data: {
+                        vehiculo_placa: vehiculo.placa,
+                        conductor_id: vehiculo.conductor_id,
+                        fecha_apertura: fechaSimulada,
+                        fecha_cierre: fechaSimulada,
+                        estado: 'Finalizada',
+                        kilometraje_salida: kmSalida,
+                        datos_chequeo: {
+                            // Campos de cabecera
+                            empresa: "OmegaGroup SAS",
+                            licencia_conductor: vehiculo.doc,
+                            categoria_licencia: vehiculo.tipo === 'Automóvil' ? 'B1' : 'C2',
+                            vigencia_licencia: vigenciaLicencia,
+                            modelo: '2023',
+                            // Documentos y Fechas
+                            doc_licencia_transito: Math.floor(Math.random() * 90000000) + 10000000 + "",
+                            fecha_vencimiento_soat: randomDate(hoy, diasSoat),
+                            fecha_revision: randomDate(hoy, diasTecno),
+                            doc_poliza_rcc: polizaRcc,
+                            doc_poliza_todo_riesgo: polizaRiesgo,
+                            doc_tarjeta_operacion: tarjetaOp,
+                            fecha_cambio_aceite: cambioAceite,
+                            // Chequeo
+                            chequeo_items: chequeo_items,
+                            descripcion_defecto: descripcion,
+                            observaciones_generales: "El vehículo se encuentra limpio y con todos los documentos portados en cabina.",
+                            kilometraje_final: kmSalida + Math.floor(Math.random() * 150) + 20
+                        }
+                    }
+                });
+                creadas++;
+            }
+        }
+        res.send(`
+            <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+                <h1 style="color: #10b981;">✅ ¡Simulación 100% Realista Exitosa!</h1>
+                <h2>Se inyectaron ${creadas} inspecciones con todos los campos diligenciados y calificados.</h2>
+                <a href="/admin" style="display: inline-block; background: #0f172a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ir al Panel de Estadísticas</a>
+            </div>
+        `);
+    } catch (error) {
+        res.send('❌ Hubo un error de base de datos: ' + error.message);
+    }
+});
+
+// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

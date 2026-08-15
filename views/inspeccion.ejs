@@ -1415,6 +1415,77 @@ document.getElementById('inspeccionInicioForm').addEventListener('submit', funct
     submitBtn.disabled = true;
     return true;
 });
+// ============================================
+// AUTOGUARDADO DE VEHÍCULO Y CONDUCTOR (LOCALSTORAGE)
+// ============================================
+
+// Lista de todos los campos que el celular debe recordar
+const camposAutoguardables = [
+    'placa', 'tipo_vehiculo', 'empresa', 'nombre_conductor',
+    'licencia_conductor', 'categoria_licencia', 'vigencia_licencia',
+    'modelo', 'fecha_revision', 'fecha_vencimiento_soat',
+    'fecha_cambio_aceite', 'doc_licencia_transito', 'doc_poliza_rcc',
+    'doc_poliza_todo_riesgo', 'doc_tarjeta_operacion',
+    'nombre_firma_conductor', 'cc_conductor'
+];
+
+function inicializarAutoguardado() {
+    camposAutoguardables.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            // 1. Al cargar la página, buscar si el celular ya se sabe el dato
+            const valorGuardado = localStorage.getItem('omega_sst_' + id);
+            if (valorGuardado) {
+                input.value = valorGuardado;
+                
+                // Si es la placa, disparamos la validación de color verde
+                if(id === 'placa') input.dispatchEvent(new Event('input'));
+                // Si es una fecha, disparamos la validación de vencimiento
+                if(input.type === 'date') input.dispatchEvent(new Event('change'));
+            }
+            
+            // 2. Guardar automáticamente el dato en el celular cada vez que escriba
+            input.addEventListener('input', function() {
+                localStorage.setItem('omega_sst_' + id, this.value);
+            });
+            input.addEventListener('change', function() {
+                localStorage.setItem('omega_sst_' + id, this.value);
+            });
+        }
+    });
+}
+
+// ============================================
+// MODIFICACIÓN AL BOTÓN DE LIMPIAR
+// ============================================
+// Reemplazamos la función del botón limpiar para que pregunte si también desea olvidar los datos
+const btnLimpiarFormulario = document.getElementById('resetBtn');
+if(btnLimpiarFormulario) {
+    // Clonamos el botón para quitarle eventos anteriores y poner el nuestro
+    const nuevoBtnLimpiar = btnLimpiarFormulario.cloneNode(true);
+    btnLimpiarFormulario.parentNode.replaceChild(nuevoBtnLimpiar, btnLimpiarFormulario);
+    
+    nuevoBtnLimpiar.addEventListener('click', function(e) {
+        e.preventDefault();
+        if(confirm('¿Desea limpiar el formulario actual?\n\nSi hace clic en Aceptar, también se borrarán los datos del conductor guardados en este celular.')) {
+            document.getElementById('inspeccionInicioForm').reset();
+            signaturePad.clear();
+            // Borrar la memoria del celular
+            camposAutoguardables.forEach(id => {
+                localStorage.removeItem('omega_sst_' + id);
+            });
+            // Limpiar colores de validación
+            document.getElementById('placa').style.borderColor = '#ddd';
+        }
+    });
+}
+
+// Ejecutar el autoguardado apenas cargue la pantalla
+window.addEventListener('load', function() {
+    inicializarAutoguardado();
+});
+
+
 </script>
 
 <style>
