@@ -17,8 +17,9 @@ model Usuario {
   rol       String @default("conductor") // "admin" o "conductor"
 
   // Relaciones
-  inspecciones       Inspeccion[]
-  inspecciones_patio InspeccionPatio[] // <-- ¡ESTA ES LA LÍNEA QUE FALTABA!
+  inspecciones         Inspeccion[]
+  inspecciones_patio   InspeccionPatio[] // <-- ¡ESTA ES LA LÍNEA QUE FALTABA!
+  inspecciones_equipos InspeccionEquipos[]
 }
 
 // Tabla de Vehículos
@@ -68,5 +69,25 @@ model InspeccionPatio {
   eliminado      Boolean @default(false)
 
   // Relación: Saber qué jefe de operaciones hizo este registro
+  admin Usuario @relation(fields: [admin_id], references: [id])
+}
+
+// ==================================================
+// NUEVO MÓDULO: INSPECCIÓN DE EQUIPOS DE EMERGENCIA
+// ==================================================
+model InspeccionEquipos {
+  id              Int      @id @default(autoincrement())
+  vehiculo_placa  String
+  admin_id        Int
+  tipo_inspeccion String // "INICIAL" o "PERIODICA"
+  fecha_registro  DateTime @default(now())
+
+  // Aquí guardaremos las 4 categorías: Botiquín, Extintor, Ambiental y Carreteras
+  datos_inspeccion Json
+
+  firma_inspector String  @db.Text
+  eliminado       Boolean @default(false)
+
+  // Relación con el administrador que hace la inspección
   admin Usuario @relation(fields: [admin_id], references: [id])
 }

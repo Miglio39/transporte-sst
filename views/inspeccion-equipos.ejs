@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title><%= title %> | OmegaGroup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --surface-bg: #f8fafc; --omega-dark: #0f172a; --omega-red: #e50914; }
+        body { background-color: var(--surface-bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+        .header-app { background: var(--omega-dark); color: white; padding: 15px 20px; border-bottom: 4px solid var(--omega-red); }
+        
+        /* Estilo para los botones Bueno/Malo/NA */
+        .btn-check-custom + label { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 0; width: 100%; font-size: 0.8rem; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .btn-check-custom:checked[value="B"] + label { background-color: #dcfce7; color: #166534; border-color: #166534; }
+        .btn-check-custom:checked[value="M"] + label { background-color: #fee2e2; color: #991b1b; border-color: #991b1b; }
+        .btn-check-custom:checked[value="N/A"] + label { background-color: #fef3c7; color: #92400e; border-color: #92400e; }
+        
+        .accordion-button { font-weight: 700; color: var(--omega-dark); background-color: white; }
+        .accordion-button:not(.collapsed) { background-color: #f8fafc; color: var(--omega-red); }
+        canvas.firma { border: 2px dashed #cbd5e1; border-radius: 8px; width: 100%; background: #ffffff; cursor: crosshair; touch-action: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header-app d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-toolbox me-2"></i> Inspección de Equipos</h5>
+        <a href="/admin" class="btn btn-sm btn-outline-light"><i class="fas fa-times"></i></a>
+    </div>
+
+    <div class="container" style="max-width: 700px;">
+        <form id="form-equipos" action="/admin/equipos/guardar" method="POST">
+            
+            <!-- DATOS INICIALES -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body row g-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-muted small">PLACA / IDENTIFICADOR</label>
+                        <input list="listaPlacas" name="placa" class="form-control fw-bold border-secondary" placeholder="Escribir..." required autocomplete="off">
+                        <datalist id="listaPlacas"><% vehiculos.forEach(v => { %> <option value="<%= v.placa %>"> <% }) %></datalist>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-muted small">TIPO DE INSPECCIÓN</label>
+                        <select name="tipo_inspeccion" class="form-select border-secondary fw-bold" required>
+                            <option value="PERIODICA">Periódica (Mensual)</option>
+                            <option value="INICIAL">Inicial (Ingreso)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACORDEÓN DE FORMULARIOS -->
+            <div class="accordion shadow-sm border-0 mb-4" id="acordeonEquipos">
+                
+                <% 
+                // AQUÍ DECLARAMOS LAS LISTAS BASADAS EN TUS DOCUMENTOS ESCANEADOS
+                const categorias = {
+                    "Botiquín de Primeros Auxilios": {
+                        icono: "fa-medkit", color: "text-danger",
+                        items: ["Gasa estéril (7.5x7.5)", "Esparadrapo de tela", "Bajalenguas x 20", "Guantes de látex x 3", "Venda elástica 3x5", "Venda elástica 4x5", "Venda triangular x 6", "Curitas x 10", "Inmovilizador cervical", "Inmovilizador extremidades", "Tapabocas x 2", "Parche ocular", "Aplicadores de algodón", "Isodine solución", "Isodine espuma", "Cloruro de sodio (Suero)", "Termómetro digital", "Máscara RCP", "Esfero y Libreta", "Linterna recargable", "Tijeras punta roma", "Manual de primeros auxilios"]
+                    },
+                    "Kit de Carreteras y Herramientas": {
+                        icono: "fa-wrench", color: "text-secondary",
+                        items: ["Conos reflectivos de 50/70cm", "Tacos de madera para llantas", "Gato con vástago", "Palanca", "Llave expansiva", "Destornillador de pala", "Llave de pernos (copa)", "Juego de llaves fijas", "Destornillador de estrella", "Alicate", "Llanta de repuesto", "Linterna", "Chaleco reflectivo", "Calibrador de presión de aire", "Cables de inicio"]
+                    },
+                    "Kit Ambiental": {
+                        icono: "fa-leaf", color: "text-success",
+                        items: ["Tela oleofílica", "Barrera oleofílica 5x10", "Encapsulador / Material absorbente", "Desengrasante biodegradable", "Cinta de peligro", "Manila 10mts", "Pala antichispa", "Martillo de caucho", "Linterna antichispa", "Caneca plástica", "Masilla epóxica", "Bolsas de propileno", "Lonas de polipropileno", "Hipoclorito de sodio", "Chaleco reflectivo", "Geomembrana / Plástico negro", "Estacas de madera", "Paleta de PARE", "Guantes de nitrilo largos", "Guantes de vaqueta", "Mascarilla gases/vapores", "Monogafas", "Tayvet (Overol desechable)"]
+                    }
+                };
+                
+                let index = 0;
+                for(let cat in categorias) { 
+                    const info = categorias[cat];
+                    index++;
+                %>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading<%= index %>">
+                            <button class="accordion-button <%= index === 1 ? '' : 'collapsed' %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>">
+                                <i class="fas <%= info.icono %> <%= info.color %> me-2 fs-5"></i> <%= cat %>
+                            </button>
+                        </h2>
+                        <div id="collapse<%= index %>" class="accordion-collapse collapse <%= index === 1 ? 'show' : '' %>" data-bs-parent="#acordeonEquipos">
+                            <div class="accordion-body bg-light">
+                                <% info.items.forEach(item => { 
+                                    let idName = item.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                                %>
+                                    <div class="mb-3 p-2 border rounded bg-white">
+                                        <p class="mb-2 small fw-bold text-dark"><%= item %></p>
+                                        <div class="d-flex gap-1">
+                                            <div class="flex-grow-1">
+                                                <input type="radio" name="<%= cat %>_<%= idName %>" id="<%= cat %>_<%= idName %>_B" value="B" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= item %>">
+                                                <label for="<%= cat %>_<%= idName %>_B">Bueno</label>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <input type="radio" name="<%= cat %>_<%= idName %>" id="<%= cat %>_<%= idName %>_M" value="M" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= item %>">
+                                                <label for="<%= cat %>_<%= idName %>_M">Malo</label>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <input type="radio" name="<%= cat %>_<%= idName %>" id="<%= cat %>_<%= idName %>_NA" value="N/A" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= item %>">
+                                                <label for="<%= cat %>_<%= idName %>_NA">N/A</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <!-- EXTINTOR (Es un formato especial con fechas) -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingExt">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExt">
+                            <i class="fas fa-fire-extinguisher text-danger me-2 fs-5"></i> Extintor
+                        </button>
+                    </h2>
+                    <div id="collapseExt" class="accordion-collapse collapse" data-bs-parent="#acordeonEquipos">
+                        <div class="accordion-body bg-light">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Capacidad y Tipo</label>
+                                <input type="text" id="extintor_capacidad" class="form-control fw-bold" placeholder="Ej: 10 Libras ABC">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Estado Físico General</label>
+                                <select id="extintor_estado" class="form-select">
+                                    <option value="BUENO">Bueno (Cilindro, Manómetro y Manguera OK)</option>
+                                    <option value="MALO">Malo (Averiado o Presión baja)</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">Fecha Recarga</label>
+                                    <input type="date" id="extintor_f_recarga" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">Próxima Recarga</label>
+                                    <input type="date" id="extintor_f_vencimiento" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIRMA DEL AUDITOR -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-3">
+                    <label class="form-label fw-bold text-muted small"><i class="fas fa-signature"></i> Firma del Inspector</label>
+                    <canvas id="firmaCanvas" class="firma" height="150"></canvas>
+                    <button type="button" class="btn btn-sm btn-light w-100 mt-2 text-danger fw-bold" onclick="signaturePad.clear()">Limpiar Firma</button>
+                </div>
+            </div>
+
+            <!-- HIDDEN INPUTS -->
+            <input type="hidden" name="datosEquiposJSON" id="datosEquiposJSON">
+            <input type="hidden" name="firmaBase64" id="firmaBase64" required>
+
+            <button type="button" onclick="enviarFormulario()" class="btn btn-lg w-100 text-white fw-bold shadow" style="background-color: var(--omega-dark);">
+                <i class="fas fa-save me-2"></i> GUARDAR INSPECCIÓN
+            </button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    
+    <script>
+        const canvas = document.getElementById('firmaCanvas');
+        function redimensionarCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio; canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+        window.addEventListener("resize", redimensionarCanvas);
+        setTimeout(redimensionarCanvas, 200);
+        const signaturePad = new SignaturePad(canvas, { penColor: "rgb(15, 23, 42)" });
+
+        function enviarFormulario() {
+            if (signaturePad.isEmpty()) { alert("Debe firmar la inspección para guardarla."); return; }
+            
+            // Recolectar datos en un objeto maestro
+            let datos = {
+                "Botiquín de Primeros Auxilios": {},
+                "Kit de Carreteras y Herramientas": {},
+                "Kit Ambiental": {},
+                "Extintor": {
+                    capacidad: document.getElementById('extintor_capacidad').value,
+                    estado: document.getElementById('extintor_estado').value,
+                    fecha_recarga: document.getElementById('extintor_f_recarga').value,
+                    proxima_recarga: document.getElementById('extintor_f_vencimiento').value
+                }
+            };
+
+            // Recorrer todos los radio buttons chequeados
+            document.querySelectorAll('.chk-equipo:checked').forEach(radio => {
+                const categoria = radio.getAttribute('data-categoria');
+                const item = radio.getAttribute('data-item');
+                datos[categoria][item] = radio.value;
+            });
+
+            document.getElementById('datosEquiposJSON').value = JSON.stringify(datos);
+            document.getElementById('firmaBase64').value = signaturePad.toDataURL();
+            
+            const btn = document.querySelector('button[onclick="enviarFormulario()"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GUARDANDO...';
+            btn.disabled = true;
+
+            document.getElementById('form-equipos').submit();
+        }
+    </script>
+</body>
+</html>

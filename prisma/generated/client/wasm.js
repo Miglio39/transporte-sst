@@ -161,6 +161,17 @@ exports.Prisma.InspeccionPatioScalarFieldEnum = {
   eliminado: 'eliminado'
 };
 
+exports.Prisma.InspeccionEquiposScalarFieldEnum = {
+  id: 'id',
+  vehiculo_placa: 'vehiculo_placa',
+  admin_id: 'admin_id',
+  tipo_inspeccion: 'tipo_inspeccion',
+  fecha_registro: 'fecha_registro',
+  datos_inspeccion: 'datos_inspeccion',
+  firma_inspector: 'firma_inspector',
+  eliminado: 'eliminado'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -196,7 +207,8 @@ exports.Prisma.ModelName = {
   Usuario: 'Usuario',
   Vehiculo: 'Vehiculo',
   Inspeccion: 'Inspeccion',
-  InspeccionPatio: 'InspeccionPatio'
+  InspeccionPatio: 'InspeccionPatio',
+  InspeccionEquipos: 'InspeccionEquipos'
 };
 
 /**

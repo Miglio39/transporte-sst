@@ -4,148 +4,341 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><%= title %> | OmegaGroup</title>
-    <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --surface-bg: #f8fafc;
-            --border-color: #e2e8f0;
-            --omega-dark: #0f172a;
-            --omega-red: #e50914;
-        }
-
+        :root { --surface-bg: #f8fafc; --omega-dark: #0f172a; --omega-red: #e50914; }
         body { background-color: var(--surface-bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
         .header-app { background: var(--omega-dark); color: white; padding: 15px 20px; border-bottom: 4px solid var(--omega-red); }
         
-        /* CONTENEDOR DE PLANOS */
-        .blueprint-container {
-            position: relative; width: 100%; max-width: 350px; height: 480px; margin: 20px auto;
-            background-color: #ffffff; border: 2px dashed #cbd5e1; border-radius: 12px;
-            background-position: center; background-repeat: no-repeat; background-size: contain;
-            display: none; /* Se oculta por defecto hasta que se elija el tipo */
-        }
-
-        /* SVG CARRO */
-        #blueprint-carro {
-            display: block;
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAwIj48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxNjAiIHJ4PSIxNSIgZmlsbD0iI2YxZjVmOSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIyNSIgeT0iNTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIzMCIgcng9IjUiIGZpbGw9IiNjYmQ1ZTEiLz48cmVjdCB4PSIyNSIgeT0iMTIwIiB3aWR0aD0iNTAiIGhlaWdodD0iMzAiIHJ4PSI1IiBmaWxsPSIjY2JkNWUxIi8+PC9zdmc+');
-        }
-
-        /* SVG MÁQUINA PESADA (Excavadora vista superior) */
-        #blueprint-maquina {
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAwIj48cmVjdCB4PSIxNSIgeT0iMzAiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNDAiIHJ4PSI4IiBmaWxsPSIjZjFmNWY5IiBzdHJva2U9IiM5NGEzYjgiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjUiIHk9IjIwIiB3aWR0aD0iMTUiIGhlaWdodD0iMTYwIiByeD0iNCIgZmlsbD0iIzQ3NTU2OSIvPjxyZWN0IHg9IjgwIiB5PSIyMCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjE2MCIgcng9IjQiIGZpbGw9IiM0NzU1NjkiLz48cmVjdCB4PSIyNSIgeT0iNjAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI2MCIgcng9IjUiIGZpbGw9IiNjYmQ1ZTEiLz48cGF0aCBkPSJNIDM1LDEyMCBMMzUsMTgwIEw2NSwxODAgTDY1LDEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjUiLz48cmVjdCB4PSIyNSIgeT0iMTc1IiB3aWR0aD0iNTAiIGhlaWdodD0iMTUiIHJ4PSIyIiBmaWxsPSIjOTRBN0I4Ii8+PC9zdmc+');
-        }
-
-        /* PUNTOS CALIENTES (HOTSPOTS) */
-        .hotspot {
-            position: absolute; width: 45px; height: 45px;
-            background-color: rgba(229, 9, 20, 0.85); border: 3px solid white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.1rem; cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s; animation: pulse 2s infinite;
-        }
-        .hotspot:hover { transform: scale(1.1); }
-        .hotspot.completed { background-color: #10b981; animation: none; border-color: #dcfce7; }
+        /* PLANOS 360 */
+        .blueprint-container { position: relative; width: 100%; max-width: 350px; height: 480px; margin: 0 auto 10px; background-color: #ffffff; border: 2px dashed #cbd5e1; border-radius: 12px; background-position: center; background-repeat: no-repeat; background-size: contain; display: none; }
+        #blueprint-carro { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAwIj48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxNjAiIHJ4PSIxNSIgZmlsbD0iI2YxZjVmOSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIyNSIgeT0iNTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIzMCIgcng9IjUiIGZpbGw9IiNjYmQ1ZTEiLz48cmVjdCB4PSIyNSIgeT0iMTIwIiB3aWR0aD0iNTAiIGhlaWdodD0iMzAiIHJ4PSI1IiBmaWxsPSIjY2JkNWUxIi8+PC9zdmc+'); }
+        #blueprint-maquina { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAwIj48cmVjdCB4PSIxNSIgeT0iMzAiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNDAiIHJ4PSI4IiBmaWxsPSIjZjFmNWY5IiBzdHJva2U9IiM5NGEzYjgiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjUiIHk9IjIwIiB3aWR0aD0iMTUiIGhlaWdodD0iMTYwIiByeD0iNCIgZmlsbD0iIzQ3NTU2OSIvPjxyZWN0IHg9IjgwIiB5PSIyMCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjE2MCIgcng9IjQiIGZpbGw9IiM0NzU1NjkiLz48cmVjdCB4PSIyNSIgeT0iNjAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI2MCIgcng9IjUiIGZpbGw9IiNjYmQ1ZTEiLz48cGF0aCBkPSJNIDM1LDEyMCBMMzUsMTgwIEw2NSwxODAgTDY1LDEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjUiLz48cmVjdCB4PSIyNSIgeT0iMTc1IiB3aWR0aD0iNTAiIGhlaWdodD0iMTUiIHJ4PSIyIiBmaWxsPSIjOTRBN0I4Ii8+PC9zdmc+'); }
         
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(229, 9, 20, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
-        }
+        .hotspot { position: absolute; width: 45px; height: 45px; background-color: rgba(229, 9, 20, 0.85); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.2s; animation: pulse 2s infinite; }
+        .hotspot.completed { background-color: #10b981; animation: none; border-color: #dcfce7; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(229,9,20,0.7); } 70% { box-shadow: 0 0 0 15px rgba(229,9,20,0); } 100% { box-shadow: 0 0 0 0 rgba(229,9,20,0); } }
 
-        /* Posiciones exactas - CARRO */
-        #blueprint-carro .hs-frente { top: 5%; left: 50%; transform: translateX(-50%); }
-        #blueprint-carro .hs-atras { bottom: 5%; left: 50%; transform: translateX(-50%); }
-        #blueprint-carro .hs-izq { top: 50%; left: -5%; transform: translateY(-50%); }
-        #blueprint-carro .hs-der { top: 50%; right: -5%; transform: translateY(-50%); }
-        #blueprint-carro .hs-techo { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #blueprint-carro .hs-frente { top: 5%; left: 50%; transform: translateX(-50%); } #blueprint-carro .hs-atras { bottom: 5%; left: 50%; transform: translateX(-50%); } #blueprint-carro .hs-izq { top: 50%; left: -5%; transform: translateY(-50%); } #blueprint-carro .hs-der { top: 50%; right: -5%; transform: translateY(-50%); } #blueprint-carro .hs-techo { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #blueprint-maquina .hs-pala { top: 5%; left: 50%; transform: translateX(-50%); } #blueprint-maquina .hs-motor { bottom: 5%; left: 50%; transform: translateX(-50%); } #blueprint-maquina .hs-oruga-izq { top: 50%; left: -10%; transform: translateY(-50%); } #blueprint-maquina .hs-oruga-der { top: 50%; right: -10%; transform: translateY(-50%); } #blueprint-maquina .hs-cabina { top: 45%; left: 50%; transform: translate(-50%, -50%); }
 
-        /* Posiciones exactas - MAQUINA */
-        #blueprint-maquina .hs-pala { top: 5%; left: 50%; transform: translateX(-50%); }
-        #blueprint-maquina .hs-motor { bottom: 5%; left: 50%; transform: translateX(-50%); }
-        #blueprint-maquina .hs-oruga-izq { top: 50%; left: -10%; transform: translateY(-50%); }
-        #blueprint-maquina .hs-oruga-der { top: 50%; right: -10%; transform: translateY(-50%); }
-        #blueprint-maquina .hs-cabina { top: 45%; left: 50%; transform: translate(-50%, -50%); }
+        /* CHECKLIST BOTONES */
+        .btn-check-custom + label { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; width: 100%; font-size: 0.85rem; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .btn-check-custom:checked[value="B"] + label, .btn-check-custom:checked[value="BUENO"] + label { background-color: #dcfce7; color: #166534; border-color: #166534; }
+        .btn-check-custom:checked[value="M"] + label, .btn-check-custom:checked[value="MALO"] + label { background-color: #fee2e2; color: #991b1b; border-color: #991b1b; }
+        .btn-check-custom:checked[value="N/A"] + label { background-color: #fef3c7; color: #92400e; border-color: #92400e; }
+        
+        .section-title { font-size: 1.1rem; font-weight: 800; color: var(--omega-dark); border-bottom: 2px solid var(--omega-red); padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; }
+        .accordion-button { font-weight: 700; color: var(--omega-dark); background-color: white; }
+        .accordion-button:not(.collapsed) { background-color: #f8fafc; color: var(--omega-red); }
 
-        /* PREVIEW DE FOTO */
         #foto-preview-container { display: none; width: 100%; height: 200px; background: #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 15px; position: relative; }
         #foto-preview { width: 100%; height: 100%; object-fit: cover; }
         canvas.firma { border: 2px dashed #cbd5e1; border-radius: 8px; width: 100%; background: #ffffff; cursor: crosshair; touch-action: none; }
+        
+        .btn-magico { background-color: #d4edda; color: #155724; border: 2px solid #27ae60; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; margin-bottom: 15px; transition: 0.2s; }
+        .btn-magico:hover { background-color: #c3e6cb; }
+        .btn-magico-sm { background-color: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; width: 100%; margin-bottom: 15px; }
+        .btn-magico-sm:hover { background-color: #cbd5e1; }
     </style>
 </head>
 <body>
 
     <div class="header-app d-flex justify-content-between align-items-center mb-4">
-        <h5 class="mb-0 fw-bold"><i class="fas fa-clipboard-check me-2"></i> Auditoría de Patio</h5>
+        <h5 class="mb-0 fw-bold"><i class="fas fa-clipboard-check me-2"></i> Auditoría de Patio Integral</h5>
         <a href="/admin" class="btn btn-sm btn-outline-light"><i class="fas fa-times"></i></a>
     </div>
 
-    <div class="container" style="max-width: 600px;">
+    <div class="container" style="max-width: 650px;">
         <form id="form-patio" action="/admin/patio/guardar" method="POST">
             
             <!-- DATOS INICIALES -->
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-bold text-muted small">TIPO DE EQUIPO</label>
-                            <select id="selectorTipoEquipo" class="form-select border-secondary shadow-none fw-bold" onchange="cambiarBlueprint()">
-                                <option value="CARRO" selected>Vehículo Ligero (Carro / Camioneta)</option>
-                                <option value="MAQUINA">Maquinaria Pesada / Especial</option>
-                            </select>
-                        </div>
+                <div class="card-body row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-muted small">TIPO DE EQUIPO</label>
+                        <select id="selectorTipoEquipo" class="form-select border-secondary fw-bold" onchange="cambiarBlueprint()">
+                            <option value="CARRO" selected>Vehículo Ligero (Carro / Camioneta)</option>
+                            <option value="MAQUINA">Maquinaria Pesada / Especial</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-muted small">PLACA / ID</label>
+                        <input list="listaPlacas" name="placa" class="form-control fw-bold" placeholder="Escribir..." required autocomplete="off" style="text-transform: uppercase;">
+                        <datalist id="listaPlacas">
+                            <% vehiculos.forEach(v => { %> <option value="<%= v.placa %>"> <% }) %>
+                        </datalist>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-muted small">MOVIMIENTO</label>
+                        <select name="tipo_movimiento" class="form-select border-secondary" required>
+                            <option value="SALIDA">Salida a Operación</option>
+                            <option value="ENTRADA">Llegada a Patio</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="col-6">
-                            <label class="form-label fw-bold text-muted small">PLACA / IDENTIFICADOR</label>
-                            <!-- DATALIST: Permite seleccionar o Escribir texto libre -->
-                            <input list="listaPlacas" name="placa" class="form-control border-secondary shadow-none fw-bold" placeholder="Escribir o elegir..." required autocomplete="off">
-                            <datalist id="listaPlacas">
-                                <% vehiculos.forEach(v => { %>
-                                    <option value="<%= v.placa %>">
+            <!-- SECCIÓN 1: NOVEDADES 360 Y LLANTAS -->
+            <h4 class="section-title"><i class="fas fa-car-crash text-danger me-2"></i> 1. Novedades y Daños (Carrocería)</h4>
+            <p class="text-muted small mb-3">Toque los puntos rojos para fotografiar abolladuras o rayones.</p>
+            
+            <div id="blueprint-carro" class="blueprint-container">
+                <div class="hotspot hs-frente" onclick="abrirCamara('Frente')" title="Frente"><i class="fas fa-car-crash"></i></div>
+                <div class="hotspot hs-atras" onclick="abrirCamara('Atrás')" title="Atrás"><i class="fas fa-car-side fa-flip-horizontal"></i></div>
+                <div class="hotspot hs-izq" onclick="abrirCamara('Lateral Izquierdo')" title="Lateral Izquierdo"><i class="fas fa-car-side"></i></div>
+                <div class="hotspot hs-der" onclick="abrirCamara('Lateral Derecho')" title="Lateral Derecho"><i class="fas fa-car-side fa-flip-horizontal"></i></div>
+                <div class="hotspot hs-techo" onclick="abrirCamara('Interior')" title="Interior"><i class="fas fa-couch"></i></div>
+            </div>
+
+            <div id="blueprint-maquina" class="blueprint-container">
+                <div class="hotspot hs-pala" onclick="abrirCamara('Implemento Frontal')" title="Frente"><i class="fas fa-snowplow"></i></div>
+                <div class="hotspot hs-motor" onclick="abrirCamara('Motor y Atrás')" title="Atrás"><i class="fas fa-cogs"></i></div>
+                <div class="hotspot hs-oruga-izq" onclick="abrirCamara('Lado Izquierdo')" title="Lateral Izquierdo"><i class="fas fa-truck-monster"></i></div>
+                <div class="hotspot hs-oruga-der" onclick="abrirCamara('Lado Derecho')" title="Lateral Derecho"><i class="fas fa-truck-monster"></i></div>
+                <div class="hotspot hs-cabina" onclick="abrirCamara('Cabina')" title="Cabina"><i class="fas fa-user-shield"></i></div>
+            </div>
+
+            <!-- BOTÓN FOTO LLANTAS -->
+            <button type="button" class="btn btn-outline-danger w-100 mb-4 py-2 fw-bold" id="btn-foto-LLANTAS" onclick="abrirCamara('Foto Llantas')">
+                <i class="fas fa-camera me-2"></i> Adjuntar Fotografía de Llantas / Neumáticos
+            </button>
+
+            <!-- SECCIÓN 2: INSPECCIÓN PREOPERACIONAL (Solo Carro) -->
+            <div id="bloques-adicionales-carro">
+                <h4 class="section-title"><i class="fas fa-clipboard-list text-primary me-2"></i> 2. Inspección Preoperacional</h4>
+                <div class="card shadow-sm border-0 mb-4 bg-white">
+                    <div class="card-body p-3">
+                        <button type="button" class="btn-magico" onclick="marcarTodosBuenoPreop()">
+                            <i class="fas fa-magic"></i> Marcar todos los ítems como Bueno
+                        </button>
+                        <% 
+                        const catPreop = {
+                            "Documentación Legal": [
+                                "SOAT vigente", "Revisión Técnico Mecánica", "Tarjeta de Propiedad", 
+                                "Póliza RCC y RCE", "Póliza Todo Riesgo", "Tarjeta de Operación"
+                            ],
+                            "Niveles": ["Líquido refrigerante de radiador", "Líquido de frenos", "Aceite motor", "Nivel líquido hidráulico", "Agua de limpiavidrios"],
+                            "Pedales": ["Acelerador (Uniformidad)", "Clutch (Cloche o embrague)", "Freno (Agarre)"],
+                            "Luces": ["Luces (Altas, medias, bajas)", "Direccionales", "Estacionarias", "Stops (Frenos)", "Testigos del tablero", "Luz de reversa", "Luces internas"],
+                            "Varios (Estado General)": ["Llantas (Labrado 2 mm y aire)", "Batería (Borner, sin corrosión)", "Rines (sin golpes/fisuras)", "Cinturón de seguridad en todos los puestos", "Pito reversa (Vehículos operativos)", "Pito", "Freno de emergencia", "Espejos laterales y cabina (sin fisuras)", "Estado carcasa luces", "Plumillas/limpiabrisas (no dejan marcas)", "Tapizado", "Panorámico (sin fisuras)", "Estado del Radiotelefono", "Aire Acondicionado", "Vidrios Laterales", "Vidrio Trasero", "Tercer Stop"]
+                        };
+                        for(let cat in catPreop) { %>
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark bg-light p-2 rounded"><%= cat %></h6>
+                                <% catPreop[cat].forEach(item => { 
+                                    let idName = item.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''); 
+                                    // Si es documentación (excepto tarjeta propiedad), solicitamos fecha
+                                    let requiereFecha = (cat === "Documentación Legal" && item !== "Tarjeta de Propiedad");
+                                %>
+                                    <div class="mb-3 border-bottom pb-2">
+                                        <p class="mb-1 small fw-bold text-muted"><%= item %></p>
+                                        <div class="d-flex gap-1 mb-2">
+                                            <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="P_<%= idName %>_B" value="BUENO" class="d-none btn-check-custom chk-preop"><label for="P_<%= idName %>_B">Bueno</label></div>
+                                            <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="P_<%= idName %>_M" value="MALO" class="d-none btn-check-custom chk-preop"><label for="P_<%= idName %>_M">Malo</label></div>
+                                            <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="P_<%= idName %>_N" value="N/A" class="d-none btn-check-custom chk-preop"><label for="P_<%= idName %>_N">N/A</label></div>
+                                        </div>
+                                        
+                                        <% if (requiereFecha) { %>
+                                            <div class="input-group input-group-sm mb-2">
+                                                <span class="input-group-text bg-warning text-dark fw-bold" style="font-size: 0.75rem;"><i class="fas fa-calendar-alt me-1"></i> Vence:</span>
+                                                <input type="date" id="vence_P_<%= idName %>" class="form-control form-control-sm">
+                                            </div>
+                                        <% } %>
+
+                                        <input type="text" id="obs_P_<%= idName %>" class="form-control form-control-sm bg-light" placeholder="Observación (opcional)...">
+                                    </div>
                                 <% }) %>
-                            </datalist>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: EQUIPOS DE EMERGENCIA -->
+            <h4 class="section-title"><i class="fas fa-toolbox text-success me-2"></i> 3. Equipos y Emergencias</h4>
+            <div class="accordion shadow-sm border-0 mb-4" id="acordeonEquipos">
+                
+                <% 
+                const catEquipos = {
+                    "Botiquín": {
+                        icono: "fa-medkit", color: "text-danger", prefijo: "BOT", agrupado: true,
+                        grupos: {
+                            "Material de Curación": [
+                                { nombre: "Micropore de 2\"", cant: "1 Unid" }, { nombre: "Parche Ocular", cant: "1 Unid." }, { nombre: "Aplicadores de Algodón", cant: "1 Paq X 10" }, { nombre: "Curitas", cant: "Paq x 10" }, { nombre: "Toallas antisepticas", cant: "2 Unid." }, { nombre: "Esparadrapo de tela", cant: "1 Unid." }, { nombre: "Compresas", cant: "2 Unid." }, { nombre: "Gasa estéril (7,5x7,5)", cant: "3 Paquetes" }, { nombre: "Bajalenguas", cant: "1 Paq X 20" }
+                            ],
+                            "Inmovilizadores": [
+                                { nombre: "Inmovilizador cervical", cant: "1 Unid" }, { nombre: "Inmovilizadores 4 miembros", cant: "1 Unid" }, { nombre: "Vendas elasticas 4x5 yd", cant: "2 Unid." }, { nombre: "Vendas elastica 3x5 yd", cant: "2 Unid" }, { nombre: "Venda triangular", cant: "6 Unid" }
+                            ],
+                            "Antisépticos": [
+                                { nombre: "Isodine solución", cant: "1 Frasco" }, { nombre: "Isodine espuma 120 ml", cant: "1 Frasco" }, { nombre: "Cloruro de sodio", cant: "1 Botella" }
+                            ],
+                            "Instrumental y Otros": [
+                                { nombre: "Tapabocas", cant: "2 Unid" }, { nombre: "Guantes de latex", cant: "3 Unid" }, { nombre: "Termometro digital", cant: "1 Unid." }, { nombre: "Mascara RCP", cant: "1 Unid" }, { nombre: "Esfero", cant: "1 Unid" }, { nombre: "Pito", cant: "1 Unid" }, { nombre: "Libreta de notas", cant: "1 Unid" }, { nombre: "Linterna Recargable", cant: "1 Unid" }, { nombre: "Tijeras Punta Roma", cant: "1 Unid." }, { nombre: "Manual de Primeros Auxilios", cant: "1 Unid." }
+                            ]
+                        }
+                    },
+                    "Kit de Carreteras": {
+                        icono: "fa-wrench", color: "text-secondary", prefijo: "CAR", agrupado: false,
+                        items: [
+                            { nombre: "Conos reflectivos 50/70cm", cant: "2 UNID" }, { nombre: "Tacos para llantas (Madera)", cant: "2 UNID" }, { nombre: "Gato con vástago", cant: "1 UNID" }, { nombre: "Palanca", cant: "1 UNID" }, { nombre: "Llave expansiva", cant: "1 UNID" }, { nombre: "Destornillador de pala", cant: "1 UNID" }, { nombre: "Llave pernos ruedas (Copa)", cant: "1 UNID" }, { nombre: "Juego de llaves fijas", cant: "1 UNID" }, { nombre: "Destornillador de estrella", cant: "1 UNID" }, { nombre: "Alicate", cant: "1 UNID" }, { nombre: "Llanta de repuesto", cant: "1 UNID" }, { nombre: "Linterna", cant: "1 UNID" }, { nombre: "Chaleco reflectivo", cant: "1 UNID" }, { nombre: "Calibrador de presión aire", cant: "1 UND" }, { nombre: "Cables de inicio", cant: "1 UND" }
+                        ]
+                    },
+                    "Kit Ambiental": {
+                        icono: "fa-leaf", color: "text-success", prefijo: "AMB", agrupado: false,
+                        items: [
+                            { nombre: "Tela oleofílica", cant: "3 MTS" }, { nombre: "Barrera oleofílica 5x10", cant: "1" }, { nombre: "Encapsulador / Absorbente", cant: "5 KILOS" }, { nombre: "Desengrasante biodegradable", cant: "1 GALON" }, { nombre: "Cinta de peligro", cant: "1 ROLLO" }, { nombre: "Manila 10mts", cant: "10 MTS" }, { nombre: "Pala antichispa", cant: "1" }, { nombre: "Martillo de caucho", cant: "1" }, { nombre: "Linterna antichispa", cant: "1" }, { nombre: "Caneca plástica", cant: "1" }, { nombre: "Masilla epóxica", cant: "1" }, { nombre: "Bolsas de propileno", cant: "3 C/U" }, { nombre: "Lonas de polipropileno", cant: "3" }, { nombre: "Hipoclorito de sodio", cant: "2 KILOS" }, { nombre: "Chaleco reflectivo", cant: "1" }, { nombre: "Geomembrana / Plástico", cant: "1" }, { nombre: "Estacas de madera", cant: "1 PAQ" }, { nombre: "Paleta de PARE", cant: "1" }, { nombre: "Guantes de nitrilo largos", cant: "1 PAR" }, { nombre: "Guantes de vaqueta", cant: "1 PAR" }, { nombre: "Mascarilla gases/vapores", cant: "1" }, { nombre: "Monogafas", cant: "1" }, { nombre: "Tayvet (Overol)", cant: "1" }
+                        ]
+                    }
+                };
+                
+                for(let cat in catEquipos) { 
+                    const info = catEquipos[cat];
+                    const idCont = "acc_" + info.prefijo;
+                %>
+                    <div class="accordion-item" id="<%= idCont %>">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#col_<%= idCont %>">
+                                <i class="fas <%= info.icono %> <%= info.color %> me-2 fs-5"></i> <%= cat %>
+                            </button>
+                        </h2>
+                        <div id="col_<%= idCont %>" class="accordion-collapse collapse" data-bs-parent="#acordeonEquipos">
+                            <div class="accordion-body bg-light">
+                                
+                                <button type="button" class="btn btn-outline-primary w-100 mb-2 py-2 fw-bold" id="btn-foto-<%= info.prefijo %>" onclick="abrirCamara('Foto <%= cat %>')">
+                                    <i class="fas fa-camera me-2"></i> Adjuntar Fotografía del <%= cat %>
+                                </button>
+
+                                <button type="button" class="btn-magico-sm" onclick="marcarGrupoEquipos('<%= idCont %>')">
+                                    <i class="fas fa-check-double"></i> Marcar todo como Bueno
+                                </button>
+
+                                <% if (info.agrupado) { %>
+                                    <% for(let grupo in info.grupos) { %>
+                                        <div class="mt-4 mb-2 p-2 bg-dark text-white rounded small fw-bold text-uppercase"><i class="fas fa-layer-group me-2"></i><%= grupo %></div>
+                                        <% info.grupos[grupo].forEach(itemObj => { 
+                                            let nombre = itemObj.nombre; let cant = itemObj.cant;
+                                            let idName = info.prefijo + '_' + nombre.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''); 
+                                        %>
+                                            <div class="mb-3 p-2 border rounded bg-white shadow-sm">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <p class="mb-0 small fw-bold text-dark w-50" style="line-height: 1.2;"><%= nombre %></p>
+                                                    <div class="input-group input-group-sm w-50">
+                                                        <span class="input-group-text bg-light text-muted" style="font-size: 0.7rem;">Cant.</span>
+                                                        <input type="text" class="form-control text-center fw-bold input-cantidad" data-item="<%= nombre %>" value="<%= cant %>">
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex gap-1 mb-2">
+                                                    <div class="flex-grow-1"><input type="radio" name="<%= idName %>_estado" id="<%= idName %>_B" value="B" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= nombre %>"><label for="<%= idName %>_B">Bueno</label></div>
+                                                    <div class="flex-grow-1"><input type="radio" name="<%= idName %>_estado" id="<%= idName %>_M" value="M" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= nombre %>"><label for="<%= idName %>_M">Malo</label></div>
+                                                    <div class="flex-grow-1"><input type="radio" name="<%= idName %>_estado" id="<%= idName %>_NA" value="N/A" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= nombre %>"><label for="<%= idName %>_NA">N/A</label></div>
+                                                </div>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light text-muted" style="font-size: 0.75rem;">Vence:</span>
+                                                    <input type="date" name="<%= idName %>_vence" class="form-control input-vencimiento" data-item="<%= nombre %>">
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    <% } %>
+                                <% } else { %>
+                                    <% info.items.forEach(itemObj => { 
+                                        let nombre = itemObj.nombre; let cant = itemObj.cant;
+                                        let idName = info.prefijo + '_' + nombre.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''); 
+                                    %>
+                                        <div class="mb-3 p-2 border rounded bg-white shadow-sm">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <p class="mb-0 small fw-bold text-dark w-50" style="line-height: 1.2;"><%= nombre %></p>
+                                                <div class="input-group input-group-sm w-50">
+                                                    <span class="input-group-text bg-light text-muted" style="font-size: 0.7rem;">Cant.</span>
+                                                    <input type="text" class="form-control text-center fw-bold input-cantidad" data-item="<%= nombre %>" value="<%= cant %>">
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-1">
+                                                <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="<%= idName %>_B" value="B" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= nombre %>"><label for="<%= idName %>_B">Bueno</label></div>
+                                                <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="<%= idName %>_M" value="M" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= nombre %>"><label for="<%= idName %>_M">Malo</label></div>
+                                                <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="<%= idName %>_NA" value="N/A" class="d-none btn-check-custom chk-equipo" data-categoria="<%= cat %>" data-item="<%= nombre %>"><label for="<%= idName %>_NA">N/A</label></div>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
                         </div>
-                        
-                        <div class="col-6">
-                            <label class="form-label fw-bold text-muted small">MOVIMIENTO</label>
-                            <select name="tipo_movimiento" class="form-select border-secondary shadow-none" required>
-                                <option value="SALIDA">Salida de patio</option>
-                                <option value="ENTRADA">Llegada a patio</option>
-                            </select>
+                    </div>
+                <% } %>
+                
+                <!-- INSPECCIÓN DETALLADA EXTINTOR -->
+                <div class="accordion-item" id="acc_EXT">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#col_extintor">
+                            <i class="fas fa-fire-extinguisher text-danger me-2 fs-5"></i> Inspección de Extintor
+                        </button>
+                    </h2>
+                    <div id="col_extintor" class="accordion-collapse collapse" data-bs-parent="#acordeonEquipos">
+                        <div class="accordion-body bg-light">
+                            <button type="button" class="btn btn-outline-primary w-100 mb-3 py-2 fw-bold" id="btn-foto-EXT" onclick="abrirCamara('Foto Extintor')">
+                                <i class="fas fa-camera me-2"></i> Adjuntar Fotografía del Extintor
+                            </button>
+                            
+                            <!-- DATOS TÉCNICOS DEL EXTINTOR -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">Capacidad</label>
+                                    <input type="text" id="extintor_capacidad" class="form-control" placeholder="Ej: 10 Libras">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">Clase de Fuego</label>
+                                    <input type="text" id="extintor_clase" class="form-control" placeholder="Ej: ABC / CO2">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">Fecha Última Recarga</label>
+                                    <input type="date" id="extintor_f_recarga" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted">Fecha Vencimiento</label>
+                                    <input type="date" id="extintor_f_vencimiento" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="mt-4 mb-2 p-2 bg-dark text-white rounded small fw-bold text-uppercase"><i class="fas fa-list-check me-2"></i>Estado de Componentes</div>
+                            
+                            <button type="button" class="btn-magico-sm" onclick="marcarGrupoEquipos('acc_EXT')">
+                                <i class="fas fa-check-double"></i> Marcar componentes como Bueno
+                            </button>
+
+                            <% 
+                            const itemsExtintor = [
+                                "Cilindro (Sin abolladuras ni corrosión)", "Manómetro (Presión en zona verde)",
+                                "Manguera y/o Corneta", "Pasador de seguridad", "Sello de seguridad (Intacto)",
+                                "Pintura general", "Etiquetas e instrucciones legibles", "Soporte de instalación"
+                            ];
+                            itemsExtintor.forEach(item => { let idName = 'EXT_' + item.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''); %>
+                                <div class="mb-2 p-2 border rounded bg-white shadow-sm">
+                                    <p class="mb-2 small fw-bold text-dark"><%= item %></p>
+                                    <div class="d-flex gap-1">
+                                        <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="<%= idName %>_B" value="B" class="d-none btn-check-custom chk-equipo" data-categoria="Extintor" data-item="<%= item %>"><label for="<%= idName %>_B">Bueno</label></div>
+                                        <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="<%= idName %>_M" value="M" class="d-none btn-check-custom chk-equipo" data-categoria="Extintor" data-item="<%= item %>"><label for="<%= idName %>_M">Malo</label></div>
+                                        <div class="flex-grow-1"><input type="radio" name="<%= idName %>" id="<%= idName %>_NA" value="N/A" class="d-none btn-check-custom chk-equipo" data-categoria="Extintor" data-item="<%= item %>"><label for="<%= idName %>_NA">N/A</label></div>
+                                    </div>
+                                </div>
+                            <% }) %>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- CARRO INTERACTIVO 360 -->
-            <div class="text-center mb-2">
-                <h6 class="fw-bold text-dark"><i class="fas fa-hand-pointer text-primary"></i> Toque un punto para registrar el estado actual</h6>
-                <small class="text-muted">Añada fotos y comentarios sobre el estado visual del equipo.</small>
-            </div>
-            
-            <!-- BLUEPRINT: CARRO -->
-            <div id="blueprint-carro" class="blueprint-container">
-                <div class="hotspot hs-frente" onclick="abrirCamara('Frente / Capó')" title="Frente"><i class="fas fa-car-crash"></i></div>
-                <div class="hotspot hs-atras" onclick="abrirCamara('Atrás / Baúl')" title="Atrás"><i class="fas fa-car-side fa-flip-horizontal"></i></div>
-                <div class="hotspot hs-izq" onclick="abrirCamara('Lateral Izquierdo')" title="Lateral Izquierdo"><i class="fas fa-car-side"></i></div>
-                <div class="hotspot hs-der" onclick="abrirCamara('Lateral Derecho')" title="Lateral Derecho"><i class="fas fa-car-side fa-flip-horizontal"></i></div>
-                <div class="hotspot hs-techo" onclick="abrirCamara('Interior / Techo')" title="Interior"><i class="fas fa-couch"></i></div>
+            <!-- SECCIÓN 4: OBSERVACIONES GENERALES -->
+            <h4 class="section-title"><i class="fas fa-comment-dots text-info me-2"></i> 4. Observaciones Generales</h4>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-3">
+                    <p class="text-muted small mb-2">Registre cualquier novedad adicional o comentario general sobre la auditoría.</p>
+                    <textarea id="observaciones_generales" class="form-control bg-light" rows="4" placeholder="Escriba sus observaciones aquí..."></textarea>
+                </div>
             </div>
 
-            <!-- BLUEPRINT: MAQUINA PESADA -->
-            <div id="blueprint-maquina" class="blueprint-container">
-                <div class="hotspot hs-pala" onclick="abrirCamara('Implemento Frontal / Pala')" title="Pala/Frente"><i class="fas fa-snowplow"></i></div>
-                <div class="hotspot hs-motor" onclick="abrirCamara('Compartimiento Motor / Atrás')" title="Atrás"><i class="fas fa-cogs"></i></div>
-                <div class="hotspot hs-oruga-izq" onclick="abrirCamara('Oruga / Llantas Izquierda')" title="Lateral Izquierdo"><i class="fas fa-truck-monster"></i></div>
-                <div class="hotspot hs-oruga-der" onclick="abrirCamara('Oruga / Llantas Derecha')" title="Lateral Derecho"><i class="fas fa-truck-monster"></i></div>
-                <div class="hotspot hs-cabina" onclick="abrirCamara('Cabina de Operación')" title="Cabina"><i class="fas fa-user-shield"></i></div>
-            </div>
-
-            <!-- FIRMA DEL JEFE -->
-            <div class="card shadow-sm border-0 mt-4 mb-4">
+            <!-- FIRMA -->
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
                     <label class="form-label fw-bold text-muted small"><i class="fas fa-signature"></i> Firma del Jefe / Auditor</label>
                     <canvas id="firmaCanvas" class="firma" height="150"></canvas>
@@ -153,17 +346,16 @@
                 </div>
             </div>
 
-            <!-- HIDDEN INPUTS (Aquí enviaremos el JSON y la firma al Backend) -->
             <input type="hidden" name="evidenciasJSON" id="evidenciasJSON" value="{}">
             <input type="hidden" name="firmaBase64" id="firmaBase64" required>
 
             <button type="button" onclick="enviarFormulario()" class="btn btn-lg w-100 text-white fw-bold shadow" style="background-color: var(--omega-dark);">
-                <i class="fas fa-paper-plane me-2"></i> REGISTRAR Y ENVIAR ALERTA
+                <i class="fas fa-paper-plane me-2"></i> GENERAR AUDITORÍA COMPLETA
             </button>
         </form>
     </div>
 
-    <!-- MODAL DE LA CÁMARA (Se abre al tocar un punto rojo) -->
+    <!-- MODAL DE CÁMARA (MULTIUSO) -->
     <div class="modal fade" id="modalCamara" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -172,23 +364,19 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    
                     <div class="d-grid mb-3">
                         <input type="file" id="fotoInput" accept="image/*" capture="environment" class="d-none" onchange="comprimirYProcesarFoto(this)">
                         <button type="button" class="btn btn-danger btn-lg py-4 fw-bold shadow-sm" onclick="document.getElementById('fotoInput').click()">
                             <i class="fas fa-camera fs-1 mb-2 d-block"></i> TOMAR FOTOGRAFÍA
                         </button>
                     </div>
-
-                    <!-- Previsualización -->
                     <div id="foto-preview-container">
                         <img id="foto-preview" src="">
                         <button type="button" class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2" onclick="document.getElementById('fotoInput').click()"><i class="fas fa-sync"></i> Cambiar</button>
                     </div>
-
                     <div class="mt-3">
-                        <label class="form-label fw-bold text-muted small">Estado / Novedad actual</label>
-                        <textarea id="comentarioInput" class="form-control" rows="2" placeholder="Ej: Operativa sin daños / Rayón profundo..."></textarea>
+                        <label class="form-label fw-bold text-muted small">Novedad / Observación de la foto (Opcional)</label>
+                        <textarea id="comentarioInput" class="form-control" rows="2" placeholder="Ej: Kit completo / Rayón profundo..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -199,26 +387,39 @@
         </div>
     </div>
 
-    <!-- LIBRERÍAS DE FUNCIONAMIENTO -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <script>
-        // 1. ALTERNAR VISTAS (CARRO VS MÁQUINA)
+        function marcarTodosBuenoPreop() {
+            document.querySelectorAll('.chk-preop[value="BUENO"]').forEach(radio => radio.checked = true);
+        }
+
+        function marcarGrupoEquipos(acordeonId) {
+            const acordeon = document.getElementById(acordeonId);
+            if(acordeon) {
+                acordeon.querySelectorAll('.chk-equipo[value="B"]').forEach(radio => radio.checked = true);
+            }
+        }
+
         function cambiarBlueprint() {
             const tipo = document.getElementById('selectorTipoEquipo').value;
             if (tipo === 'CARRO') {
                 document.getElementById('blueprint-carro').style.display = 'block';
                 document.getElementById('blueprint-maquina').style.display = 'none';
+                document.getElementById('bloques-adicionales-carro').style.display = 'block';
+                document.getElementById('acc_CAR').style.display = 'block';
+                document.getElementById('acc_AMB').style.display = 'none';
             } else {
                 document.getElementById('blueprint-carro').style.display = 'none';
                 document.getElementById('blueprint-maquina').style.display = 'block';
+                document.getElementById('bloques-adicionales-carro').style.display = 'none';
+                document.getElementById('acc_CAR').style.display = 'none';
+                document.getElementById('acc_AMB').style.display = 'block';
             }
         }
-        // Ejecutar al cargar la página
         cambiarBlueprint();
 
-        // 2. MOTOR DE EVIDENCIAS Y CÁMARA
         let zonaActual = '';
         let fotoBase64Temporal = '';
         const evidenciasAlmacenadas = {}; 
@@ -226,115 +427,147 @@
 
         function abrirCamara(zona) {
             zonaActual = zona;
-            document.getElementById('modalTitulo').innerText = 'Registro: ' + zona;
-            
-            // Limpiar modal
+            document.getElementById('modalTitulo').innerText = zona;
             document.getElementById('fotoInput').value = '';
             document.getElementById('comentarioInput').value = '';
             document.getElementById('foto-preview-container').style.display = 'none';
             fotoBase64Temporal = '';
 
-            // Si ya había evidencia en esa zona, cargarla
             if(evidenciasAlmacenadas[zona]) {
                 fotoBase64Temporal = evidenciasAlmacenadas[zona].foto;
                 document.getElementById('foto-preview').src = fotoBase64Temporal;
                 document.getElementById('foto-preview-container').style.display = 'block';
                 document.getElementById('comentarioInput').value = evidenciasAlmacenadas[zona].comentario;
             }
-
             modalCamara.show();
         }
 
-        // COMPRESIÓN DE IMAGEN (Evita el Error PayloadTooLarge)
         function comprimirYProcesarFoto(input) {
             if (input.files && input.files[0]) {
-                const file = input.files[0];
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
                     const img = new Image();
                     img.src = e.target.result;
-                    
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // Resolución optimizada para PDF
-                        const MAX_HEIGHT = 800;
-                        let width = img.width;
-                        let height = img.height;
-
-                        // Mantener la proporción
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
+                        const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
+                        let width = img.width; let height = img.height;
+                        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Exportar a JPG con calidad 60%
                         fotoBase64Temporal = canvas.toDataURL('image/jpeg', 0.6);
-                        
                         document.getElementById('foto-preview').src = fotoBase64Temporal;
                         document.getElementById('foto-preview-container').style.display = 'block';
                     }
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
         function guardarEvidencia() {
-            if (!fotoBase64Temporal) {
-                alert('Debe tomar una fotografía para registrar el estado.');
-                return;
-            }
-            // Guardamos en memoria
-            evidenciasAlmacenadas[zonaActual] = {
-                foto: fotoBase64Temporal,
-                comentario: document.getElementById('comentarioInput').value
-            };
+            if (!fotoBase64Temporal) { alert('Debe tomar una fotografía.'); return; }
+            evidenciasAlmacenadas[zonaActual] = { foto: fotoBase64Temporal, comentario: document.getElementById('comentarioInput').value };
             
-            // Buscar y marcar todos los puntos con el nombre de la zona actual en VERDE
-            const hotspots = document.querySelectorAll('.hotspot');
-            hotspots.forEach(hp => {
-                // Comparamos usando el onclick (hack visual)
-                if(hp.getAttribute('onclick').includes(zonaActual)) {
-                    hp.classList.add('completed');
-                    hp.innerHTML = '<i class="fas fa-check"></i>';
+            if(zonaActual.startsWith('Foto ')) {
+                let idBtn = '';
+                if(zonaActual.includes('Botiquín')) idBtn = 'btn-foto-BOT';
+                else if(zonaActual.includes('Carreteras')) idBtn = 'btn-foto-CAR';
+                else if(zonaActual.includes('Ambiental')) idBtn = 'btn-foto-AMB';
+                else if(zonaActual.includes('Extintor')) idBtn = 'btn-foto-EXT';
+                else if(zonaActual.includes('Llantas')) idBtn = 'btn-foto-LLANTAS'; // Captura del nuevo botón
+                
+                const btn = document.getElementById(idBtn);
+                if(btn) {
+                    // Si es el de llantas venía danger, lo pasamos a success
+                    btn.classList.remove('btn-outline-primary', 'btn-outline-danger');
+                    btn.classList.add('btn-success');
+                    btn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Fotografía Adjuntada';
                 }
-            });
-            
+            } else {
+                document.querySelectorAll('.hotspot').forEach(hp => {
+                    if(hp.getAttribute('onclick').includes(zonaActual)) {
+                        hp.classList.add('completed'); hp.innerHTML = '<i class="fas fa-check"></i>';
+                    }
+                });
+            }
             modalCamara.hide();
         }
 
-        // 3. MOTOR DE FIRMA
         const canvas = document.getElementById('firmaCanvas');
         function redimensionarCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
+            canvas.width = canvas.offsetWidth * ratio; canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
         }
         window.addEventListener("resize", redimensionarCanvas);
-        setTimeout(redimensionarCanvas, 200); // Dar tiempo al render
-        
+        setTimeout(redimensionarCanvas, 200);
         const signaturePad = new SignaturePad(canvas, { penColor: "rgb(15, 23, 42)" });
         function limpiarFirma() { signaturePad.clear(); }
 
-        // 4. ENVIAR FORMULARIO
         function enviarFormulario() {
-            if (signaturePad.isEmpty()) {
-                alert("Por favor, registre la firma antes de guardar.");
-                return;
-            }
+            if (signaturePad.isEmpty()) { alert("Por favor, registre la firma del inspector."); return; }
             
+            // 1. Recopilar Checklist Preoperacional (Si es Carro)
+            if (document.getElementById('selectorTipoEquipo').value === 'CARRO') {
+                const checklistPreop = {};
+                document.querySelectorAll('.chk-preop:checked').forEach(radio => { 
+                    const obsInput = document.getElementById('obs_P_' + radio.name);
+                    const venceInput = document.getElementById('vence_P_' + radio.name);
+                    
+                    checklistPreop[radio.name] = {
+                        estado: radio.value,
+                        observacion: obsInput ? obsInput.value : '',
+                        vencimiento: venceInput ? (venceInput.value || 'N/A') : undefined
+                    };
+                });
+                evidenciasAlmacenadas['checklist_preoperacional'] = checklistPreop;
+            }
+
+            // 2. Recopilar Equipos (Botiquín, Kits, Extintor)
+            const checklistEquipos = {
+                "Botiquín": {}, "Kit de Carreteras": {}, "Kit Ambiental": {}, "Extintor": {},
+                "Extintor_Datos": {
+                    capacidad: document.getElementById('extintor_capacidad').value,
+                    clase: document.getElementById('extintor_clase').value,
+                    fecha_recarga: document.getElementById('extintor_f_recarga').value,
+                    proxima_recarga: document.getElementById('extintor_f_vencimiento').value
+                }
+            };
+
+            // Agrupamos el estado, la fecha y LA CANTIDAD en un solo objeto por item
+            document.querySelectorAll('.chk-equipo:checked').forEach(radio => {
+                const cat = radio.getAttribute('data-categoria');
+                const item = radio.getAttribute('data-item');
+                
+                if (checklistEquipos[cat]) {
+                    if (!checklistEquipos[cat][item]) checklistEquipos[cat][item] = {};
+                    checklistEquipos[cat][item].estado = radio.value;
+                    
+                    // Buscar si tiene fecha de vencimiento
+                    const inputFecha = document.querySelector(`input.input-vencimiento[data-item="${item}"]`);
+                    if (inputFecha) {
+                        checklistEquipos[cat][item].vencimiento = inputFecha.value || 'N/A';
+                    }
+
+                    // Buscar cantidad editable
+                    const inputCant = document.querySelector(`input.input-cantidad[data-item="${item}"]`);
+                    if (inputCant) {
+                        checklistEquipos[cat][item].cantidad = inputCant.value || '0';
+                    }
+                }
+            });
+            evidenciasAlmacenadas['checklist_equipos'] = checklistEquipos;
+
+            // 3. Capturar Observaciones Generales
+            evidenciasAlmacenadas['observaciones_generales'] = document.getElementById('observaciones_generales').value;
+
             document.getElementById('evidenciasJSON').value = JSON.stringify(evidenciasAlmacenadas);
             document.getElementById('firmaBase64').value = signaturePad.toDataURL();
             
             const btn = document.querySelector('button[onclick="enviarFormulario()"]');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERANDO REGISTRO...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERANDO DOCUMENTO...';
             btn.disabled = true;
 
             document.getElementById('form-patio').submit();

@@ -33,6 +33,11 @@ export type Inspeccion = $Result.DefaultSelection<Prisma.$InspeccionPayload>
  * 
  */
 export type InspeccionPatio = $Result.DefaultSelection<Prisma.$InspeccionPatioPayload>
+/**
+ * Model InspeccionEquipos
+ * 
+ */
+export type InspeccionEquipos = $Result.DefaultSelection<Prisma.$InspeccionEquiposPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -196,6 +201,16 @@ export class PrismaClient<
     * ```
     */
   get inspeccionPatio(): Prisma.InspeccionPatioDelegate<ExtArgs>;
+
+  /**
+   * `prisma.inspeccionEquipos`: Exposes CRUD operations for the **InspeccionEquipos** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more InspeccionEquipos
+    * const inspeccionEquipos = await prisma.inspeccionEquipos.findMany()
+    * ```
+    */
+  get inspeccionEquipos(): Prisma.InspeccionEquiposDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -640,7 +655,8 @@ export namespace Prisma {
     Usuario: 'Usuario',
     Vehiculo: 'Vehiculo',
     Inspeccion: 'Inspeccion',
-    InspeccionPatio: 'InspeccionPatio'
+    InspeccionPatio: 'InspeccionPatio',
+    InspeccionEquipos: 'InspeccionEquipos'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -656,7 +672,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "usuario" | "vehiculo" | "inspeccion" | "inspeccionPatio"
+      modelProps: "usuario" | "vehiculo" | "inspeccion" | "inspeccionPatio" | "inspeccionEquipos"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -940,6 +956,76 @@ export namespace Prisma {
           }
         }
       }
+      InspeccionEquipos: {
+        payload: Prisma.$InspeccionEquiposPayload<ExtArgs>
+        fields: Prisma.InspeccionEquiposFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.InspeccionEquiposFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.InspeccionEquiposFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>
+          }
+          findFirst: {
+            args: Prisma.InspeccionEquiposFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.InspeccionEquiposFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>
+          }
+          findMany: {
+            args: Prisma.InspeccionEquiposFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>[]
+          }
+          create: {
+            args: Prisma.InspeccionEquiposCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>
+          }
+          createMany: {
+            args: Prisma.InspeccionEquiposCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.InspeccionEquiposCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>[]
+          }
+          delete: {
+            args: Prisma.InspeccionEquiposDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>
+          }
+          update: {
+            args: Prisma.InspeccionEquiposUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>
+          }
+          deleteMany: {
+            args: Prisma.InspeccionEquiposDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.InspeccionEquiposUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.InspeccionEquiposUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionEquiposPayload>
+          }
+          aggregate: {
+            args: Prisma.InspeccionEquiposAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateInspeccionEquipos>
+          }
+          groupBy: {
+            args: Prisma.InspeccionEquiposGroupByArgs<ExtArgs>
+            result: $Utils.Optional<InspeccionEquiposGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.InspeccionEquiposCountArgs<ExtArgs>
+            result: $Utils.Optional<InspeccionEquiposCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1103,11 +1189,13 @@ export namespace Prisma {
   export type UsuarioCountOutputType = {
     inspecciones: number
     inspecciones_patio: number
+    inspecciones_equipos: number
   }
 
   export type UsuarioCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inspecciones?: boolean | UsuarioCountOutputTypeCountInspeccionesArgs
     inspecciones_patio?: boolean | UsuarioCountOutputTypeCountInspecciones_patioArgs
+    inspecciones_equipos?: boolean | UsuarioCountOutputTypeCountInspecciones_equiposArgs
   }
 
   // Custom InputTypes
@@ -1133,6 +1221,13 @@ export namespace Prisma {
    */
   export type UsuarioCountOutputTypeCountInspecciones_patioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: InspeccionPatioWhereInput
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountInspecciones_equiposArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InspeccionEquiposWhereInput
   }
 
 
@@ -1371,6 +1466,7 @@ export namespace Prisma {
     rol?: boolean
     inspecciones?: boolean | Usuario$inspeccionesArgs<ExtArgs>
     inspecciones_patio?: boolean | Usuario$inspecciones_patioArgs<ExtArgs>
+    inspecciones_equipos?: boolean | Usuario$inspecciones_equiposArgs<ExtArgs>
     _count?: boolean | UsuarioCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["usuario"]>
 
@@ -1393,6 +1489,7 @@ export namespace Prisma {
   export type UsuarioInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inspecciones?: boolean | Usuario$inspeccionesArgs<ExtArgs>
     inspecciones_patio?: boolean | Usuario$inspecciones_patioArgs<ExtArgs>
+    inspecciones_equipos?: boolean | Usuario$inspecciones_equiposArgs<ExtArgs>
     _count?: boolean | UsuarioCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UsuarioIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1402,6 +1499,7 @@ export namespace Prisma {
     objects: {
       inspecciones: Prisma.$InspeccionPayload<ExtArgs>[]
       inspecciones_patio: Prisma.$InspeccionPatioPayload<ExtArgs>[]
+      inspecciones_equipos: Prisma.$InspeccionEquiposPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -1775,6 +1873,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     inspecciones<T extends Usuario$inspeccionesArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$inspeccionesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionPayload<ExtArgs>, T, "findMany"> | Null>
     inspecciones_patio<T extends Usuario$inspecciones_patioArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$inspecciones_patioArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findMany"> | Null>
+    inspecciones_equipos<T extends Usuario$inspecciones_equiposArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$inspecciones_equiposArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2160,6 +2259,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: InspeccionPatioScalarFieldEnum | InspeccionPatioScalarFieldEnum[]
+  }
+
+  /**
+   * Usuario.inspecciones_equipos
+   */
+  export type Usuario$inspecciones_equiposArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    where?: InspeccionEquiposWhereInput
+    orderBy?: InspeccionEquiposOrderByWithRelationInput | InspeccionEquiposOrderByWithRelationInput[]
+    cursor?: InspeccionEquiposWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InspeccionEquiposScalarFieldEnum | InspeccionEquiposScalarFieldEnum[]
   }
 
   /**
@@ -5154,6 +5273,1009 @@ export namespace Prisma {
 
 
   /**
+   * Model InspeccionEquipos
+   */
+
+  export type AggregateInspeccionEquipos = {
+    _count: InspeccionEquiposCountAggregateOutputType | null
+    _avg: InspeccionEquiposAvgAggregateOutputType | null
+    _sum: InspeccionEquiposSumAggregateOutputType | null
+    _min: InspeccionEquiposMinAggregateOutputType | null
+    _max: InspeccionEquiposMaxAggregateOutputType | null
+  }
+
+  export type InspeccionEquiposAvgAggregateOutputType = {
+    id: number | null
+    admin_id: number | null
+  }
+
+  export type InspeccionEquiposSumAggregateOutputType = {
+    id: number | null
+    admin_id: number | null
+  }
+
+  export type InspeccionEquiposMinAggregateOutputType = {
+    id: number | null
+    vehiculo_placa: string | null
+    admin_id: number | null
+    tipo_inspeccion: string | null
+    fecha_registro: Date | null
+    firma_inspector: string | null
+    eliminado: boolean | null
+  }
+
+  export type InspeccionEquiposMaxAggregateOutputType = {
+    id: number | null
+    vehiculo_placa: string | null
+    admin_id: number | null
+    tipo_inspeccion: string | null
+    fecha_registro: Date | null
+    firma_inspector: string | null
+    eliminado: boolean | null
+  }
+
+  export type InspeccionEquiposCountAggregateOutputType = {
+    id: number
+    vehiculo_placa: number
+    admin_id: number
+    tipo_inspeccion: number
+    fecha_registro: number
+    datos_inspeccion: number
+    firma_inspector: number
+    eliminado: number
+    _all: number
+  }
+
+
+  export type InspeccionEquiposAvgAggregateInputType = {
+    id?: true
+    admin_id?: true
+  }
+
+  export type InspeccionEquiposSumAggregateInputType = {
+    id?: true
+    admin_id?: true
+  }
+
+  export type InspeccionEquiposMinAggregateInputType = {
+    id?: true
+    vehiculo_placa?: true
+    admin_id?: true
+    tipo_inspeccion?: true
+    fecha_registro?: true
+    firma_inspector?: true
+    eliminado?: true
+  }
+
+  export type InspeccionEquiposMaxAggregateInputType = {
+    id?: true
+    vehiculo_placa?: true
+    admin_id?: true
+    tipo_inspeccion?: true
+    fecha_registro?: true
+    firma_inspector?: true
+    eliminado?: true
+  }
+
+  export type InspeccionEquiposCountAggregateInputType = {
+    id?: true
+    vehiculo_placa?: true
+    admin_id?: true
+    tipo_inspeccion?: true
+    fecha_registro?: true
+    datos_inspeccion?: true
+    firma_inspector?: true
+    eliminado?: true
+    _all?: true
+  }
+
+  export type InspeccionEquiposAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InspeccionEquipos to aggregate.
+     */
+    where?: InspeccionEquiposWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionEquipos to fetch.
+     */
+    orderBy?: InspeccionEquiposOrderByWithRelationInput | InspeccionEquiposOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: InspeccionEquiposWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionEquipos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionEquipos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned InspeccionEquipos
+    **/
+    _count?: true | InspeccionEquiposCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: InspeccionEquiposAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: InspeccionEquiposSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: InspeccionEquiposMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: InspeccionEquiposMaxAggregateInputType
+  }
+
+  export type GetInspeccionEquiposAggregateType<T extends InspeccionEquiposAggregateArgs> = {
+        [P in keyof T & keyof AggregateInspeccionEquipos]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateInspeccionEquipos[P]>
+      : GetScalarType<T[P], AggregateInspeccionEquipos[P]>
+  }
+
+
+
+
+  export type InspeccionEquiposGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InspeccionEquiposWhereInput
+    orderBy?: InspeccionEquiposOrderByWithAggregationInput | InspeccionEquiposOrderByWithAggregationInput[]
+    by: InspeccionEquiposScalarFieldEnum[] | InspeccionEquiposScalarFieldEnum
+    having?: InspeccionEquiposScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: InspeccionEquiposCountAggregateInputType | true
+    _avg?: InspeccionEquiposAvgAggregateInputType
+    _sum?: InspeccionEquiposSumAggregateInputType
+    _min?: InspeccionEquiposMinAggregateInputType
+    _max?: InspeccionEquiposMaxAggregateInputType
+  }
+
+  export type InspeccionEquiposGroupByOutputType = {
+    id: number
+    vehiculo_placa: string
+    admin_id: number
+    tipo_inspeccion: string
+    fecha_registro: Date
+    datos_inspeccion: JsonValue
+    firma_inspector: string
+    eliminado: boolean
+    _count: InspeccionEquiposCountAggregateOutputType | null
+    _avg: InspeccionEquiposAvgAggregateOutputType | null
+    _sum: InspeccionEquiposSumAggregateOutputType | null
+    _min: InspeccionEquiposMinAggregateOutputType | null
+    _max: InspeccionEquiposMaxAggregateOutputType | null
+  }
+
+  type GetInspeccionEquiposGroupByPayload<T extends InspeccionEquiposGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<InspeccionEquiposGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof InspeccionEquiposGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], InspeccionEquiposGroupByOutputType[P]>
+            : GetScalarType<T[P], InspeccionEquiposGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type InspeccionEquiposSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vehiculo_placa?: boolean
+    admin_id?: boolean
+    tipo_inspeccion?: boolean
+    fecha_registro?: boolean
+    datos_inspeccion?: boolean
+    firma_inspector?: boolean
+    eliminado?: boolean
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["inspeccionEquipos"]>
+
+  export type InspeccionEquiposSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vehiculo_placa?: boolean
+    admin_id?: boolean
+    tipo_inspeccion?: boolean
+    fecha_registro?: boolean
+    datos_inspeccion?: boolean
+    firma_inspector?: boolean
+    eliminado?: boolean
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["inspeccionEquipos"]>
+
+  export type InspeccionEquiposSelectScalar = {
+    id?: boolean
+    vehiculo_placa?: boolean
+    admin_id?: boolean
+    tipo_inspeccion?: boolean
+    fecha_registro?: boolean
+    datos_inspeccion?: boolean
+    firma_inspector?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionEquiposInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }
+  export type InspeccionEquiposIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }
+
+  export type $InspeccionEquiposPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "InspeccionEquipos"
+    objects: {
+      admin: Prisma.$UsuarioPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      vehiculo_placa: string
+      admin_id: number
+      tipo_inspeccion: string
+      fecha_registro: Date
+      datos_inspeccion: Prisma.JsonValue
+      firma_inspector: string
+      eliminado: boolean
+    }, ExtArgs["result"]["inspeccionEquipos"]>
+    composites: {}
+  }
+
+  type InspeccionEquiposGetPayload<S extends boolean | null | undefined | InspeccionEquiposDefaultArgs> = $Result.GetResult<Prisma.$InspeccionEquiposPayload, S>
+
+  type InspeccionEquiposCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<InspeccionEquiposFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: InspeccionEquiposCountAggregateInputType | true
+    }
+
+  export interface InspeccionEquiposDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['InspeccionEquipos'], meta: { name: 'InspeccionEquipos' } }
+    /**
+     * Find zero or one InspeccionEquipos that matches the filter.
+     * @param {InspeccionEquiposFindUniqueArgs} args - Arguments to find a InspeccionEquipos
+     * @example
+     * // Get one InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends InspeccionEquiposFindUniqueArgs>(args: SelectSubset<T, InspeccionEquiposFindUniqueArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one InspeccionEquipos that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {InspeccionEquiposFindUniqueOrThrowArgs} args - Arguments to find a InspeccionEquipos
+     * @example
+     * // Get one InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends InspeccionEquiposFindUniqueOrThrowArgs>(args: SelectSubset<T, InspeccionEquiposFindUniqueOrThrowArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first InspeccionEquipos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposFindFirstArgs} args - Arguments to find a InspeccionEquipos
+     * @example
+     * // Get one InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends InspeccionEquiposFindFirstArgs>(args?: SelectSubset<T, InspeccionEquiposFindFirstArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first InspeccionEquipos that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposFindFirstOrThrowArgs} args - Arguments to find a InspeccionEquipos
+     * @example
+     * // Get one InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends InspeccionEquiposFindFirstOrThrowArgs>(args?: SelectSubset<T, InspeccionEquiposFindFirstOrThrowArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more InspeccionEquipos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.findMany()
+     * 
+     * // Get first 10 InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const inspeccionEquiposWithIdOnly = await prisma.inspeccionEquipos.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends InspeccionEquiposFindManyArgs>(args?: SelectSubset<T, InspeccionEquiposFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a InspeccionEquipos.
+     * @param {InspeccionEquiposCreateArgs} args - Arguments to create a InspeccionEquipos.
+     * @example
+     * // Create one InspeccionEquipos
+     * const InspeccionEquipos = await prisma.inspeccionEquipos.create({
+     *   data: {
+     *     // ... data to create a InspeccionEquipos
+     *   }
+     * })
+     * 
+     */
+    create<T extends InspeccionEquiposCreateArgs>(args: SelectSubset<T, InspeccionEquiposCreateArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many InspeccionEquipos.
+     * @param {InspeccionEquiposCreateManyArgs} args - Arguments to create many InspeccionEquipos.
+     * @example
+     * // Create many InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends InspeccionEquiposCreateManyArgs>(args?: SelectSubset<T, InspeccionEquiposCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many InspeccionEquipos and returns the data saved in the database.
+     * @param {InspeccionEquiposCreateManyAndReturnArgs} args - Arguments to create many InspeccionEquipos.
+     * @example
+     * // Create many InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many InspeccionEquipos and only return the `id`
+     * const inspeccionEquiposWithIdOnly = await prisma.inspeccionEquipos.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends InspeccionEquiposCreateManyAndReturnArgs>(args?: SelectSubset<T, InspeccionEquiposCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a InspeccionEquipos.
+     * @param {InspeccionEquiposDeleteArgs} args - Arguments to delete one InspeccionEquipos.
+     * @example
+     * // Delete one InspeccionEquipos
+     * const InspeccionEquipos = await prisma.inspeccionEquipos.delete({
+     *   where: {
+     *     // ... filter to delete one InspeccionEquipos
+     *   }
+     * })
+     * 
+     */
+    delete<T extends InspeccionEquiposDeleteArgs>(args: SelectSubset<T, InspeccionEquiposDeleteArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one InspeccionEquipos.
+     * @param {InspeccionEquiposUpdateArgs} args - Arguments to update one InspeccionEquipos.
+     * @example
+     * // Update one InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends InspeccionEquiposUpdateArgs>(args: SelectSubset<T, InspeccionEquiposUpdateArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more InspeccionEquipos.
+     * @param {InspeccionEquiposDeleteManyArgs} args - Arguments to filter InspeccionEquipos to delete.
+     * @example
+     * // Delete a few InspeccionEquipos
+     * const { count } = await prisma.inspeccionEquipos.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends InspeccionEquiposDeleteManyArgs>(args?: SelectSubset<T, InspeccionEquiposDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more InspeccionEquipos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends InspeccionEquiposUpdateManyArgs>(args: SelectSubset<T, InspeccionEquiposUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one InspeccionEquipos.
+     * @param {InspeccionEquiposUpsertArgs} args - Arguments to update or create a InspeccionEquipos.
+     * @example
+     * // Update or create a InspeccionEquipos
+     * const inspeccionEquipos = await prisma.inspeccionEquipos.upsert({
+     *   create: {
+     *     // ... data to create a InspeccionEquipos
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the InspeccionEquipos we want to update
+     *   }
+     * })
+     */
+    upsert<T extends InspeccionEquiposUpsertArgs>(args: SelectSubset<T, InspeccionEquiposUpsertArgs<ExtArgs>>): Prisma__InspeccionEquiposClient<$Result.GetResult<Prisma.$InspeccionEquiposPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of InspeccionEquipos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposCountArgs} args - Arguments to filter InspeccionEquipos to count.
+     * @example
+     * // Count the number of InspeccionEquipos
+     * const count = await prisma.inspeccionEquipos.count({
+     *   where: {
+     *     // ... the filter for the InspeccionEquipos we want to count
+     *   }
+     * })
+    **/
+    count<T extends InspeccionEquiposCountArgs>(
+      args?: Subset<T, InspeccionEquiposCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], InspeccionEquiposCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a InspeccionEquipos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends InspeccionEquiposAggregateArgs>(args: Subset<T, InspeccionEquiposAggregateArgs>): Prisma.PrismaPromise<GetInspeccionEquiposAggregateType<T>>
+
+    /**
+     * Group by InspeccionEquipos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionEquiposGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends InspeccionEquiposGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: InspeccionEquiposGroupByArgs['orderBy'] }
+        : { orderBy?: InspeccionEquiposGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, InspeccionEquiposGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetInspeccionEquiposGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the InspeccionEquipos model
+   */
+  readonly fields: InspeccionEquiposFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for InspeccionEquipos.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__InspeccionEquiposClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    admin<T extends UsuarioDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UsuarioDefaultArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the InspeccionEquipos model
+   */ 
+  interface InspeccionEquiposFieldRefs {
+    readonly id: FieldRef<"InspeccionEquipos", 'Int'>
+    readonly vehiculo_placa: FieldRef<"InspeccionEquipos", 'String'>
+    readonly admin_id: FieldRef<"InspeccionEquipos", 'Int'>
+    readonly tipo_inspeccion: FieldRef<"InspeccionEquipos", 'String'>
+    readonly fecha_registro: FieldRef<"InspeccionEquipos", 'DateTime'>
+    readonly datos_inspeccion: FieldRef<"InspeccionEquipos", 'Json'>
+    readonly firma_inspector: FieldRef<"InspeccionEquipos", 'String'>
+    readonly eliminado: FieldRef<"InspeccionEquipos", 'Boolean'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * InspeccionEquipos findUnique
+   */
+  export type InspeccionEquiposFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionEquipos to fetch.
+     */
+    where: InspeccionEquiposWhereUniqueInput
+  }
+
+  /**
+   * InspeccionEquipos findUniqueOrThrow
+   */
+  export type InspeccionEquiposFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionEquipos to fetch.
+     */
+    where: InspeccionEquiposWhereUniqueInput
+  }
+
+  /**
+   * InspeccionEquipos findFirst
+   */
+  export type InspeccionEquiposFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionEquipos to fetch.
+     */
+    where?: InspeccionEquiposWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionEquipos to fetch.
+     */
+    orderBy?: InspeccionEquiposOrderByWithRelationInput | InspeccionEquiposOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InspeccionEquipos.
+     */
+    cursor?: InspeccionEquiposWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionEquipos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionEquipos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InspeccionEquipos.
+     */
+    distinct?: InspeccionEquiposScalarFieldEnum | InspeccionEquiposScalarFieldEnum[]
+  }
+
+  /**
+   * InspeccionEquipos findFirstOrThrow
+   */
+  export type InspeccionEquiposFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionEquipos to fetch.
+     */
+    where?: InspeccionEquiposWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionEquipos to fetch.
+     */
+    orderBy?: InspeccionEquiposOrderByWithRelationInput | InspeccionEquiposOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InspeccionEquipos.
+     */
+    cursor?: InspeccionEquiposWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionEquipos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionEquipos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InspeccionEquipos.
+     */
+    distinct?: InspeccionEquiposScalarFieldEnum | InspeccionEquiposScalarFieldEnum[]
+  }
+
+  /**
+   * InspeccionEquipos findMany
+   */
+  export type InspeccionEquiposFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionEquipos to fetch.
+     */
+    where?: InspeccionEquiposWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionEquipos to fetch.
+     */
+    orderBy?: InspeccionEquiposOrderByWithRelationInput | InspeccionEquiposOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing InspeccionEquipos.
+     */
+    cursor?: InspeccionEquiposWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionEquipos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionEquipos.
+     */
+    skip?: number
+    distinct?: InspeccionEquiposScalarFieldEnum | InspeccionEquiposScalarFieldEnum[]
+  }
+
+  /**
+   * InspeccionEquipos create
+   */
+  export type InspeccionEquiposCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * The data needed to create a InspeccionEquipos.
+     */
+    data: XOR<InspeccionEquiposCreateInput, InspeccionEquiposUncheckedCreateInput>
+  }
+
+  /**
+   * InspeccionEquipos createMany
+   */
+  export type InspeccionEquiposCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many InspeccionEquipos.
+     */
+    data: InspeccionEquiposCreateManyInput | InspeccionEquiposCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * InspeccionEquipos createManyAndReturn
+   */
+  export type InspeccionEquiposCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many InspeccionEquipos.
+     */
+    data: InspeccionEquiposCreateManyInput | InspeccionEquiposCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * InspeccionEquipos update
+   */
+  export type InspeccionEquiposUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * The data needed to update a InspeccionEquipos.
+     */
+    data: XOR<InspeccionEquiposUpdateInput, InspeccionEquiposUncheckedUpdateInput>
+    /**
+     * Choose, which InspeccionEquipos to update.
+     */
+    where: InspeccionEquiposWhereUniqueInput
+  }
+
+  /**
+   * InspeccionEquipos updateMany
+   */
+  export type InspeccionEquiposUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update InspeccionEquipos.
+     */
+    data: XOR<InspeccionEquiposUpdateManyMutationInput, InspeccionEquiposUncheckedUpdateManyInput>
+    /**
+     * Filter which InspeccionEquipos to update
+     */
+    where?: InspeccionEquiposWhereInput
+  }
+
+  /**
+   * InspeccionEquipos upsert
+   */
+  export type InspeccionEquiposUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * The filter to search for the InspeccionEquipos to update in case it exists.
+     */
+    where: InspeccionEquiposWhereUniqueInput
+    /**
+     * In case the InspeccionEquipos found by the `where` argument doesn't exist, create a new InspeccionEquipos with this data.
+     */
+    create: XOR<InspeccionEquiposCreateInput, InspeccionEquiposUncheckedCreateInput>
+    /**
+     * In case the InspeccionEquipos was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<InspeccionEquiposUpdateInput, InspeccionEquiposUncheckedUpdateInput>
+  }
+
+  /**
+   * InspeccionEquipos delete
+   */
+  export type InspeccionEquiposDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+    /**
+     * Filter which InspeccionEquipos to delete.
+     */
+    where: InspeccionEquiposWhereUniqueInput
+  }
+
+  /**
+   * InspeccionEquipos deleteMany
+   */
+  export type InspeccionEquiposDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InspeccionEquipos to delete
+     */
+    where?: InspeccionEquiposWhereInput
+  }
+
+  /**
+   * InspeccionEquipos without action
+   */
+  export type InspeccionEquiposDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionEquipos
+     */
+    select?: InspeccionEquiposSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionEquiposInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -5216,6 +6338,20 @@ export namespace Prisma {
   };
 
   export type InspeccionPatioScalarFieldEnum = (typeof InspeccionPatioScalarFieldEnum)[keyof typeof InspeccionPatioScalarFieldEnum]
+
+
+  export const InspeccionEquiposScalarFieldEnum: {
+    id: 'id',
+    vehiculo_placa: 'vehiculo_placa',
+    admin_id: 'admin_id',
+    tipo_inspeccion: 'tipo_inspeccion',
+    fecha_registro: 'fecha_registro',
+    datos_inspeccion: 'datos_inspeccion',
+    firma_inspector: 'firma_inspector',
+    eliminado: 'eliminado'
+  };
+
+  export type InspeccionEquiposScalarFieldEnum = (typeof InspeccionEquiposScalarFieldEnum)[keyof typeof InspeccionEquiposScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -5355,6 +6491,7 @@ export namespace Prisma {
     rol?: StringFilter<"Usuario"> | string
     inspecciones?: InspeccionListRelationFilter
     inspecciones_patio?: InspeccionPatioListRelationFilter
+    inspecciones_equipos?: InspeccionEquiposListRelationFilter
   }
 
   export type UsuarioOrderByWithRelationInput = {
@@ -5365,6 +6502,7 @@ export namespace Prisma {
     rol?: SortOrder
     inspecciones?: InspeccionOrderByRelationAggregateInput
     inspecciones_patio?: InspeccionPatioOrderByRelationAggregateInput
+    inspecciones_equipos?: InspeccionEquiposOrderByRelationAggregateInput
   }
 
   export type UsuarioWhereUniqueInput = Prisma.AtLeast<{
@@ -5378,6 +6516,7 @@ export namespace Prisma {
     rol?: StringFilter<"Usuario"> | string
     inspecciones?: InspeccionListRelationFilter
     inspecciones_patio?: InspeccionPatioListRelationFilter
+    inspecciones_equipos?: InspeccionEquiposListRelationFilter
   }, "id" | "documento">
 
   export type UsuarioOrderByWithAggregationInput = {
@@ -5611,6 +6750,78 @@ export namespace Prisma {
     eliminado?: BoolWithAggregatesFilter<"InspeccionPatio"> | boolean
   }
 
+  export type InspeccionEquiposWhereInput = {
+    AND?: InspeccionEquiposWhereInput | InspeccionEquiposWhereInput[]
+    OR?: InspeccionEquiposWhereInput[]
+    NOT?: InspeccionEquiposWhereInput | InspeccionEquiposWhereInput[]
+    id?: IntFilter<"InspeccionEquipos"> | number
+    vehiculo_placa?: StringFilter<"InspeccionEquipos"> | string
+    admin_id?: IntFilter<"InspeccionEquipos"> | number
+    tipo_inspeccion?: StringFilter<"InspeccionEquipos"> | string
+    fecha_registro?: DateTimeFilter<"InspeccionEquipos"> | Date | string
+    datos_inspeccion?: JsonFilter<"InspeccionEquipos">
+    firma_inspector?: StringFilter<"InspeccionEquipos"> | string
+    eliminado?: BoolFilter<"InspeccionEquipos"> | boolean
+    admin?: XOR<UsuarioRelationFilter, UsuarioWhereInput>
+  }
+
+  export type InspeccionEquiposOrderByWithRelationInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_inspeccion?: SortOrder
+    fecha_registro?: SortOrder
+    datos_inspeccion?: SortOrder
+    firma_inspector?: SortOrder
+    eliminado?: SortOrder
+    admin?: UsuarioOrderByWithRelationInput
+  }
+
+  export type InspeccionEquiposWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: InspeccionEquiposWhereInput | InspeccionEquiposWhereInput[]
+    OR?: InspeccionEquiposWhereInput[]
+    NOT?: InspeccionEquiposWhereInput | InspeccionEquiposWhereInput[]
+    vehiculo_placa?: StringFilter<"InspeccionEquipos"> | string
+    admin_id?: IntFilter<"InspeccionEquipos"> | number
+    tipo_inspeccion?: StringFilter<"InspeccionEquipos"> | string
+    fecha_registro?: DateTimeFilter<"InspeccionEquipos"> | Date | string
+    datos_inspeccion?: JsonFilter<"InspeccionEquipos">
+    firma_inspector?: StringFilter<"InspeccionEquipos"> | string
+    eliminado?: BoolFilter<"InspeccionEquipos"> | boolean
+    admin?: XOR<UsuarioRelationFilter, UsuarioWhereInput>
+  }, "id">
+
+  export type InspeccionEquiposOrderByWithAggregationInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_inspeccion?: SortOrder
+    fecha_registro?: SortOrder
+    datos_inspeccion?: SortOrder
+    firma_inspector?: SortOrder
+    eliminado?: SortOrder
+    _count?: InspeccionEquiposCountOrderByAggregateInput
+    _avg?: InspeccionEquiposAvgOrderByAggregateInput
+    _max?: InspeccionEquiposMaxOrderByAggregateInput
+    _min?: InspeccionEquiposMinOrderByAggregateInput
+    _sum?: InspeccionEquiposSumOrderByAggregateInput
+  }
+
+  export type InspeccionEquiposScalarWhereWithAggregatesInput = {
+    AND?: InspeccionEquiposScalarWhereWithAggregatesInput | InspeccionEquiposScalarWhereWithAggregatesInput[]
+    OR?: InspeccionEquiposScalarWhereWithAggregatesInput[]
+    NOT?: InspeccionEquiposScalarWhereWithAggregatesInput | InspeccionEquiposScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"InspeccionEquipos"> | number
+    vehiculo_placa?: StringWithAggregatesFilter<"InspeccionEquipos"> | string
+    admin_id?: IntWithAggregatesFilter<"InspeccionEquipos"> | number
+    tipo_inspeccion?: StringWithAggregatesFilter<"InspeccionEquipos"> | string
+    fecha_registro?: DateTimeWithAggregatesFilter<"InspeccionEquipos"> | Date | string
+    datos_inspeccion?: JsonWithAggregatesFilter<"InspeccionEquipos">
+    firma_inspector?: StringWithAggregatesFilter<"InspeccionEquipos"> | string
+    eliminado?: BoolWithAggregatesFilter<"InspeccionEquipos"> | boolean
+  }
+
   export type UsuarioCreateInput = {
     nombre: string
     documento: string
@@ -5618,6 +6829,7 @@ export namespace Prisma {
     rol?: string
     inspecciones?: InspeccionCreateNestedManyWithoutConductorInput
     inspecciones_patio?: InspeccionPatioCreateNestedManyWithoutAdminInput
+    inspecciones_equipos?: InspeccionEquiposCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUncheckedCreateInput = {
@@ -5628,6 +6840,7 @@ export namespace Prisma {
     rol?: string
     inspecciones?: InspeccionUncheckedCreateNestedManyWithoutConductorInput
     inspecciones_patio?: InspeccionPatioUncheckedCreateNestedManyWithoutAdminInput
+    inspecciones_equipos?: InspeccionEquiposUncheckedCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUpdateInput = {
@@ -5637,6 +6850,7 @@ export namespace Prisma {
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones?: InspeccionUpdateManyWithoutConductorNestedInput
     inspecciones_patio?: InspeccionPatioUpdateManyWithoutAdminNestedInput
+    inspecciones_equipos?: InspeccionEquiposUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioUncheckedUpdateInput = {
@@ -5647,6 +6861,7 @@ export namespace Prisma {
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones?: InspeccionUncheckedUpdateManyWithoutConductorNestedInput
     inspecciones_patio?: InspeccionPatioUncheckedUpdateManyWithoutAdminNestedInput
+    inspecciones_equipos?: InspeccionEquiposUncheckedUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioCreateManyInput = {
@@ -5884,6 +7099,79 @@ export namespace Prisma {
     eliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
+  export type InspeccionEquiposCreateInput = {
+    vehiculo_placa: string
+    tipo_inspeccion: string
+    fecha_registro?: Date | string
+    datos_inspeccion: JsonNullValueInput | InputJsonValue
+    firma_inspector: string
+    eliminado?: boolean
+    admin: UsuarioCreateNestedOneWithoutInspecciones_equiposInput
+  }
+
+  export type InspeccionEquiposUncheckedCreateInput = {
+    id?: number
+    vehiculo_placa: string
+    admin_id: number
+    tipo_inspeccion: string
+    fecha_registro?: Date | string
+    datos_inspeccion: JsonNullValueInput | InputJsonValue
+    firma_inspector: string
+    eliminado?: boolean
+  }
+
+  export type InspeccionEquiposUpdateInput = {
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+    admin?: UsuarioUpdateOneRequiredWithoutInspecciones_equiposNestedInput
+  }
+
+  export type InspeccionEquiposUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    admin_id?: IntFieldUpdateOperationsInput | number
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionEquiposCreateManyInput = {
+    id?: number
+    vehiculo_placa: string
+    admin_id: number
+    tipo_inspeccion: string
+    fecha_registro?: Date | string
+    datos_inspeccion: JsonNullValueInput | InputJsonValue
+    firma_inspector: string
+    eliminado?: boolean
+  }
+
+  export type InspeccionEquiposUpdateManyMutationInput = {
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionEquiposUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    admin_id?: IntFieldUpdateOperationsInput | number
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -5922,11 +7210,21 @@ export namespace Prisma {
     none?: InspeccionPatioWhereInput
   }
 
+  export type InspeccionEquiposListRelationFilter = {
+    every?: InspeccionEquiposWhereInput
+    some?: InspeccionEquiposWhereInput
+    none?: InspeccionEquiposWhereInput
+  }
+
   export type InspeccionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type InspeccionPatioOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type InspeccionEquiposOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -6339,6 +7637,47 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
+  export type InspeccionEquiposCountOrderByAggregateInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_inspeccion?: SortOrder
+    fecha_registro?: SortOrder
+    datos_inspeccion?: SortOrder
+    firma_inspector?: SortOrder
+    eliminado?: SortOrder
+  }
+
+  export type InspeccionEquiposAvgOrderByAggregateInput = {
+    id?: SortOrder
+    admin_id?: SortOrder
+  }
+
+  export type InspeccionEquiposMaxOrderByAggregateInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_inspeccion?: SortOrder
+    fecha_registro?: SortOrder
+    firma_inspector?: SortOrder
+    eliminado?: SortOrder
+  }
+
+  export type InspeccionEquiposMinOrderByAggregateInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_inspeccion?: SortOrder
+    fecha_registro?: SortOrder
+    firma_inspector?: SortOrder
+    eliminado?: SortOrder
+  }
+
+  export type InspeccionEquiposSumOrderByAggregateInput = {
+    id?: SortOrder
+    admin_id?: SortOrder
+  }
+
   export type InspeccionCreateNestedManyWithoutConductorInput = {
     create?: XOR<InspeccionCreateWithoutConductorInput, InspeccionUncheckedCreateWithoutConductorInput> | InspeccionCreateWithoutConductorInput[] | InspeccionUncheckedCreateWithoutConductorInput[]
     connectOrCreate?: InspeccionCreateOrConnectWithoutConductorInput | InspeccionCreateOrConnectWithoutConductorInput[]
@@ -6353,6 +7692,13 @@ export namespace Prisma {
     connect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
   }
 
+  export type InspeccionEquiposCreateNestedManyWithoutAdminInput = {
+    create?: XOR<InspeccionEquiposCreateWithoutAdminInput, InspeccionEquiposUncheckedCreateWithoutAdminInput> | InspeccionEquiposCreateWithoutAdminInput[] | InspeccionEquiposUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionEquiposCreateOrConnectWithoutAdminInput | InspeccionEquiposCreateOrConnectWithoutAdminInput[]
+    createMany?: InspeccionEquiposCreateManyAdminInputEnvelope
+    connect?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+  }
+
   export type InspeccionUncheckedCreateNestedManyWithoutConductorInput = {
     create?: XOR<InspeccionCreateWithoutConductorInput, InspeccionUncheckedCreateWithoutConductorInput> | InspeccionCreateWithoutConductorInput[] | InspeccionUncheckedCreateWithoutConductorInput[]
     connectOrCreate?: InspeccionCreateOrConnectWithoutConductorInput | InspeccionCreateOrConnectWithoutConductorInput[]
@@ -6365,6 +7711,13 @@ export namespace Prisma {
     connectOrCreate?: InspeccionPatioCreateOrConnectWithoutAdminInput | InspeccionPatioCreateOrConnectWithoutAdminInput[]
     createMany?: InspeccionPatioCreateManyAdminInputEnvelope
     connect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+  }
+
+  export type InspeccionEquiposUncheckedCreateNestedManyWithoutAdminInput = {
+    create?: XOR<InspeccionEquiposCreateWithoutAdminInput, InspeccionEquiposUncheckedCreateWithoutAdminInput> | InspeccionEquiposCreateWithoutAdminInput[] | InspeccionEquiposUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionEquiposCreateOrConnectWithoutAdminInput | InspeccionEquiposCreateOrConnectWithoutAdminInput[]
+    createMany?: InspeccionEquiposCreateManyAdminInputEnvelope
+    connect?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -6397,6 +7750,20 @@ export namespace Prisma {
     update?: InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput | InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput[]
     updateMany?: InspeccionPatioUpdateManyWithWhereWithoutAdminInput | InspeccionPatioUpdateManyWithWhereWithoutAdminInput[]
     deleteMany?: InspeccionPatioScalarWhereInput | InspeccionPatioScalarWhereInput[]
+  }
+
+  export type InspeccionEquiposUpdateManyWithoutAdminNestedInput = {
+    create?: XOR<InspeccionEquiposCreateWithoutAdminInput, InspeccionEquiposUncheckedCreateWithoutAdminInput> | InspeccionEquiposCreateWithoutAdminInput[] | InspeccionEquiposUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionEquiposCreateOrConnectWithoutAdminInput | InspeccionEquiposCreateOrConnectWithoutAdminInput[]
+    upsert?: InspeccionEquiposUpsertWithWhereUniqueWithoutAdminInput | InspeccionEquiposUpsertWithWhereUniqueWithoutAdminInput[]
+    createMany?: InspeccionEquiposCreateManyAdminInputEnvelope
+    set?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    disconnect?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    delete?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    connect?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    update?: InspeccionEquiposUpdateWithWhereUniqueWithoutAdminInput | InspeccionEquiposUpdateWithWhereUniqueWithoutAdminInput[]
+    updateMany?: InspeccionEquiposUpdateManyWithWhereWithoutAdminInput | InspeccionEquiposUpdateManyWithWhereWithoutAdminInput[]
+    deleteMany?: InspeccionEquiposScalarWhereInput | InspeccionEquiposScalarWhereInput[]
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -6433,6 +7800,20 @@ export namespace Prisma {
     update?: InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput | InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput[]
     updateMany?: InspeccionPatioUpdateManyWithWhereWithoutAdminInput | InspeccionPatioUpdateManyWithWhereWithoutAdminInput[]
     deleteMany?: InspeccionPatioScalarWhereInput | InspeccionPatioScalarWhereInput[]
+  }
+
+  export type InspeccionEquiposUncheckedUpdateManyWithoutAdminNestedInput = {
+    create?: XOR<InspeccionEquiposCreateWithoutAdminInput, InspeccionEquiposUncheckedCreateWithoutAdminInput> | InspeccionEquiposCreateWithoutAdminInput[] | InspeccionEquiposUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionEquiposCreateOrConnectWithoutAdminInput | InspeccionEquiposCreateOrConnectWithoutAdminInput[]
+    upsert?: InspeccionEquiposUpsertWithWhereUniqueWithoutAdminInput | InspeccionEquiposUpsertWithWhereUniqueWithoutAdminInput[]
+    createMany?: InspeccionEquiposCreateManyAdminInputEnvelope
+    set?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    disconnect?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    delete?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    connect?: InspeccionEquiposWhereUniqueInput | InspeccionEquiposWhereUniqueInput[]
+    update?: InspeccionEquiposUpdateWithWhereUniqueWithoutAdminInput | InspeccionEquiposUpdateWithWhereUniqueWithoutAdminInput[]
+    updateMany?: InspeccionEquiposUpdateManyWithWhereWithoutAdminInput | InspeccionEquiposUpdateManyWithWhereWithoutAdminInput[]
+    deleteMany?: InspeccionEquiposScalarWhereInput | InspeccionEquiposScalarWhereInput[]
   }
 
   export type InspeccionCreateNestedManyWithoutVehiculoInput = {
@@ -6541,6 +7922,20 @@ export namespace Prisma {
     upsert?: UsuarioUpsertWithoutInspecciones_patioInput
     connect?: UsuarioWhereUniqueInput
     update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutInspecciones_patioInput, UsuarioUpdateWithoutInspecciones_patioInput>, UsuarioUncheckedUpdateWithoutInspecciones_patioInput>
+  }
+
+  export type UsuarioCreateNestedOneWithoutInspecciones_equiposInput = {
+    create?: XOR<UsuarioCreateWithoutInspecciones_equiposInput, UsuarioUncheckedCreateWithoutInspecciones_equiposInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutInspecciones_equiposInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
+  export type UsuarioUpdateOneRequiredWithoutInspecciones_equiposNestedInput = {
+    create?: XOR<UsuarioCreateWithoutInspecciones_equiposInput, UsuarioUncheckedCreateWithoutInspecciones_equiposInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutInspecciones_equiposInput
+    upsert?: UsuarioUpsertWithoutInspecciones_equiposInput
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutInspecciones_equiposInput, UsuarioUpdateWithoutInspecciones_equiposInput>, UsuarioUncheckedUpdateWithoutInspecciones_equiposInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -6852,6 +8247,35 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type InspeccionEquiposCreateWithoutAdminInput = {
+    vehiculo_placa: string
+    tipo_inspeccion: string
+    fecha_registro?: Date | string
+    datos_inspeccion: JsonNullValueInput | InputJsonValue
+    firma_inspector: string
+    eliminado?: boolean
+  }
+
+  export type InspeccionEquiposUncheckedCreateWithoutAdminInput = {
+    id?: number
+    vehiculo_placa: string
+    tipo_inspeccion: string
+    fecha_registro?: Date | string
+    datos_inspeccion: JsonNullValueInput | InputJsonValue
+    firma_inspector: string
+    eliminado?: boolean
+  }
+
+  export type InspeccionEquiposCreateOrConnectWithoutAdminInput = {
+    where: InspeccionEquiposWhereUniqueInput
+    create: XOR<InspeccionEquiposCreateWithoutAdminInput, InspeccionEquiposUncheckedCreateWithoutAdminInput>
+  }
+
+  export type InspeccionEquiposCreateManyAdminInputEnvelope = {
+    data: InspeccionEquiposCreateManyAdminInput | InspeccionEquiposCreateManyAdminInput[]
+    skipDuplicates?: boolean
+  }
+
   export type InspeccionUpsertWithWhereUniqueWithoutConductorInput = {
     where: InspeccionWhereUniqueInput
     update: XOR<InspeccionUpdateWithoutConductorInput, InspeccionUncheckedUpdateWithoutConductorInput>
@@ -6915,6 +8339,36 @@ export namespace Prisma {
     eliminado?: BoolFilter<"InspeccionPatio"> | boolean
   }
 
+  export type InspeccionEquiposUpsertWithWhereUniqueWithoutAdminInput = {
+    where: InspeccionEquiposWhereUniqueInput
+    update: XOR<InspeccionEquiposUpdateWithoutAdminInput, InspeccionEquiposUncheckedUpdateWithoutAdminInput>
+    create: XOR<InspeccionEquiposCreateWithoutAdminInput, InspeccionEquiposUncheckedCreateWithoutAdminInput>
+  }
+
+  export type InspeccionEquiposUpdateWithWhereUniqueWithoutAdminInput = {
+    where: InspeccionEquiposWhereUniqueInput
+    data: XOR<InspeccionEquiposUpdateWithoutAdminInput, InspeccionEquiposUncheckedUpdateWithoutAdminInput>
+  }
+
+  export type InspeccionEquiposUpdateManyWithWhereWithoutAdminInput = {
+    where: InspeccionEquiposScalarWhereInput
+    data: XOR<InspeccionEquiposUpdateManyMutationInput, InspeccionEquiposUncheckedUpdateManyWithoutAdminInput>
+  }
+
+  export type InspeccionEquiposScalarWhereInput = {
+    AND?: InspeccionEquiposScalarWhereInput | InspeccionEquiposScalarWhereInput[]
+    OR?: InspeccionEquiposScalarWhereInput[]
+    NOT?: InspeccionEquiposScalarWhereInput | InspeccionEquiposScalarWhereInput[]
+    id?: IntFilter<"InspeccionEquipos"> | number
+    vehiculo_placa?: StringFilter<"InspeccionEquipos"> | string
+    admin_id?: IntFilter<"InspeccionEquipos"> | number
+    tipo_inspeccion?: StringFilter<"InspeccionEquipos"> | string
+    fecha_registro?: DateTimeFilter<"InspeccionEquipos"> | Date | string
+    datos_inspeccion?: JsonFilter<"InspeccionEquipos">
+    firma_inspector?: StringFilter<"InspeccionEquipos"> | string
+    eliminado?: BoolFilter<"InspeccionEquipos"> | boolean
+  }
+
   export type InspeccionCreateWithoutVehiculoInput = {
     fecha_apertura?: Date | string
     fecha_cierre?: Date | string | null
@@ -6970,6 +8424,7 @@ export namespace Prisma {
     password: string
     rol?: string
     inspecciones_patio?: InspeccionPatioCreateNestedManyWithoutAdminInput
+    inspecciones_equipos?: InspeccionEquiposCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUncheckedCreateWithoutInspeccionesInput = {
@@ -6979,6 +8434,7 @@ export namespace Prisma {
     password: string
     rol?: string
     inspecciones_patio?: InspeccionPatioUncheckedCreateNestedManyWithoutAdminInput
+    inspecciones_equipos?: InspeccionEquiposUncheckedCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioCreateOrConnectWithoutInspeccionesInput = {
@@ -7020,6 +8476,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones_patio?: InspeccionPatioUpdateManyWithoutAdminNestedInput
+    inspecciones_equipos?: InspeccionEquiposUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioUncheckedUpdateWithoutInspeccionesInput = {
@@ -7029,6 +8486,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones_patio?: InspeccionPatioUncheckedUpdateManyWithoutAdminNestedInput
+    inspecciones_equipos?: InspeccionEquiposUncheckedUpdateManyWithoutAdminNestedInput
   }
 
   export type VehiculoUpsertWithoutInspeccionesInput = {
@@ -7060,6 +8518,7 @@ export namespace Prisma {
     password: string
     rol?: string
     inspecciones?: InspeccionCreateNestedManyWithoutConductorInput
+    inspecciones_equipos?: InspeccionEquiposCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUncheckedCreateWithoutInspecciones_patioInput = {
@@ -7069,6 +8528,7 @@ export namespace Prisma {
     password: string
     rol?: string
     inspecciones?: InspeccionUncheckedCreateNestedManyWithoutConductorInput
+    inspecciones_equipos?: InspeccionEquiposUncheckedCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioCreateOrConnectWithoutInspecciones_patioInput = {
@@ -7093,6 +8553,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones?: InspeccionUpdateManyWithoutConductorNestedInput
+    inspecciones_equipos?: InspeccionEquiposUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioUncheckedUpdateWithoutInspecciones_patioInput = {
@@ -7102,6 +8563,61 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones?: InspeccionUncheckedUpdateManyWithoutConductorNestedInput
+    inspecciones_equipos?: InspeccionEquiposUncheckedUpdateManyWithoutAdminNestedInput
+  }
+
+  export type UsuarioCreateWithoutInspecciones_equiposInput = {
+    nombre: string
+    documento: string
+    password: string
+    rol?: string
+    inspecciones?: InspeccionCreateNestedManyWithoutConductorInput
+    inspecciones_patio?: InspeccionPatioCreateNestedManyWithoutAdminInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutInspecciones_equiposInput = {
+    id?: number
+    nombre: string
+    documento: string
+    password: string
+    rol?: string
+    inspecciones?: InspeccionUncheckedCreateNestedManyWithoutConductorInput
+    inspecciones_patio?: InspeccionPatioUncheckedCreateNestedManyWithoutAdminInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutInspecciones_equiposInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutInspecciones_equiposInput, UsuarioUncheckedCreateWithoutInspecciones_equiposInput>
+  }
+
+  export type UsuarioUpsertWithoutInspecciones_equiposInput = {
+    update: XOR<UsuarioUpdateWithoutInspecciones_equiposInput, UsuarioUncheckedUpdateWithoutInspecciones_equiposInput>
+    create: XOR<UsuarioCreateWithoutInspecciones_equiposInput, UsuarioUncheckedCreateWithoutInspecciones_equiposInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutInspecciones_equiposInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutInspecciones_equiposInput, UsuarioUncheckedUpdateWithoutInspecciones_equiposInput>
+  }
+
+  export type UsuarioUpdateWithoutInspecciones_equiposInput = {
+    nombre?: StringFieldUpdateOperationsInput | string
+    documento?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    rol?: StringFieldUpdateOperationsInput | string
+    inspecciones?: InspeccionUpdateManyWithoutConductorNestedInput
+    inspecciones_patio?: InspeccionPatioUpdateManyWithoutAdminNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutInspecciones_equiposInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nombre?: StringFieldUpdateOperationsInput | string
+    documento?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    rol?: StringFieldUpdateOperationsInput | string
+    inspecciones?: InspeccionUncheckedUpdateManyWithoutConductorNestedInput
+    inspecciones_patio?: InspeccionPatioUncheckedUpdateManyWithoutAdminNestedInput
   }
 
   export type InspeccionCreateManyConductorInput = {
@@ -7124,6 +8640,16 @@ export namespace Prisma {
     evidencias: JsonNullValueInput | InputJsonValue
     firma_admin: string
     correo_enviado?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionEquiposCreateManyAdminInput = {
+    id?: number
+    vehiculo_placa: string
+    tipo_inspeccion: string
+    fecha_registro?: Date | string
+    datos_inspeccion: JsonNullValueInput | InputJsonValue
+    firma_inspector: string
     eliminado?: boolean
   }
 
@@ -7191,6 +8717,35 @@ export namespace Prisma {
     evidencias?: JsonNullValueInput | InputJsonValue
     firma_admin?: StringFieldUpdateOperationsInput | string
     correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionEquiposUpdateWithoutAdminInput = {
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionEquiposUncheckedUpdateWithoutAdminInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionEquiposUncheckedUpdateManyWithoutAdminInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_inspeccion?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    datos_inspeccion?: JsonNullValueInput | InputJsonValue
+    firma_inspector?: StringFieldUpdateOperationsInput | string
     eliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
@@ -7270,6 +8825,10 @@ export namespace Prisma {
      * @deprecated Use InspeccionPatioDefaultArgs instead
      */
     export type InspeccionPatioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = InspeccionPatioDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use InspeccionEquiposDefaultArgs instead
+     */
+    export type InspeccionEquiposArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = InspeccionEquiposDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

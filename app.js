@@ -670,6 +670,53 @@ app.get('/admin/patio/nuevo', verificarRol(['admin']), async (req, res) => {
 });
 
 // ==============================================================
+// RUTAS: INSPECCIÓN DE EQUIPOS (BOTIQUÍN, EXTINTOR, KITS)
+// ==============================================================
+
+// 1. Mostrar el Formulario Digital
+app.get('/admin/equipos/nuevo', verificarRol(['admin']), async (req, res) => {
+    try {
+        const vehiculos = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
+        res.render('inspeccion-equipos', { 
+            title: 'Inspección de Equipos', 
+            vehiculos,
+            usuario: req.usuario || req.user || { nombre: 'Admin' }
+        });
+    } catch (error) {
+        console.error('Error cargando módulo de equipos:', error);
+        res.status(500).send('Error al cargar el módulo.');
+    }
+});
+
+// 2. Recibir los datos y guardarlos
+app.post('/admin/equipos/guardar', verificarRol(['admin']), async (req, res) => {
+    try {
+        const { placa, tipo_inspeccion, firmaBase64, datosEquiposJSON } = req.body;
+        const adminId = req.usuario ? req.usuario.id : (req.user ? req.user.id : 1); 
+
+        const datosParseados = JSON.parse(datosEquiposJSON);
+
+        // Guardar en Base de Datos
+        const nuevoRegistro = await prisma.inspeccionEquipos.create({
+            data: {
+                vehiculo_placa: placa || 'SIN-PLACA',
+                admin_id: adminId,
+                tipo_inspeccion: tipo_inspeccion,
+                datos_inspeccion: datosParseados,
+                firma_inspector: firmaBase64
+            }
+        });
+
+        // Por ahora redirigimos al éxito. ¡El PDF lo haremos en el próximo paso!
+        res.send(`<script>alert('Inspección de Equipos guardada con éxito.'); window.location.href='/admin';</script>`);
+
+    } catch (error) {
+        console.error('🔥 Error al guardar equipos:', error);
+        res.status(500).send('Error al guardar la inspección de equipos.');
+    }
+});
+
+// ==============================================================
 // NUEVA RUTA: RECIBIR DATOS, GUARDAR Y DESCARGAR PDF DE PATIO
 // ==============================================================
 app.post('/admin/patio/guardar', verificarRol(['admin']), async (req, res) => {
