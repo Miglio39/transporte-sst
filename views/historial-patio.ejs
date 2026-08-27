@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Patio | OmegaGroup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style> body { background-color: #f8fafc; font-family: 'Segoe UI', sans-serif; } </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold"><i class="fas fa-history text-primary me-2"></i> Historial Inspecciones de Patio</h3>
+            <a href="/admin" class="btn btn-secondary">Volver</a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha y Hora</th>
+                                <th>Placa / ID</th>
+                                <th>Movimiento</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% inspecciones.forEach(insp => { %>
+                                <tr>
+                                    <td class="fw-bold text-muted">#<%= insp.id %></td>
+                                    <td><%= new Date(insp.fecha_registro).toLocaleString('es-CO') %></td>
+                                    <td class="fw-bold"><%= insp.vehiculo_placa %></td>
+                                    <td><span class="badge bg-<%= insp.tipo_movimiento === 'SALIDA' ? 'primary' : 'warning' %>"><%= insp.tipo_movimiento %></span></td>
+                                    <td class="text-end">
+                                        <!-- Ver / Descargar PDF -->
+                                        <a href="/admin/patio/pdf/<%= insp.id %>" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                        <!-- Botón que abre el modal de enviar correo -->
+                                        <button class="btn btn-sm btn-success fw-bold shadow-sm ms-1" onclick="abrirModalCorreo(<%= insp.id %>, '<%= insp.vehiculo_placa %>')">
+                                            <i class="fas fa-envelope"></i> Enviar
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Enviar Correo -->
+    <div class="modal fade" id="modalCorreo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-paper-plane me-2"></i> Enviar Reporte</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formEnviarCorreo" method="POST">
+                    <div class="modal-body">
+                        <p class="text-muted small">El sistema generará el PDF y lo enviará como archivo adjunto.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Correo electrónico del cliente/destinatario:</label>
+                            <input type="email" name="correo" class="form-control" placeholder="ejemplo@empresa.com" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success fw-bold" onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Enviando...';">Enviar Reporte</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function abrirModalCorreo(id, placa) {
+            document.getElementById('formEnviarCorreo').action = '/admin/patio/enviar-correo/' + id;
+            new bootstrap.Modal(document.getElementById('modalCorreo')).show();
+        }
+    </script>
+</body>
+</html>

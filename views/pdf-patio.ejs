@@ -2,83 +2,213 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Auditoría de Patio</title>
+    <title>Reporte_Patio_<%= inspeccion.vehiculo_placa %></title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; margin: 0; padding: 10px; font-size: 12px; }
-        .header { border-bottom: 3px solid #e50914; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
-        .header h1 { margin: 0; font-size: 24px; color: #0f172a; text-transform: uppercase; }
-        .header p { margin: 5px 0 0 0; color: #64748b; font-size: 14px; }
+        /* ESTILOS PARA FORMATO A4 / IMPRESIÓN */
+        @page { size: A4; margin: 1cm; }
+        body { font-family: 'Arial', sans-serif; font-size: 11px; color: #1e293b; line-height: 1.3; margin: 0; padding: 20px; background: #fff; }
         
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        .info-table th, .info-table td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
-        .info-table th { background-color: #f8fafc; color: #0f172a; width: 25%; font-size: 11px; text-transform: uppercase; }
-        .info-table td { font-weight: bold; font-size: 14px; }
-        .movimiento-ENTRADA { color: #10b981; }
-        .movimiento-SALIDA { color: #f59e0b; }
+        .header { display: flex; border-bottom: 2px solid #e50914; padding-bottom: 10px; margin-bottom: 15px; }
+        .header-logo { width: 120px; font-size: 24px; font-weight: bold; color: #0f172a; }
+        .header-info { text-align: right; width: 100%; }
+        .header-info h2 { margin: 0; font-size: 16px; color: #0f172a; text-transform: uppercase; }
+        .header-info p { margin: 2px 0; font-size: 10px; color: #64748b; }
+        
+        /* Cajas de Datos */
+        .info-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-bottom: 15px; background: #f8fafc; display: flex; justify-content: space-between; }
+        .info-box div { flex: 1; }
+        .info-box strong { display: block; font-size: 9px; color: #64748b; text-transform: uppercase; }
+        .info-box span { font-size: 12px; font-weight: bold; color: #0f172a; }
 
-        .evidencia-grid { display: block; width: 100%; }
-        .evidencia-card { width: 48%; display: inline-block; vertical-align: top; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; page-break-inside: avoid; margin-right: 1%; }
-        .evidencia-titulo { background: #0f172a; color: white; padding: 8px; font-size: 12px; font-weight: bold; text-align: center; margin: 0; }
-        .evidencia-img { width: 100%; height: 200px; object-fit: contain; background: #f1f5f9; border-bottom: 1px solid #cbd5e1; }
-        .evidencia-obs { padding: 10px; font-size: 11px; color: #334155; min-height: 40px; }
+        .section-title { background: #0f172a; color: #fff; padding: 4px 8px; font-size: 12px; font-weight: bold; margin-bottom: 10px; border-radius: 3px; }
+        
+        /* Tablas */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px; }
+        th, td { border: 1px solid #cbd5e1; padding: 5px; text-align: left; }
+        th { background: #f1f5f9; color: #334155; text-transform: uppercase; font-size: 9px; }
+        .text-center { text-align: center; }
+        
+        /* Estado Badge */
+        .estado-B { color: #166534; font-weight: bold; }
+        .estado-M { color: #991b1b; font-weight: bold; }
+        .estado-N { color: #92400e; font-style: italic; }
 
-        .firma-box { width: 300px; margin: 30px auto 0; text-align: center; }
-        .firma-box img { max-width: 100%; height: 100px; border-bottom: 1px solid #000; }
-        .firma-box p { margin: 5px 0 0 0; font-weight: bold; font-size: 12px; }
-        .firma-box span { font-size: 10px; color: #64748b; }
+        /* Grilla de Fotos */
+        .foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .foto-card { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; text-align: center; page-break-inside: avoid; }
+        .foto-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 2px; margin-bottom: 4px; }
+        .foto-card p { margin: 0; font-weight: bold; font-size: 9px; }
+        .foto-card small { color: #e50914; font-size: 8px; display: block; }
+
+        /* Firmas */
+        .firmas-container { display: flex; justify-content: space-between; margin-top: 30px; page-break-inside: avoid; }
+        .firma-box { width: 45%; text-align: center; border-top: 1px solid #0f172a; padding-top: 5px; position: relative; }
+        .firma-box img { max-width: 150px; max-height: 80px; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); }
+
+        /* Botón de control (Oculto al imprimir) */
+        @media print { .no-print { display: none !important; } }
+        .btn-print { position: fixed; bottom: 20px; right: 20px; background: #e50914; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); font-size: 14px; }
     </style>
 </head>
 <body>
 
+    <button class="no-print btn-print" onclick="window.print()">Descargar PDF</button>
+
     <div class="header">
-        <h1>Control de Auditoría Visual (Patio)</h1>
-        <p>Documento de Inspección Física de Equipos y Vehículos</p>
+        <div class="header-logo">OMEGAGROUP</div>
+        <div class="header-info">
+            <h2>REPORTE OFICIAL DE AUDITORÍA DE PATIO</h2>
+            <p>Sistema de Gestión Integral HSEQ - Generado automáticamente</p>
+        </div>
     </div>
 
-    <table class="info-table">
-        <tr>
-            <th>Placa / Identificador</th>
-            <td><%= registro.vehiculo_placa %></td>
-            <th>Tipo de Movimiento</th>
-            <td class="movimiento-<%= registro.tipo_movimiento %>"><%= registro.tipo_movimiento %></td>
-        </tr>
-        <tr>
-            <th>Fecha de Registro</th>
-            <td><%= fechaImpresion %></td>
-            <th>Auditor / Jefe</th>
-            <td><%= registro.admin.nombre %></td>
-        </tr>
-    </table>
+    <!-- DATOS PRINCIPALES -->
+    <div class="info-box">
+        <div><strong>Placa / ID Equipo</strong><span><%= inspeccion.vehiculo_placa %></span></div>
+        <div><strong>Movimiento</strong><span><%= inspeccion.tipo_movimiento %></span></div>
+        <div><strong>Fecha de Registro</strong><span><%= new Date(inspeccion.fecha_registro).toLocaleString('es-CO') %></span></div>
+        <div><strong>ID Registro</strong><span>#<%= inspeccion.id %></span></div>
+    </div>
 
-    <h3 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; color: #0f172a;">Registro Fotográfico</h3>
-    
-    <div class="evidencia-grid">
+    <!-- SI ES MÁQUINA: DATOS DE MANTENIMIENTO -->
+    <% if (datos.datos_mantenimiento) { %>
+        <div class="info-box" style="background: #fffbeb; border-color: #fde68a;">
+            <div><strong>Último Mantenimiento</strong><span><%= datos.datos_mantenimiento.ultimo_mantenimiento %></span></div>
+            <div><strong>Próximo Mantenimiento</strong><span><%= datos.datos_mantenimiento.proximo_mantenimiento %></span></div>
+        </div>
+    <% } %>
+
+    <!-- EVIDENCIAS FOTOGRÁFICAS (Rutina y Daños) -->
+    <div class="section-title">EVIDENCIAS FOTOGRÁFICAS (Carrocería / Llantas / Accesorios)</div>
+    <div class="foto-grid">
+        <% if (datos.rutina) { Object.keys(datos.rutina).forEach(zona => { %>
+            <div class="foto-card">
+                <img src="<%= datos.rutina[zona].foto %>">
+                <p><%= zona %></p>
+                <% if(datos.rutina[zona].comentario) { %><small><%= datos.rutina[zona].comentario %></small><% } %>
+            </div>
+        <% }) } %>
+        <% if (datos.danos && datos.danos.length > 0) { datos.danos.forEach((dano, index) => { %>
+            <div class="foto-card" style="border-color: #e50914; background: #fef2f2;">
+                <img src="<%= dano.foto %>">
+                <p>DAÑO REGISTRADO #<%= index + 1 %></p>
+                <% if(dano.comentario) { %><small><%= dano.comentario %></small><% } %>
+            </div>
+        <% }) } %>
+    </div>
+
+    <!-- CHECKLIST PREOPERACIONAL (Solo Carro) -->
+    <% if (datos.checklist_preoperacional && Object.keys(datos.checklist_preoperacional).length > 0) { %>
+        <div class="section-title">INSPECCIÓN PREOPERACIONAL (Niveles, Luces, Documentos)</div>
+        <table>
+            <thead><tr><th width="40%">Elemento Evaluado</th><th width="10%" class="text-center">Estado</th><th width="20%">Vencimiento</th><th width="30%">Observación</th></tr></thead>
+            <tbody>
+                <% for (const item in datos.checklist_preoperacional) { 
+                    const info = datos.checklist_preoperacional[item];
+                    const nombreLimpio = item.replace(/_/g, ' ');
+                %>
+                    <tr>
+                        <td style="font-weight: bold;"><%= nombreLimpio %></td>
+                        <td class="text-center estado-<%= info.estado.charAt(0) %>"><%= info.estado %></td>
+                        <td><%= info.vencimiento !== 'N/A' && info.vencimiento ? info.vencimiento : '-' %></td>
+                        <td><%= info.observacion || '-' %></td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    <% } %>
+
+    <!-- EQUIPOS DE EMERGENCIA -->
+    <% if (datos.checklist_equipos && Object.keys(datos.checklist_equipos).length > 0) { %>
+        <div class="section-title">EQUIPOS DE EMERGENCIA Y HERRAMIENTAS (Kits, Botiquín, Extintor)</div>
+        
         <% 
-            const zonas = Object.keys(evidencias);
-            if (zonas.length === 0) { 
+        // 1. Mostrar Equipos Regulares
+        ["Botiquín", "Kit Ambiental", "Kit de Carreteras"].forEach(categoria => { 
+            if (datos.checklist_equipos[categoria] && Object.keys(datos.checklist_equipos[categoria]).length > 0) {
         %>
-            <p style="text-align: center; padding: 20px; background: #f8fafc; color: #64748b; border: 1px dashed #cbd5e1;">
-                El equipo no presentó novedades visuales (No se adjuntaron fotografías).
-            </p>
-        <% } else { %>
-            <% zonas.forEach(zona => { 
-                const data = evidencias[zona];
-            %>
-                <div class="evidencia-card">
-                    <h4 class="evidencia-titulo"><%= zona.toUpperCase() %></h4>
-                    <img src="<%= data.foto %>" class="evidencia-img">
-                    <div class="evidencia-obs">
-                        <strong>Novedad:</strong> <%= data.comentario || 'Sin comentarios registrados.' %>
-                    </div>
-                </div>
-            <% }) %>
+            <h4 style="margin: 5px 0; font-size: 11px;"><%= categoria %></h4>
+            <table>
+                <thead><tr><th width="50%">Ítem</th><th width="15%" class="text-center">Estado</th><th width="15%" class="text-center">Cantidad</th><th width="20%">Vence</th></tr></thead>
+                <tbody>
+                    <% for (const item in datos.checklist_equipos[categoria]) { const info = datos.checklist_equipos[categoria][item]; %>
+                        <tr>
+                            <td><%= item %></td>
+                            <td class="text-center estado-<%= info.estado %>"><%= info.estado === 'B' ? 'BUENO' : (info.estado === 'M' ? 'MALO' : 'N/A') %></td>
+                            <td class="text-center fw-bold"><%= info.cantidad %></td>
+                            <td><%= info.vencimiento || 'N/A' %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        <% }}) %>
+
+        <!-- 2. Mostrar Extintor -->
+        <% if (datos.checklist_equipos["Extintor"] && Object.keys(datos.checklist_equipos["Extintor"]).length > 0) { 
+            const extDatos = datos.checklist_equipos["Extintor_Datos"];
+        %>
+            <h4 style="margin: 10px 0 5px; font-size: 11px;">Extintor (Ficha Técnica y Componentes)</h4>
+            <div class="info-box">
+                <div><strong>Capacidad</strong><span><%= extDatos.capacidad || 'N/R' %></span></div>
+                <div><strong>Clase de Fuego</strong><span><%= extDatos.clase || 'N/R' %></span></div>
+                <div><strong>Última Recarga</strong><span><%= extDatos.fecha_recarga || 'N/R' %></span></div>
+                <div><strong>Vencimiento</strong><span style="color: #e50914;"><%= extDatos.proxima_recarga || 'N/R' %></span></div>
+            </div>
+            <table>
+                <thead><tr><th>Componente del Extintor</th><th class="text-center">Estado</th></tr></thead>
+                <tbody>
+                    <% for (const comp in datos.checklist_equipos["Extintor"]) { %>
+                        <tr>
+                            <td><%= comp %></td>
+                            <td class="text-center estado-<%= datos.checklist_equipos['Extintor'][comp] %>"><%= datos.checklist_equipos['Extintor'][comp] === 'B' ? 'BUENO' : (datos.checklist_equipos['Extintor'][comp] === 'M' ? 'MALO' : 'N/A') %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
         <% } %>
+
+        <!-- FOTOS DE LOS EQUIPOS -->
+        <h4 style="margin: 10px 0 5px; font-size: 11px;">Registro Fotográfico de Equipos</h4>
+        <div class="foto-grid">
+            <% if (datos.equipos) { Object.keys(datos.equipos).forEach(zona => { %>
+                <div class="foto-card">
+                    <img src="<%= datos.equipos[zona].foto %>">
+                    <p><%= zona %></p>
+                </div>
+            <% }) } %>
+        </div>
+    <% } %>
+
+    <!-- OBSERVACIONES -->
+    <div class="section-title">OBSERVACIONES GENERALES</div>
+    <div style="border: 1px solid #cbd5e1; padding: 10px; min-height: 40px; margin-bottom: 20px; font-style: italic;">
+        <%= datos.observaciones_generales || 'Sin observaciones registradas.' %>
     </div>
 
-    <div class="firma-box">
-        <img src="<%= registro.firma_admin %>" alt="Firma del Auditor">
-        <p><%= registro.admin.nombre %></p>
-        <span>Jefe de Operaciones / Auditor Autorizado</span>
+    <!-- FIRMAS DE CONFORMIDAD -->
+    <div class="firmas-container">
+        <!-- Quien Entrega -->
+        <div class="firma-box">
+            <% if (datos.firmas_conformidad && datos.firmas_conformidad.entrega && datos.firmas_conformidad.entrega.firma) { %>
+                <img src="<%= datos.firmas_conformidad.entrega.firma %>" alt="Firma Entrega">
+            <% } %>
+            <strong>ENTREGA: </strong> <%= datos.firmas_conformidad ? datos.firmas_conformidad.entrega.nombre : 'No registrado' %>
+            <br><small style="color: #64748b;">(Firma de Conformidad)</small>
+        </div>
+        
+        <!-- Quien Recibe -->
+        <div class="firma-box">
+            <% if (datos.firmas_conformidad && datos.firmas_conformidad.recibe && datos.firmas_conformidad.recibe.firma) { %>
+                <img src="<%= datos.firmas_conformidad.recibe.firma %>" alt="Firma Recibe">
+            <% } %>
+            <strong>RECIBE: </strong> <%= datos.firmas_conformidad ? datos.firmas_conformidad.recibe.nombre : 'No registrado' %>
+            <br><small style="color: #64748b;">(Firma de Conformidad)</small>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #94a3b8;">
+        Documento generado a través de la plataforma OmegaGroup SST. <br>
+        Fecha de impresión del sistema: <%= new Date().toLocaleDateString('es-CO') %>
     </div>
 
 </body>
