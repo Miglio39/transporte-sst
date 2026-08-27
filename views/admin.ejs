@@ -142,12 +142,19 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarAdmin">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
-                    <li class="nav-item"><a href="/admin/conductores" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-users me-1"></i> Conductores</a></li>
-                    <li class="nav-item"><a href="/admin/conductores/nuevo" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-user-plus me-1"></i> Nuevo Conductor</a></li>
-                    <li class="nav-item"><a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;"><i class="fas fa-plus me-1"></i> Inspección</a></li>
-                    <li class="nav-item"><a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off me-1"></i> Salir</a></li>
-                </ul>
+               <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
+    <!-- NUEVO BOTÓN PARA EL MÓDULO DE PATIO -->
+    <li class="nav-item">
+        <a href="/admin/patio/nuevo" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: #3b82f6; color: white;">
+            <i class="fas fa-camera me-1"></i> Patio Operativo
+        </a>
+    </li>
+    
+    <li class="nav-item"><a href="/admin/conductores" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-users me-1"></i> Conductores</a></li>
+    <li class="nav-item"><a href="/admin/conductores/nuevo" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-user-plus me-1"></i> Nuevo Conductor</a></li>
+    <li class="nav-item"><a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;"><i class="fas fa-plus me-1"></i> Inspección</a></li>
+    <li class="nav-item"><a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off me-1"></i> Salir</a></li>
+</ul>
             </div>
         </div>
     </nav>

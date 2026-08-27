@@ -149,6 +149,18 @@ exports.Prisma.InspeccionScalarFieldEnum = {
   vehiculo_placa: 'vehiculo_placa'
 };
 
+exports.Prisma.InspeccionPatioScalarFieldEnum = {
+  id: 'id',
+  vehiculo_placa: 'vehiculo_placa',
+  admin_id: 'admin_id',
+  tipo_movimiento: 'tipo_movimiento',
+  fecha_registro: 'fecha_registro',
+  evidencias: 'evidencias',
+  firma_admin: 'firma_admin',
+  correo_enviado: 'correo_enviado',
+  eliminado: 'eliminado'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -156,6 +168,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -179,7 +195,8 @@ exports.Prisma.JsonNullValueFilter = {
 exports.Prisma.ModelName = {
   Usuario: 'Usuario',
   Vehiculo: 'Vehiculo',
-  Inspeccion: 'Inspeccion'
+  Inspeccion: 'Inspeccion',
+  InspeccionPatio: 'InspeccionPatio'
 };
 
 /**

@@ -20,8 +20,9 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.json({ limit: '10mb' }));
+// Aumentamos el límite a 50MB para permitir la subida de múltiples fotos de auditoría
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser()); // Necesario para leer las cookies de sesión
 
@@ -645,6 +646,93 @@ app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) =
         res.status(500).send('Ocurrió un error al intentar generar el documento PDF.');
     }
 });
+
+// ==============================================================
+// NUEVA RUTA: FORMULARIO DE CONTROL DE PATIO (CARRO 360)
+// ==============================================================
+app.get('/admin/patio/nuevo', verificarRol(['admin']), async (req, res) => {
+    try {
+        // Traemos todos los vehículos para que el Jefe elija cuál está revisando
+        const vehiculos = await prisma.vehiculo.findMany({
+            orderBy: { placa: 'asc' }
+        });
+        
+        res.render('patio-nuevo', { 
+            title: 'Control de Patio 360', 
+            vehiculos,
+            // Corrección: Leemos el usuario del middleware correcto para evitar el error
+            usuario: req.usuario || req.user || { nombre: 'Admin' }
+        });
+    } catch (error) {
+        console.error('Error cargando módulo de patio:', error);
+        res.status(500).send('Error al cargar el módulo de patio.');
+    }
+});
+
+// ==============================================================
+// NUEVA RUTA: RECIBIR DATOS, GUARDAR Y DESCARGAR PDF DE PATIO
+// ==============================================================
+app.post('/admin/patio/guardar', verificarRol(['admin']), async (req, res) => {
+    let browser = null;
+    try {
+        const { placa, tipo_movimiento, evidenciasJSON, firmaBase64 } = req.body;
+        const adminId = req.usuario ? req.usuario.id : (req.user ? req.user.id : 1); 
+
+        // 1. Parsear el JSON de evidencias (Fotos y comentarios)
+        const evidenciasObj = JSON.parse(evidenciasJSON);
+
+        // 2. Guardar el registro oficial en la Base de Datos
+        const nuevoRegistro = await prisma.inspeccionPatio.create({
+            data: {
+                vehiculo_placa: placa || 'SIN-PLACA',
+                admin_id: adminId,
+                tipo_movimiento: tipo_movimiento,
+                evidencias: evidenciasObj,
+                firma_admin: firmaBase64,
+                correo_enviado: false
+            },
+            include: { admin: true } // Traemos los datos del jefe que firmó
+        });
+
+        // 3. Generar el documento PDF
+        const templatePath = path.join(__dirname, 'views/pdf-patio.ejs');
+        const html = await ejs.renderFile(templatePath, {
+            registro: nuevoRegistro,
+            evidencias: evidenciasObj,
+            fechaImpresion: new Date().toLocaleString('es-CO')
+        });
+
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+        const pdfBytes = await page.pdf({
+            format: 'Letter',
+            printBackground: true,
+            margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+        });
+
+        await browser.close();
+
+        // 4. Descargar el PDF directamente en el navegador del Jefe
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="Auditoria_Patio_${placa}_${tipo_movimiento}.pdf"`);
+        res.end(Buffer.from(pdfBytes));
+
+        // NOTA: El envío automático de correo lo conectaremos en el siguiente paso
+        // una vez verifiquemos que el PDF sale perfecto.
+
+    } catch (error) {
+        if (browser) await browser.close();
+        console.error('🔥 Error al procesar la auditoría de patio:', error);
+        res.status(500).send('Error grave al generar el registro de patio: ' + error.message);
+    }
+});
+
 
 // ==========================================
 // NUEVA RUTA: REPORTE MAESTRO CONSOLIDADO

@@ -28,6 +28,11 @@ export type Vehiculo = $Result.DefaultSelection<Prisma.$VehiculoPayload>
  * 
  */
 export type Inspeccion = $Result.DefaultSelection<Prisma.$InspeccionPayload>
+/**
+ * Model InspeccionPatio
+ * 
+ */
+export type InspeccionPatio = $Result.DefaultSelection<Prisma.$InspeccionPatioPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -181,6 +186,16 @@ export class PrismaClient<
     * ```
     */
   get inspeccion(): Prisma.InspeccionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.inspeccionPatio`: Exposes CRUD operations for the **InspeccionPatio** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more InspeccionPatios
+    * const inspeccionPatios = await prisma.inspeccionPatio.findMany()
+    * ```
+    */
+  get inspeccionPatio(): Prisma.InspeccionPatioDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -624,7 +639,8 @@ export namespace Prisma {
   export const ModelName: {
     Usuario: 'Usuario',
     Vehiculo: 'Vehiculo',
-    Inspeccion: 'Inspeccion'
+    Inspeccion: 'Inspeccion',
+    InspeccionPatio: 'InspeccionPatio'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -640,7 +656,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "usuario" | "vehiculo" | "inspeccion"
+      modelProps: "usuario" | "vehiculo" | "inspeccion" | "inspeccionPatio"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -854,6 +870,76 @@ export namespace Prisma {
           }
         }
       }
+      InspeccionPatio: {
+        payload: Prisma.$InspeccionPatioPayload<ExtArgs>
+        fields: Prisma.InspeccionPatioFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.InspeccionPatioFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.InspeccionPatioFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>
+          }
+          findFirst: {
+            args: Prisma.InspeccionPatioFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.InspeccionPatioFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>
+          }
+          findMany: {
+            args: Prisma.InspeccionPatioFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>[]
+          }
+          create: {
+            args: Prisma.InspeccionPatioCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>
+          }
+          createMany: {
+            args: Prisma.InspeccionPatioCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.InspeccionPatioCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>[]
+          }
+          delete: {
+            args: Prisma.InspeccionPatioDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>
+          }
+          update: {
+            args: Prisma.InspeccionPatioUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>
+          }
+          deleteMany: {
+            args: Prisma.InspeccionPatioDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.InspeccionPatioUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.InspeccionPatioUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InspeccionPatioPayload>
+          }
+          aggregate: {
+            args: Prisma.InspeccionPatioAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateInspeccionPatio>
+          }
+          groupBy: {
+            args: Prisma.InspeccionPatioGroupByArgs<ExtArgs>
+            result: $Utils.Optional<InspeccionPatioGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.InspeccionPatioCountArgs<ExtArgs>
+            result: $Utils.Optional<InspeccionPatioCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1016,10 +1102,12 @@ export namespace Prisma {
 
   export type UsuarioCountOutputType = {
     inspecciones: number
+    inspecciones_patio: number
   }
 
   export type UsuarioCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inspecciones?: boolean | UsuarioCountOutputTypeCountInspeccionesArgs
+    inspecciones_patio?: boolean | UsuarioCountOutputTypeCountInspecciones_patioArgs
   }
 
   // Custom InputTypes
@@ -1038,6 +1126,13 @@ export namespace Prisma {
    */
   export type UsuarioCountOutputTypeCountInspeccionesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: InspeccionWhereInput
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountInspecciones_patioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InspeccionPatioWhereInput
   }
 
 
@@ -1275,6 +1370,7 @@ export namespace Prisma {
     password?: boolean
     rol?: boolean
     inspecciones?: boolean | Usuario$inspeccionesArgs<ExtArgs>
+    inspecciones_patio?: boolean | Usuario$inspecciones_patioArgs<ExtArgs>
     _count?: boolean | UsuarioCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["usuario"]>
 
@@ -1296,6 +1392,7 @@ export namespace Prisma {
 
   export type UsuarioInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     inspecciones?: boolean | Usuario$inspeccionesArgs<ExtArgs>
+    inspecciones_patio?: boolean | Usuario$inspecciones_patioArgs<ExtArgs>
     _count?: boolean | UsuarioCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UsuarioIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1304,6 +1401,7 @@ export namespace Prisma {
     name: "Usuario"
     objects: {
       inspecciones: Prisma.$InspeccionPayload<ExtArgs>[]
+      inspecciones_patio: Prisma.$InspeccionPatioPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -1676,6 +1774,7 @@ export namespace Prisma {
   export interface Prisma__UsuarioClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     inspecciones<T extends Usuario$inspeccionesArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$inspeccionesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionPayload<ExtArgs>, T, "findMany"> | Null>
+    inspecciones_patio<T extends Usuario$inspecciones_patioArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$inspecciones_patioArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2041,6 +2140,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: InspeccionScalarFieldEnum | InspeccionScalarFieldEnum[]
+  }
+
+  /**
+   * Usuario.inspecciones_patio
+   */
+  export type Usuario$inspecciones_patioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    where?: InspeccionPatioWhereInput
+    orderBy?: InspeccionPatioOrderByWithRelationInput | InspeccionPatioOrderByWithRelationInput[]
+    cursor?: InspeccionPatioWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InspeccionPatioScalarFieldEnum | InspeccionPatioScalarFieldEnum[]
   }
 
   /**
@@ -4020,6 +4139,1021 @@ export namespace Prisma {
 
 
   /**
+   * Model InspeccionPatio
+   */
+
+  export type AggregateInspeccionPatio = {
+    _count: InspeccionPatioCountAggregateOutputType | null
+    _avg: InspeccionPatioAvgAggregateOutputType | null
+    _sum: InspeccionPatioSumAggregateOutputType | null
+    _min: InspeccionPatioMinAggregateOutputType | null
+    _max: InspeccionPatioMaxAggregateOutputType | null
+  }
+
+  export type InspeccionPatioAvgAggregateOutputType = {
+    id: number | null
+    admin_id: number | null
+  }
+
+  export type InspeccionPatioSumAggregateOutputType = {
+    id: number | null
+    admin_id: number | null
+  }
+
+  export type InspeccionPatioMinAggregateOutputType = {
+    id: number | null
+    vehiculo_placa: string | null
+    admin_id: number | null
+    tipo_movimiento: string | null
+    fecha_registro: Date | null
+    firma_admin: string | null
+    correo_enviado: boolean | null
+    eliminado: boolean | null
+  }
+
+  export type InspeccionPatioMaxAggregateOutputType = {
+    id: number | null
+    vehiculo_placa: string | null
+    admin_id: number | null
+    tipo_movimiento: string | null
+    fecha_registro: Date | null
+    firma_admin: string | null
+    correo_enviado: boolean | null
+    eliminado: boolean | null
+  }
+
+  export type InspeccionPatioCountAggregateOutputType = {
+    id: number
+    vehiculo_placa: number
+    admin_id: number
+    tipo_movimiento: number
+    fecha_registro: number
+    evidencias: number
+    firma_admin: number
+    correo_enviado: number
+    eliminado: number
+    _all: number
+  }
+
+
+  export type InspeccionPatioAvgAggregateInputType = {
+    id?: true
+    admin_id?: true
+  }
+
+  export type InspeccionPatioSumAggregateInputType = {
+    id?: true
+    admin_id?: true
+  }
+
+  export type InspeccionPatioMinAggregateInputType = {
+    id?: true
+    vehiculo_placa?: true
+    admin_id?: true
+    tipo_movimiento?: true
+    fecha_registro?: true
+    firma_admin?: true
+    correo_enviado?: true
+    eliminado?: true
+  }
+
+  export type InspeccionPatioMaxAggregateInputType = {
+    id?: true
+    vehiculo_placa?: true
+    admin_id?: true
+    tipo_movimiento?: true
+    fecha_registro?: true
+    firma_admin?: true
+    correo_enviado?: true
+    eliminado?: true
+  }
+
+  export type InspeccionPatioCountAggregateInputType = {
+    id?: true
+    vehiculo_placa?: true
+    admin_id?: true
+    tipo_movimiento?: true
+    fecha_registro?: true
+    evidencias?: true
+    firma_admin?: true
+    correo_enviado?: true
+    eliminado?: true
+    _all?: true
+  }
+
+  export type InspeccionPatioAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InspeccionPatio to aggregate.
+     */
+    where?: InspeccionPatioWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionPatios to fetch.
+     */
+    orderBy?: InspeccionPatioOrderByWithRelationInput | InspeccionPatioOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: InspeccionPatioWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionPatios from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionPatios.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned InspeccionPatios
+    **/
+    _count?: true | InspeccionPatioCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: InspeccionPatioAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: InspeccionPatioSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: InspeccionPatioMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: InspeccionPatioMaxAggregateInputType
+  }
+
+  export type GetInspeccionPatioAggregateType<T extends InspeccionPatioAggregateArgs> = {
+        [P in keyof T & keyof AggregateInspeccionPatio]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateInspeccionPatio[P]>
+      : GetScalarType<T[P], AggregateInspeccionPatio[P]>
+  }
+
+
+
+
+  export type InspeccionPatioGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InspeccionPatioWhereInput
+    orderBy?: InspeccionPatioOrderByWithAggregationInput | InspeccionPatioOrderByWithAggregationInput[]
+    by: InspeccionPatioScalarFieldEnum[] | InspeccionPatioScalarFieldEnum
+    having?: InspeccionPatioScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: InspeccionPatioCountAggregateInputType | true
+    _avg?: InspeccionPatioAvgAggregateInputType
+    _sum?: InspeccionPatioSumAggregateInputType
+    _min?: InspeccionPatioMinAggregateInputType
+    _max?: InspeccionPatioMaxAggregateInputType
+  }
+
+  export type InspeccionPatioGroupByOutputType = {
+    id: number
+    vehiculo_placa: string
+    admin_id: number
+    tipo_movimiento: string
+    fecha_registro: Date
+    evidencias: JsonValue
+    firma_admin: string
+    correo_enviado: boolean
+    eliminado: boolean
+    _count: InspeccionPatioCountAggregateOutputType | null
+    _avg: InspeccionPatioAvgAggregateOutputType | null
+    _sum: InspeccionPatioSumAggregateOutputType | null
+    _min: InspeccionPatioMinAggregateOutputType | null
+    _max: InspeccionPatioMaxAggregateOutputType | null
+  }
+
+  type GetInspeccionPatioGroupByPayload<T extends InspeccionPatioGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<InspeccionPatioGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof InspeccionPatioGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], InspeccionPatioGroupByOutputType[P]>
+            : GetScalarType<T[P], InspeccionPatioGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type InspeccionPatioSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vehiculo_placa?: boolean
+    admin_id?: boolean
+    tipo_movimiento?: boolean
+    fecha_registro?: boolean
+    evidencias?: boolean
+    firma_admin?: boolean
+    correo_enviado?: boolean
+    eliminado?: boolean
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["inspeccionPatio"]>
+
+  export type InspeccionPatioSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vehiculo_placa?: boolean
+    admin_id?: boolean
+    tipo_movimiento?: boolean
+    fecha_registro?: boolean
+    evidencias?: boolean
+    firma_admin?: boolean
+    correo_enviado?: boolean
+    eliminado?: boolean
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["inspeccionPatio"]>
+
+  export type InspeccionPatioSelectScalar = {
+    id?: boolean
+    vehiculo_placa?: boolean
+    admin_id?: boolean
+    tipo_movimiento?: boolean
+    fecha_registro?: boolean
+    evidencias?: boolean
+    firma_admin?: boolean
+    correo_enviado?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionPatioInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }
+  export type InspeccionPatioIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | UsuarioDefaultArgs<ExtArgs>
+  }
+
+  export type $InspeccionPatioPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "InspeccionPatio"
+    objects: {
+      admin: Prisma.$UsuarioPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      vehiculo_placa: string
+      admin_id: number
+      tipo_movimiento: string
+      fecha_registro: Date
+      evidencias: Prisma.JsonValue
+      firma_admin: string
+      correo_enviado: boolean
+      eliminado: boolean
+    }, ExtArgs["result"]["inspeccionPatio"]>
+    composites: {}
+  }
+
+  type InspeccionPatioGetPayload<S extends boolean | null | undefined | InspeccionPatioDefaultArgs> = $Result.GetResult<Prisma.$InspeccionPatioPayload, S>
+
+  type InspeccionPatioCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<InspeccionPatioFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: InspeccionPatioCountAggregateInputType | true
+    }
+
+  export interface InspeccionPatioDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['InspeccionPatio'], meta: { name: 'InspeccionPatio' } }
+    /**
+     * Find zero or one InspeccionPatio that matches the filter.
+     * @param {InspeccionPatioFindUniqueArgs} args - Arguments to find a InspeccionPatio
+     * @example
+     * // Get one InspeccionPatio
+     * const inspeccionPatio = await prisma.inspeccionPatio.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends InspeccionPatioFindUniqueArgs>(args: SelectSubset<T, InspeccionPatioFindUniqueArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one InspeccionPatio that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {InspeccionPatioFindUniqueOrThrowArgs} args - Arguments to find a InspeccionPatio
+     * @example
+     * // Get one InspeccionPatio
+     * const inspeccionPatio = await prisma.inspeccionPatio.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends InspeccionPatioFindUniqueOrThrowArgs>(args: SelectSubset<T, InspeccionPatioFindUniqueOrThrowArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first InspeccionPatio that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioFindFirstArgs} args - Arguments to find a InspeccionPatio
+     * @example
+     * // Get one InspeccionPatio
+     * const inspeccionPatio = await prisma.inspeccionPatio.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends InspeccionPatioFindFirstArgs>(args?: SelectSubset<T, InspeccionPatioFindFirstArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first InspeccionPatio that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioFindFirstOrThrowArgs} args - Arguments to find a InspeccionPatio
+     * @example
+     * // Get one InspeccionPatio
+     * const inspeccionPatio = await prisma.inspeccionPatio.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends InspeccionPatioFindFirstOrThrowArgs>(args?: SelectSubset<T, InspeccionPatioFindFirstOrThrowArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more InspeccionPatios that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all InspeccionPatios
+     * const inspeccionPatios = await prisma.inspeccionPatio.findMany()
+     * 
+     * // Get first 10 InspeccionPatios
+     * const inspeccionPatios = await prisma.inspeccionPatio.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const inspeccionPatioWithIdOnly = await prisma.inspeccionPatio.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends InspeccionPatioFindManyArgs>(args?: SelectSubset<T, InspeccionPatioFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a InspeccionPatio.
+     * @param {InspeccionPatioCreateArgs} args - Arguments to create a InspeccionPatio.
+     * @example
+     * // Create one InspeccionPatio
+     * const InspeccionPatio = await prisma.inspeccionPatio.create({
+     *   data: {
+     *     // ... data to create a InspeccionPatio
+     *   }
+     * })
+     * 
+     */
+    create<T extends InspeccionPatioCreateArgs>(args: SelectSubset<T, InspeccionPatioCreateArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many InspeccionPatios.
+     * @param {InspeccionPatioCreateManyArgs} args - Arguments to create many InspeccionPatios.
+     * @example
+     * // Create many InspeccionPatios
+     * const inspeccionPatio = await prisma.inspeccionPatio.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends InspeccionPatioCreateManyArgs>(args?: SelectSubset<T, InspeccionPatioCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many InspeccionPatios and returns the data saved in the database.
+     * @param {InspeccionPatioCreateManyAndReturnArgs} args - Arguments to create many InspeccionPatios.
+     * @example
+     * // Create many InspeccionPatios
+     * const inspeccionPatio = await prisma.inspeccionPatio.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many InspeccionPatios and only return the `id`
+     * const inspeccionPatioWithIdOnly = await prisma.inspeccionPatio.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends InspeccionPatioCreateManyAndReturnArgs>(args?: SelectSubset<T, InspeccionPatioCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a InspeccionPatio.
+     * @param {InspeccionPatioDeleteArgs} args - Arguments to delete one InspeccionPatio.
+     * @example
+     * // Delete one InspeccionPatio
+     * const InspeccionPatio = await prisma.inspeccionPatio.delete({
+     *   where: {
+     *     // ... filter to delete one InspeccionPatio
+     *   }
+     * })
+     * 
+     */
+    delete<T extends InspeccionPatioDeleteArgs>(args: SelectSubset<T, InspeccionPatioDeleteArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one InspeccionPatio.
+     * @param {InspeccionPatioUpdateArgs} args - Arguments to update one InspeccionPatio.
+     * @example
+     * // Update one InspeccionPatio
+     * const inspeccionPatio = await prisma.inspeccionPatio.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends InspeccionPatioUpdateArgs>(args: SelectSubset<T, InspeccionPatioUpdateArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more InspeccionPatios.
+     * @param {InspeccionPatioDeleteManyArgs} args - Arguments to filter InspeccionPatios to delete.
+     * @example
+     * // Delete a few InspeccionPatios
+     * const { count } = await prisma.inspeccionPatio.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends InspeccionPatioDeleteManyArgs>(args?: SelectSubset<T, InspeccionPatioDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more InspeccionPatios.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many InspeccionPatios
+     * const inspeccionPatio = await prisma.inspeccionPatio.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends InspeccionPatioUpdateManyArgs>(args: SelectSubset<T, InspeccionPatioUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one InspeccionPatio.
+     * @param {InspeccionPatioUpsertArgs} args - Arguments to update or create a InspeccionPatio.
+     * @example
+     * // Update or create a InspeccionPatio
+     * const inspeccionPatio = await prisma.inspeccionPatio.upsert({
+     *   create: {
+     *     // ... data to create a InspeccionPatio
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the InspeccionPatio we want to update
+     *   }
+     * })
+     */
+    upsert<T extends InspeccionPatioUpsertArgs>(args: SelectSubset<T, InspeccionPatioUpsertArgs<ExtArgs>>): Prisma__InspeccionPatioClient<$Result.GetResult<Prisma.$InspeccionPatioPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of InspeccionPatios.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioCountArgs} args - Arguments to filter InspeccionPatios to count.
+     * @example
+     * // Count the number of InspeccionPatios
+     * const count = await prisma.inspeccionPatio.count({
+     *   where: {
+     *     // ... the filter for the InspeccionPatios we want to count
+     *   }
+     * })
+    **/
+    count<T extends InspeccionPatioCountArgs>(
+      args?: Subset<T, InspeccionPatioCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], InspeccionPatioCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a InspeccionPatio.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends InspeccionPatioAggregateArgs>(args: Subset<T, InspeccionPatioAggregateArgs>): Prisma.PrismaPromise<GetInspeccionPatioAggregateType<T>>
+
+    /**
+     * Group by InspeccionPatio.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InspeccionPatioGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends InspeccionPatioGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: InspeccionPatioGroupByArgs['orderBy'] }
+        : { orderBy?: InspeccionPatioGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, InspeccionPatioGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetInspeccionPatioGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the InspeccionPatio model
+   */
+  readonly fields: InspeccionPatioFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for InspeccionPatio.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__InspeccionPatioClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    admin<T extends UsuarioDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UsuarioDefaultArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the InspeccionPatio model
+   */ 
+  interface InspeccionPatioFieldRefs {
+    readonly id: FieldRef<"InspeccionPatio", 'Int'>
+    readonly vehiculo_placa: FieldRef<"InspeccionPatio", 'String'>
+    readonly admin_id: FieldRef<"InspeccionPatio", 'Int'>
+    readonly tipo_movimiento: FieldRef<"InspeccionPatio", 'String'>
+    readonly fecha_registro: FieldRef<"InspeccionPatio", 'DateTime'>
+    readonly evidencias: FieldRef<"InspeccionPatio", 'Json'>
+    readonly firma_admin: FieldRef<"InspeccionPatio", 'String'>
+    readonly correo_enviado: FieldRef<"InspeccionPatio", 'Boolean'>
+    readonly eliminado: FieldRef<"InspeccionPatio", 'Boolean'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * InspeccionPatio findUnique
+   */
+  export type InspeccionPatioFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionPatio to fetch.
+     */
+    where: InspeccionPatioWhereUniqueInput
+  }
+
+  /**
+   * InspeccionPatio findUniqueOrThrow
+   */
+  export type InspeccionPatioFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionPatio to fetch.
+     */
+    where: InspeccionPatioWhereUniqueInput
+  }
+
+  /**
+   * InspeccionPatio findFirst
+   */
+  export type InspeccionPatioFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionPatio to fetch.
+     */
+    where?: InspeccionPatioWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionPatios to fetch.
+     */
+    orderBy?: InspeccionPatioOrderByWithRelationInput | InspeccionPatioOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InspeccionPatios.
+     */
+    cursor?: InspeccionPatioWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionPatios from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionPatios.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InspeccionPatios.
+     */
+    distinct?: InspeccionPatioScalarFieldEnum | InspeccionPatioScalarFieldEnum[]
+  }
+
+  /**
+   * InspeccionPatio findFirstOrThrow
+   */
+  export type InspeccionPatioFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionPatio to fetch.
+     */
+    where?: InspeccionPatioWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionPatios to fetch.
+     */
+    orderBy?: InspeccionPatioOrderByWithRelationInput | InspeccionPatioOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InspeccionPatios.
+     */
+    cursor?: InspeccionPatioWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionPatios from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionPatios.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InspeccionPatios.
+     */
+    distinct?: InspeccionPatioScalarFieldEnum | InspeccionPatioScalarFieldEnum[]
+  }
+
+  /**
+   * InspeccionPatio findMany
+   */
+  export type InspeccionPatioFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * Filter, which InspeccionPatios to fetch.
+     */
+    where?: InspeccionPatioWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InspeccionPatios to fetch.
+     */
+    orderBy?: InspeccionPatioOrderByWithRelationInput | InspeccionPatioOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing InspeccionPatios.
+     */
+    cursor?: InspeccionPatioWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InspeccionPatios from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InspeccionPatios.
+     */
+    skip?: number
+    distinct?: InspeccionPatioScalarFieldEnum | InspeccionPatioScalarFieldEnum[]
+  }
+
+  /**
+   * InspeccionPatio create
+   */
+  export type InspeccionPatioCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * The data needed to create a InspeccionPatio.
+     */
+    data: XOR<InspeccionPatioCreateInput, InspeccionPatioUncheckedCreateInput>
+  }
+
+  /**
+   * InspeccionPatio createMany
+   */
+  export type InspeccionPatioCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many InspeccionPatios.
+     */
+    data: InspeccionPatioCreateManyInput | InspeccionPatioCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * InspeccionPatio createManyAndReturn
+   */
+  export type InspeccionPatioCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many InspeccionPatios.
+     */
+    data: InspeccionPatioCreateManyInput | InspeccionPatioCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * InspeccionPatio update
+   */
+  export type InspeccionPatioUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * The data needed to update a InspeccionPatio.
+     */
+    data: XOR<InspeccionPatioUpdateInput, InspeccionPatioUncheckedUpdateInput>
+    /**
+     * Choose, which InspeccionPatio to update.
+     */
+    where: InspeccionPatioWhereUniqueInput
+  }
+
+  /**
+   * InspeccionPatio updateMany
+   */
+  export type InspeccionPatioUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update InspeccionPatios.
+     */
+    data: XOR<InspeccionPatioUpdateManyMutationInput, InspeccionPatioUncheckedUpdateManyInput>
+    /**
+     * Filter which InspeccionPatios to update
+     */
+    where?: InspeccionPatioWhereInput
+  }
+
+  /**
+   * InspeccionPatio upsert
+   */
+  export type InspeccionPatioUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * The filter to search for the InspeccionPatio to update in case it exists.
+     */
+    where: InspeccionPatioWhereUniqueInput
+    /**
+     * In case the InspeccionPatio found by the `where` argument doesn't exist, create a new InspeccionPatio with this data.
+     */
+    create: XOR<InspeccionPatioCreateInput, InspeccionPatioUncheckedCreateInput>
+    /**
+     * In case the InspeccionPatio was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<InspeccionPatioUpdateInput, InspeccionPatioUncheckedUpdateInput>
+  }
+
+  /**
+   * InspeccionPatio delete
+   */
+  export type InspeccionPatioDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+    /**
+     * Filter which InspeccionPatio to delete.
+     */
+    where: InspeccionPatioWhereUniqueInput
+  }
+
+  /**
+   * InspeccionPatio deleteMany
+   */
+  export type InspeccionPatioDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InspeccionPatios to delete
+     */
+    where?: InspeccionPatioWhereInput
+  }
+
+  /**
+   * InspeccionPatio without action
+   */
+  export type InspeccionPatioDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InspeccionPatio
+     */
+    select?: InspeccionPatioSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InspeccionPatioInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -4069,6 +5203,21 @@ export namespace Prisma {
   export type InspeccionScalarFieldEnum = (typeof InspeccionScalarFieldEnum)[keyof typeof InspeccionScalarFieldEnum]
 
 
+  export const InspeccionPatioScalarFieldEnum: {
+    id: 'id',
+    vehiculo_placa: 'vehiculo_placa',
+    admin_id: 'admin_id',
+    tipo_movimiento: 'tipo_movimiento',
+    fecha_registro: 'fecha_registro',
+    evidencias: 'evidencias',
+    firma_admin: 'firma_admin',
+    correo_enviado: 'correo_enviado',
+    eliminado: 'eliminado'
+  };
+
+  export type InspeccionPatioScalarFieldEnum = (typeof InspeccionPatioScalarFieldEnum)[keyof typeof InspeccionPatioScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -4083,6 +5232,13 @@ export namespace Prisma {
   };
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -4198,6 +5354,7 @@ export namespace Prisma {
     password?: StringFilter<"Usuario"> | string
     rol?: StringFilter<"Usuario"> | string
     inspecciones?: InspeccionListRelationFilter
+    inspecciones_patio?: InspeccionPatioListRelationFilter
   }
 
   export type UsuarioOrderByWithRelationInput = {
@@ -4207,6 +5364,7 @@ export namespace Prisma {
     password?: SortOrder
     rol?: SortOrder
     inspecciones?: InspeccionOrderByRelationAggregateInput
+    inspecciones_patio?: InspeccionPatioOrderByRelationAggregateInput
   }
 
   export type UsuarioWhereUniqueInput = Prisma.AtLeast<{
@@ -4219,6 +5377,7 @@ export namespace Prisma {
     password?: StringFilter<"Usuario"> | string
     rol?: StringFilter<"Usuario"> | string
     inspecciones?: InspeccionListRelationFilter
+    inspecciones_patio?: InspeccionPatioListRelationFilter
   }, "id" | "documento">
 
   export type UsuarioOrderByWithAggregationInput = {
@@ -4375,12 +5534,90 @@ export namespace Prisma {
     vehiculo_placa?: StringWithAggregatesFilter<"Inspeccion"> | string
   }
 
+  export type InspeccionPatioWhereInput = {
+    AND?: InspeccionPatioWhereInput | InspeccionPatioWhereInput[]
+    OR?: InspeccionPatioWhereInput[]
+    NOT?: InspeccionPatioWhereInput | InspeccionPatioWhereInput[]
+    id?: IntFilter<"InspeccionPatio"> | number
+    vehiculo_placa?: StringFilter<"InspeccionPatio"> | string
+    admin_id?: IntFilter<"InspeccionPatio"> | number
+    tipo_movimiento?: StringFilter<"InspeccionPatio"> | string
+    fecha_registro?: DateTimeFilter<"InspeccionPatio"> | Date | string
+    evidencias?: JsonFilter<"InspeccionPatio">
+    firma_admin?: StringFilter<"InspeccionPatio"> | string
+    correo_enviado?: BoolFilter<"InspeccionPatio"> | boolean
+    eliminado?: BoolFilter<"InspeccionPatio"> | boolean
+    admin?: XOR<UsuarioRelationFilter, UsuarioWhereInput>
+  }
+
+  export type InspeccionPatioOrderByWithRelationInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_movimiento?: SortOrder
+    fecha_registro?: SortOrder
+    evidencias?: SortOrder
+    firma_admin?: SortOrder
+    correo_enviado?: SortOrder
+    eliminado?: SortOrder
+    admin?: UsuarioOrderByWithRelationInput
+  }
+
+  export type InspeccionPatioWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: InspeccionPatioWhereInput | InspeccionPatioWhereInput[]
+    OR?: InspeccionPatioWhereInput[]
+    NOT?: InspeccionPatioWhereInput | InspeccionPatioWhereInput[]
+    vehiculo_placa?: StringFilter<"InspeccionPatio"> | string
+    admin_id?: IntFilter<"InspeccionPatio"> | number
+    tipo_movimiento?: StringFilter<"InspeccionPatio"> | string
+    fecha_registro?: DateTimeFilter<"InspeccionPatio"> | Date | string
+    evidencias?: JsonFilter<"InspeccionPatio">
+    firma_admin?: StringFilter<"InspeccionPatio"> | string
+    correo_enviado?: BoolFilter<"InspeccionPatio"> | boolean
+    eliminado?: BoolFilter<"InspeccionPatio"> | boolean
+    admin?: XOR<UsuarioRelationFilter, UsuarioWhereInput>
+  }, "id">
+
+  export type InspeccionPatioOrderByWithAggregationInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_movimiento?: SortOrder
+    fecha_registro?: SortOrder
+    evidencias?: SortOrder
+    firma_admin?: SortOrder
+    correo_enviado?: SortOrder
+    eliminado?: SortOrder
+    _count?: InspeccionPatioCountOrderByAggregateInput
+    _avg?: InspeccionPatioAvgOrderByAggregateInput
+    _max?: InspeccionPatioMaxOrderByAggregateInput
+    _min?: InspeccionPatioMinOrderByAggregateInput
+    _sum?: InspeccionPatioSumOrderByAggregateInput
+  }
+
+  export type InspeccionPatioScalarWhereWithAggregatesInput = {
+    AND?: InspeccionPatioScalarWhereWithAggregatesInput | InspeccionPatioScalarWhereWithAggregatesInput[]
+    OR?: InspeccionPatioScalarWhereWithAggregatesInput[]
+    NOT?: InspeccionPatioScalarWhereWithAggregatesInput | InspeccionPatioScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"InspeccionPatio"> | number
+    vehiculo_placa?: StringWithAggregatesFilter<"InspeccionPatio"> | string
+    admin_id?: IntWithAggregatesFilter<"InspeccionPatio"> | number
+    tipo_movimiento?: StringWithAggregatesFilter<"InspeccionPatio"> | string
+    fecha_registro?: DateTimeWithAggregatesFilter<"InspeccionPatio"> | Date | string
+    evidencias?: JsonWithAggregatesFilter<"InspeccionPatio">
+    firma_admin?: StringWithAggregatesFilter<"InspeccionPatio"> | string
+    correo_enviado?: BoolWithAggregatesFilter<"InspeccionPatio"> | boolean
+    eliminado?: BoolWithAggregatesFilter<"InspeccionPatio"> | boolean
+  }
+
   export type UsuarioCreateInput = {
     nombre: string
     documento: string
     password: string
     rol?: string
     inspecciones?: InspeccionCreateNestedManyWithoutConductorInput
+    inspecciones_patio?: InspeccionPatioCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUncheckedCreateInput = {
@@ -4390,6 +5627,7 @@ export namespace Prisma {
     password: string
     rol?: string
     inspecciones?: InspeccionUncheckedCreateNestedManyWithoutConductorInput
+    inspecciones_patio?: InspeccionPatioUncheckedCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUpdateInput = {
@@ -4398,6 +5636,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones?: InspeccionUpdateManyWithoutConductorNestedInput
+    inspecciones_patio?: InspeccionPatioUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioUncheckedUpdateInput = {
@@ -4407,6 +5646,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
     inspecciones?: InspeccionUncheckedUpdateManyWithoutConductorNestedInput
+    inspecciones_patio?: InspeccionPatioUncheckedUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioCreateManyInput = {
@@ -4564,6 +5804,86 @@ export namespace Prisma {
     vehiculo_placa?: StringFieldUpdateOperationsInput | string
   }
 
+  export type InspeccionPatioCreateInput = {
+    vehiculo_placa: string
+    tipo_movimiento: string
+    fecha_registro?: Date | string
+    evidencias: JsonNullValueInput | InputJsonValue
+    firma_admin: string
+    correo_enviado?: boolean
+    eliminado?: boolean
+    admin: UsuarioCreateNestedOneWithoutInspecciones_patioInput
+  }
+
+  export type InspeccionPatioUncheckedCreateInput = {
+    id?: number
+    vehiculo_placa: string
+    admin_id: number
+    tipo_movimiento: string
+    fecha_registro?: Date | string
+    evidencias: JsonNullValueInput | InputJsonValue
+    firma_admin: string
+    correo_enviado?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionPatioUpdateInput = {
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+    admin?: UsuarioUpdateOneRequiredWithoutInspecciones_patioNestedInput
+  }
+
+  export type InspeccionPatioUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    admin_id?: IntFieldUpdateOperationsInput | number
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionPatioCreateManyInput = {
+    id?: number
+    vehiculo_placa: string
+    admin_id: number
+    tipo_movimiento: string
+    fecha_registro?: Date | string
+    evidencias: JsonNullValueInput | InputJsonValue
+    firma_admin: string
+    correo_enviado?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionPatioUpdateManyMutationInput = {
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionPatioUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    admin_id?: IntFieldUpdateOperationsInput | number
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -4596,7 +5916,17 @@ export namespace Prisma {
     none?: InspeccionWhereInput
   }
 
+  export type InspeccionPatioListRelationFilter = {
+    every?: InspeccionPatioWhereInput
+    some?: InspeccionPatioWhereInput
+    none?: InspeccionPatioWhereInput
+  }
+
   export type InspeccionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type InspeccionPatioOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -4917,6 +6247,97 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+  export type JsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type InspeccionPatioCountOrderByAggregateInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_movimiento?: SortOrder
+    fecha_registro?: SortOrder
+    evidencias?: SortOrder
+    firma_admin?: SortOrder
+    correo_enviado?: SortOrder
+    eliminado?: SortOrder
+  }
+
+  export type InspeccionPatioAvgOrderByAggregateInput = {
+    id?: SortOrder
+    admin_id?: SortOrder
+  }
+
+  export type InspeccionPatioMaxOrderByAggregateInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_movimiento?: SortOrder
+    fecha_registro?: SortOrder
+    firma_admin?: SortOrder
+    correo_enviado?: SortOrder
+    eliminado?: SortOrder
+  }
+
+  export type InspeccionPatioMinOrderByAggregateInput = {
+    id?: SortOrder
+    vehiculo_placa?: SortOrder
+    admin_id?: SortOrder
+    tipo_movimiento?: SortOrder
+    fecha_registro?: SortOrder
+    firma_admin?: SortOrder
+    correo_enviado?: SortOrder
+    eliminado?: SortOrder
+  }
+
+  export type InspeccionPatioSumOrderByAggregateInput = {
+    id?: SortOrder
+    admin_id?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
 
   export type InspeccionCreateNestedManyWithoutConductorInput = {
     create?: XOR<InspeccionCreateWithoutConductorInput, InspeccionUncheckedCreateWithoutConductorInput> | InspeccionCreateWithoutConductorInput[] | InspeccionUncheckedCreateWithoutConductorInput[]
@@ -4925,11 +6346,25 @@ export namespace Prisma {
     connect?: InspeccionWhereUniqueInput | InspeccionWhereUniqueInput[]
   }
 
+  export type InspeccionPatioCreateNestedManyWithoutAdminInput = {
+    create?: XOR<InspeccionPatioCreateWithoutAdminInput, InspeccionPatioUncheckedCreateWithoutAdminInput> | InspeccionPatioCreateWithoutAdminInput[] | InspeccionPatioUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionPatioCreateOrConnectWithoutAdminInput | InspeccionPatioCreateOrConnectWithoutAdminInput[]
+    createMany?: InspeccionPatioCreateManyAdminInputEnvelope
+    connect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+  }
+
   export type InspeccionUncheckedCreateNestedManyWithoutConductorInput = {
     create?: XOR<InspeccionCreateWithoutConductorInput, InspeccionUncheckedCreateWithoutConductorInput> | InspeccionCreateWithoutConductorInput[] | InspeccionUncheckedCreateWithoutConductorInput[]
     connectOrCreate?: InspeccionCreateOrConnectWithoutConductorInput | InspeccionCreateOrConnectWithoutConductorInput[]
     createMany?: InspeccionCreateManyConductorInputEnvelope
     connect?: InspeccionWhereUniqueInput | InspeccionWhereUniqueInput[]
+  }
+
+  export type InspeccionPatioUncheckedCreateNestedManyWithoutAdminInput = {
+    create?: XOR<InspeccionPatioCreateWithoutAdminInput, InspeccionPatioUncheckedCreateWithoutAdminInput> | InspeccionPatioCreateWithoutAdminInput[] | InspeccionPatioUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionPatioCreateOrConnectWithoutAdminInput | InspeccionPatioCreateOrConnectWithoutAdminInput[]
+    createMany?: InspeccionPatioCreateManyAdminInputEnvelope
+    connect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -4948,6 +6383,20 @@ export namespace Prisma {
     update?: InspeccionUpdateWithWhereUniqueWithoutConductorInput | InspeccionUpdateWithWhereUniqueWithoutConductorInput[]
     updateMany?: InspeccionUpdateManyWithWhereWithoutConductorInput | InspeccionUpdateManyWithWhereWithoutConductorInput[]
     deleteMany?: InspeccionScalarWhereInput | InspeccionScalarWhereInput[]
+  }
+
+  export type InspeccionPatioUpdateManyWithoutAdminNestedInput = {
+    create?: XOR<InspeccionPatioCreateWithoutAdminInput, InspeccionPatioUncheckedCreateWithoutAdminInput> | InspeccionPatioCreateWithoutAdminInput[] | InspeccionPatioUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionPatioCreateOrConnectWithoutAdminInput | InspeccionPatioCreateOrConnectWithoutAdminInput[]
+    upsert?: InspeccionPatioUpsertWithWhereUniqueWithoutAdminInput | InspeccionPatioUpsertWithWhereUniqueWithoutAdminInput[]
+    createMany?: InspeccionPatioCreateManyAdminInputEnvelope
+    set?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    disconnect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    delete?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    connect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    update?: InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput | InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput[]
+    updateMany?: InspeccionPatioUpdateManyWithWhereWithoutAdminInput | InspeccionPatioUpdateManyWithWhereWithoutAdminInput[]
+    deleteMany?: InspeccionPatioScalarWhereInput | InspeccionPatioScalarWhereInput[]
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -4970,6 +6419,20 @@ export namespace Prisma {
     update?: InspeccionUpdateWithWhereUniqueWithoutConductorInput | InspeccionUpdateWithWhereUniqueWithoutConductorInput[]
     updateMany?: InspeccionUpdateManyWithWhereWithoutConductorInput | InspeccionUpdateManyWithWhereWithoutConductorInput[]
     deleteMany?: InspeccionScalarWhereInput | InspeccionScalarWhereInput[]
+  }
+
+  export type InspeccionPatioUncheckedUpdateManyWithoutAdminNestedInput = {
+    create?: XOR<InspeccionPatioCreateWithoutAdminInput, InspeccionPatioUncheckedCreateWithoutAdminInput> | InspeccionPatioCreateWithoutAdminInput[] | InspeccionPatioUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: InspeccionPatioCreateOrConnectWithoutAdminInput | InspeccionPatioCreateOrConnectWithoutAdminInput[]
+    upsert?: InspeccionPatioUpsertWithWhereUniqueWithoutAdminInput | InspeccionPatioUpsertWithWhereUniqueWithoutAdminInput[]
+    createMany?: InspeccionPatioCreateManyAdminInputEnvelope
+    set?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    disconnect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    delete?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    connect?: InspeccionPatioWhereUniqueInput | InspeccionPatioWhereUniqueInput[]
+    update?: InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput | InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput[]
+    updateMany?: InspeccionPatioUpdateManyWithWhereWithoutAdminInput | InspeccionPatioUpdateManyWithWhereWithoutAdminInput[]
+    deleteMany?: InspeccionPatioScalarWhereInput | InspeccionPatioScalarWhereInput[]
   }
 
   export type InspeccionCreateNestedManyWithoutVehiculoInput = {
@@ -5064,6 +6527,20 @@ export namespace Prisma {
     upsert?: VehiculoUpsertWithoutInspeccionesInput
     connect?: VehiculoWhereUniqueInput
     update?: XOR<XOR<VehiculoUpdateToOneWithWhereWithoutInspeccionesInput, VehiculoUpdateWithoutInspeccionesInput>, VehiculoUncheckedUpdateWithoutInspeccionesInput>
+  }
+
+  export type UsuarioCreateNestedOneWithoutInspecciones_patioInput = {
+    create?: XOR<UsuarioCreateWithoutInspecciones_patioInput, UsuarioUncheckedCreateWithoutInspecciones_patioInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutInspecciones_patioInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
+  export type UsuarioUpdateOneRequiredWithoutInspecciones_patioNestedInput = {
+    create?: XOR<UsuarioCreateWithoutInspecciones_patioInput, UsuarioUncheckedCreateWithoutInspecciones_patioInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutInspecciones_patioInput
+    upsert?: UsuarioUpsertWithoutInspecciones_patioInput
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutInspecciones_patioInput, UsuarioUpdateWithoutInspecciones_patioInput>, UsuarioUncheckedUpdateWithoutInspecciones_patioInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -5288,6 +6765,28 @@ export namespace Prisma {
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
   }
+  export type NestedJsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type InspeccionCreateWithoutConductorInput = {
     fecha_apertura?: Date | string
@@ -5322,6 +6821,37 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type InspeccionPatioCreateWithoutAdminInput = {
+    vehiculo_placa: string
+    tipo_movimiento: string
+    fecha_registro?: Date | string
+    evidencias: JsonNullValueInput | InputJsonValue
+    firma_admin: string
+    correo_enviado?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionPatioUncheckedCreateWithoutAdminInput = {
+    id?: number
+    vehiculo_placa: string
+    tipo_movimiento: string
+    fecha_registro?: Date | string
+    evidencias: JsonNullValueInput | InputJsonValue
+    firma_admin: string
+    correo_enviado?: boolean
+    eliminado?: boolean
+  }
+
+  export type InspeccionPatioCreateOrConnectWithoutAdminInput = {
+    where: InspeccionPatioWhereUniqueInput
+    create: XOR<InspeccionPatioCreateWithoutAdminInput, InspeccionPatioUncheckedCreateWithoutAdminInput>
+  }
+
+  export type InspeccionPatioCreateManyAdminInputEnvelope = {
+    data: InspeccionPatioCreateManyAdminInput | InspeccionPatioCreateManyAdminInput[]
+    skipDuplicates?: boolean
+  }
+
   export type InspeccionUpsertWithWhereUniqueWithoutConductorInput = {
     where: InspeccionWhereUniqueInput
     update: XOR<InspeccionUpdateWithoutConductorInput, InspeccionUncheckedUpdateWithoutConductorInput>
@@ -5352,6 +6882,37 @@ export namespace Prisma {
     eliminado?: BoolFilter<"Inspeccion"> | boolean
     conductor_id?: IntFilter<"Inspeccion"> | number
     vehiculo_placa?: StringFilter<"Inspeccion"> | string
+  }
+
+  export type InspeccionPatioUpsertWithWhereUniqueWithoutAdminInput = {
+    where: InspeccionPatioWhereUniqueInput
+    update: XOR<InspeccionPatioUpdateWithoutAdminInput, InspeccionPatioUncheckedUpdateWithoutAdminInput>
+    create: XOR<InspeccionPatioCreateWithoutAdminInput, InspeccionPatioUncheckedCreateWithoutAdminInput>
+  }
+
+  export type InspeccionPatioUpdateWithWhereUniqueWithoutAdminInput = {
+    where: InspeccionPatioWhereUniqueInput
+    data: XOR<InspeccionPatioUpdateWithoutAdminInput, InspeccionPatioUncheckedUpdateWithoutAdminInput>
+  }
+
+  export type InspeccionPatioUpdateManyWithWhereWithoutAdminInput = {
+    where: InspeccionPatioScalarWhereInput
+    data: XOR<InspeccionPatioUpdateManyMutationInput, InspeccionPatioUncheckedUpdateManyWithoutAdminInput>
+  }
+
+  export type InspeccionPatioScalarWhereInput = {
+    AND?: InspeccionPatioScalarWhereInput | InspeccionPatioScalarWhereInput[]
+    OR?: InspeccionPatioScalarWhereInput[]
+    NOT?: InspeccionPatioScalarWhereInput | InspeccionPatioScalarWhereInput[]
+    id?: IntFilter<"InspeccionPatio"> | number
+    vehiculo_placa?: StringFilter<"InspeccionPatio"> | string
+    admin_id?: IntFilter<"InspeccionPatio"> | number
+    tipo_movimiento?: StringFilter<"InspeccionPatio"> | string
+    fecha_registro?: DateTimeFilter<"InspeccionPatio"> | Date | string
+    evidencias?: JsonFilter<"InspeccionPatio">
+    firma_admin?: StringFilter<"InspeccionPatio"> | string
+    correo_enviado?: BoolFilter<"InspeccionPatio"> | boolean
+    eliminado?: BoolFilter<"InspeccionPatio"> | boolean
   }
 
   export type InspeccionCreateWithoutVehiculoInput = {
@@ -5408,6 +6969,7 @@ export namespace Prisma {
     documento: string
     password: string
     rol?: string
+    inspecciones_patio?: InspeccionPatioCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioUncheckedCreateWithoutInspeccionesInput = {
@@ -5416,6 +6978,7 @@ export namespace Prisma {
     documento: string
     password: string
     rol?: string
+    inspecciones_patio?: InspeccionPatioUncheckedCreateNestedManyWithoutAdminInput
   }
 
   export type UsuarioCreateOrConnectWithoutInspeccionesInput = {
@@ -5456,6 +7019,7 @@ export namespace Prisma {
     documento?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
+    inspecciones_patio?: InspeccionPatioUpdateManyWithoutAdminNestedInput
   }
 
   export type UsuarioUncheckedUpdateWithoutInspeccionesInput = {
@@ -5464,6 +7028,7 @@ export namespace Prisma {
     documento?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     rol?: StringFieldUpdateOperationsInput | string
+    inspecciones_patio?: InspeccionPatioUncheckedUpdateManyWithoutAdminNestedInput
   }
 
   export type VehiculoUpsertWithoutInspeccionesInput = {
@@ -5489,6 +7054,56 @@ export namespace Prisma {
     modelo?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type UsuarioCreateWithoutInspecciones_patioInput = {
+    nombre: string
+    documento: string
+    password: string
+    rol?: string
+    inspecciones?: InspeccionCreateNestedManyWithoutConductorInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutInspecciones_patioInput = {
+    id?: number
+    nombre: string
+    documento: string
+    password: string
+    rol?: string
+    inspecciones?: InspeccionUncheckedCreateNestedManyWithoutConductorInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutInspecciones_patioInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutInspecciones_patioInput, UsuarioUncheckedCreateWithoutInspecciones_patioInput>
+  }
+
+  export type UsuarioUpsertWithoutInspecciones_patioInput = {
+    update: XOR<UsuarioUpdateWithoutInspecciones_patioInput, UsuarioUncheckedUpdateWithoutInspecciones_patioInput>
+    create: XOR<UsuarioCreateWithoutInspecciones_patioInput, UsuarioUncheckedCreateWithoutInspecciones_patioInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutInspecciones_patioInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutInspecciones_patioInput, UsuarioUncheckedUpdateWithoutInspecciones_patioInput>
+  }
+
+  export type UsuarioUpdateWithoutInspecciones_patioInput = {
+    nombre?: StringFieldUpdateOperationsInput | string
+    documento?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    rol?: StringFieldUpdateOperationsInput | string
+    inspecciones?: InspeccionUpdateManyWithoutConductorNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutInspecciones_patioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nombre?: StringFieldUpdateOperationsInput | string
+    documento?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    rol?: StringFieldUpdateOperationsInput | string
+    inspecciones?: InspeccionUncheckedUpdateManyWithoutConductorNestedInput
+  }
+
   export type InspeccionCreateManyConductorInput = {
     id?: number
     fecha_apertura?: Date | string
@@ -5499,6 +7114,17 @@ export namespace Prisma {
     datos_chequeo?: NullableJsonNullValueInput | InputJsonValue
     eliminado?: boolean
     vehiculo_placa: string
+  }
+
+  export type InspeccionPatioCreateManyAdminInput = {
+    id?: number
+    vehiculo_placa: string
+    tipo_movimiento: string
+    fecha_registro?: Date | string
+    evidencias: JsonNullValueInput | InputJsonValue
+    firma_admin: string
+    correo_enviado?: boolean
+    eliminado?: boolean
   }
 
   export type InspeccionUpdateWithoutConductorInput = {
@@ -5534,6 +7160,38 @@ export namespace Prisma {
     datos_chequeo?: NullableJsonNullValueInput | InputJsonValue
     eliminado?: BoolFieldUpdateOperationsInput | boolean
     vehiculo_placa?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type InspeccionPatioUpdateWithoutAdminInput = {
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionPatioUncheckedUpdateWithoutAdminInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type InspeccionPatioUncheckedUpdateManyWithoutAdminInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vehiculo_placa?: StringFieldUpdateOperationsInput | string
+    tipo_movimiento?: StringFieldUpdateOperationsInput | string
+    fecha_registro?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidencias?: JsonNullValueInput | InputJsonValue
+    firma_admin?: StringFieldUpdateOperationsInput | string
+    correo_enviado?: BoolFieldUpdateOperationsInput | boolean
+    eliminado?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type InspeccionCreateManyVehiculoInput = {
@@ -5608,6 +7266,10 @@ export namespace Prisma {
      * @deprecated Use InspeccionDefaultArgs instead
      */
     export type InspeccionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = InspeccionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use InspeccionPatioDefaultArgs instead
+     */
+    export type InspeccionPatioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = InspeccionPatioDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

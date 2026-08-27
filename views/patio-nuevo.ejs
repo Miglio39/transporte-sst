@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title><%= title %> | OmegaGroup</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --surface-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --omega-dark: #0f172a;
+            --omega-red: #e50914;
+        }
+
+        body { background-color: var(--surface-bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+        .header-app { background: var(--omega-dark); color: white; padding: 15px 20px; border-bottom: 4px solid var(--omega-red); }
+        
+        /* CONTENEDOR DE PLANOS */
+        .blueprint-container {
+            position: relative; width: 100%; max-width: 350px; height: 480px; margin: 20px auto;
+            background-color: #ffffff; border: 2px dashed #cbd5e1; border-radius: 12px;
+            background-position: center; background-repeat: no-repeat; background-size: contain;
+            display: none; /* Se oculta por defecto hasta que se elija el tipo */
+        }
+
+        /* SVG CARRO */
+        #blueprint-carro {
+            display: block;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAwIj48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxNjAiIHJ4PSIxNSIgZmlsbD0iI2YxZjVmOSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSIyNSIgeT0iNTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIzMCIgcng9IjUiIGZpbGw9IiNjYmQ1ZTEiLz48cmVjdCB4PSIyNSIgeT0iMTIwIiB3aWR0aD0iNTAiIGhlaWdodD0iMzAiIHJ4PSI1IiBmaWxsPSIjY2JkNWUxIi8+PC9zdmc+');
+        }
+
+        /* SVG MÁQUINA PESADA (Excavadora vista superior) */
+        #blueprint-maquina {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAwIj48cmVjdCB4PSIxNSIgeT0iMzAiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNDAiIHJ4PSI4IiBmaWxsPSIjZjFmNWY5IiBzdHJva2U9IiM5NGEzYjgiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjUiIHk9IjIwIiB3aWR0aD0iMTUiIGhlaWdodD0iMTYwIiByeD0iNCIgZmlsbD0iIzQ3NTU2OSIvPjxyZWN0IHg9IjgwIiB5PSIyMCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjE2MCIgcng9IjQiIGZpbGw9IiM0NzU1NjkiLz48cmVjdCB4PSIyNSIgeT0iNjAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI2MCIgcng9IjUiIGZpbGw9IiNjYmQ1ZTEiLz48cGF0aCBkPSJNIDM1LDEyMCBMMzUsMTgwIEw2NSwxODAgTDY1LDEyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjUiLz48cmVjdCB4PSIyNSIgeT0iMTc1IiB3aWR0aD0iNTAiIGhlaWdodD0iMTUiIHJ4PSIyIiBmaWxsPSIjOTRBN0I4Ii8+PC9zdmc+');
+        }
+
+        /* PUNTOS CALIENTES (HOTSPOTS) */
+        .hotspot {
+            position: absolute; width: 45px; height: 45px;
+            background-color: rgba(229, 9, 20, 0.85); border: 3px solid white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.1rem; cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s; animation: pulse 2s infinite;
+        }
+        .hotspot:hover { transform: scale(1.1); }
+        .hotspot.completed { background-color: #10b981; animation: none; border-color: #dcfce7; }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(229, 9, 20, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 9, 20, 0); }
+        }
+
+        /* Posiciones exactas - CARRO */
+        #blueprint-carro .hs-frente { top: 5%; left: 50%; transform: translateX(-50%); }
+        #blueprint-carro .hs-atras { bottom: 5%; left: 50%; transform: translateX(-50%); }
+        #blueprint-carro .hs-izq { top: 50%; left: -5%; transform: translateY(-50%); }
+        #blueprint-carro .hs-der { top: 50%; right: -5%; transform: translateY(-50%); }
+        #blueprint-carro .hs-techo { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* Posiciones exactas - MAQUINA */
+        #blueprint-maquina .hs-pala { top: 5%; left: 50%; transform: translateX(-50%); }
+        #blueprint-maquina .hs-motor { bottom: 5%; left: 50%; transform: translateX(-50%); }
+        #blueprint-maquina .hs-oruga-izq { top: 50%; left: -10%; transform: translateY(-50%); }
+        #blueprint-maquina .hs-oruga-der { top: 50%; right: -10%; transform: translateY(-50%); }
+        #blueprint-maquina .hs-cabina { top: 45%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* PREVIEW DE FOTO */
+        #foto-preview-container { display: none; width: 100%; height: 200px; background: #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 15px; position: relative; }
+        #foto-preview { width: 100%; height: 100%; object-fit: cover; }
+        canvas.firma { border: 2px dashed #cbd5e1; border-radius: 8px; width: 100%; background: #ffffff; cursor: crosshair; touch-action: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header-app d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-clipboard-check me-2"></i> Auditoría de Patio</h5>
+        <a href="/admin" class="btn btn-sm btn-outline-light"><i class="fas fa-times"></i></a>
+    </div>
+
+    <div class="container" style="max-width: 600px;">
+        <form id="form-patio" action="/admin/patio/guardar" method="POST">
+            
+            <!-- DATOS INICIALES -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small">TIPO DE EQUIPO</label>
+                            <select id="selectorTipoEquipo" class="form-select border-secondary shadow-none fw-bold" onchange="cambiarBlueprint()">
+                                <option value="CARRO" selected>Vehículo Ligero (Carro / Camioneta)</option>
+                                <option value="MAQUINA">Maquinaria Pesada / Especial</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-muted small">PLACA / IDENTIFICADOR</label>
+                            <!-- DATALIST: Permite seleccionar o Escribir texto libre -->
+                            <input list="listaPlacas" name="placa" class="form-control border-secondary shadow-none fw-bold" placeholder="Escribir o elegir..." required autocomplete="off">
+                            <datalist id="listaPlacas">
+                                <% vehiculos.forEach(v => { %>
+                                    <option value="<%= v.placa %>">
+                                <% }) %>
+                            </datalist>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-muted small">MOVIMIENTO</label>
+                            <select name="tipo_movimiento" class="form-select border-secondary shadow-none" required>
+                                <option value="SALIDA">Salida de patio</option>
+                                <option value="ENTRADA">Llegada a patio</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARRO INTERACTIVO 360 -->
+            <div class="text-center mb-2">
+                <h6 class="fw-bold text-dark"><i class="fas fa-hand-pointer text-primary"></i> Toque un punto para registrar el estado actual</h6>
+                <small class="text-muted">Añada fotos y comentarios sobre el estado visual del equipo.</small>
+            </div>
+            
+            <!-- BLUEPRINT: CARRO -->
+            <div id="blueprint-carro" class="blueprint-container">
+                <div class="hotspot hs-frente" onclick="abrirCamara('Frente / Capó')" title="Frente"><i class="fas fa-car-crash"></i></div>
+                <div class="hotspot hs-atras" onclick="abrirCamara('Atrás / Baúl')" title="Atrás"><i class="fas fa-car-side fa-flip-horizontal"></i></div>
+                <div class="hotspot hs-izq" onclick="abrirCamara('Lateral Izquierdo')" title="Lateral Izquierdo"><i class="fas fa-car-side"></i></div>
+                <div class="hotspot hs-der" onclick="abrirCamara('Lateral Derecho')" title="Lateral Derecho"><i class="fas fa-car-side fa-flip-horizontal"></i></div>
+                <div class="hotspot hs-techo" onclick="abrirCamara('Interior / Techo')" title="Interior"><i class="fas fa-couch"></i></div>
+            </div>
+
+            <!-- BLUEPRINT: MAQUINA PESADA -->
+            <div id="blueprint-maquina" class="blueprint-container">
+                <div class="hotspot hs-pala" onclick="abrirCamara('Implemento Frontal / Pala')" title="Pala/Frente"><i class="fas fa-snowplow"></i></div>
+                <div class="hotspot hs-motor" onclick="abrirCamara('Compartimiento Motor / Atrás')" title="Atrás"><i class="fas fa-cogs"></i></div>
+                <div class="hotspot hs-oruga-izq" onclick="abrirCamara('Oruga / Llantas Izquierda')" title="Lateral Izquierdo"><i class="fas fa-truck-monster"></i></div>
+                <div class="hotspot hs-oruga-der" onclick="abrirCamara('Oruga / Llantas Derecha')" title="Lateral Derecho"><i class="fas fa-truck-monster"></i></div>
+                <div class="hotspot hs-cabina" onclick="abrirCamara('Cabina de Operación')" title="Cabina"><i class="fas fa-user-shield"></i></div>
+            </div>
+
+            <!-- FIRMA DEL JEFE -->
+            <div class="card shadow-sm border-0 mt-4 mb-4">
+                <div class="card-body">
+                    <label class="form-label fw-bold text-muted small"><i class="fas fa-signature"></i> Firma del Jefe / Auditor</label>
+                    <canvas id="firmaCanvas" class="firma" height="150"></canvas>
+                    <button type="button" class="btn btn-sm btn-light w-100 mt-2 text-danger fw-bold" onclick="limpiarFirma()">Volver a firmar</button>
+                </div>
+            </div>
+
+            <!-- HIDDEN INPUTS (Aquí enviaremos el JSON y la firma al Backend) -->
+            <input type="hidden" name="evidenciasJSON" id="evidenciasJSON" value="{}">
+            <input type="hidden" name="firmaBase64" id="firmaBase64" required>
+
+            <button type="button" onclick="enviarFormulario()" class="btn btn-lg w-100 text-white fw-bold shadow" style="background-color: var(--omega-dark);">
+                <i class="fas fa-paper-plane me-2"></i> REGISTRAR Y ENVIAR ALERTA
+            </button>
+        </form>
+    </div>
+
+    <!-- MODAL DE LA CÁMARA (Se abre al tocar un punto rojo) -->
+    <div class="modal fade" id="modalCamara" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold" id="modalTitulo"><i class="fas fa-camera"></i> Evidencia</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    
+                    <div class="d-grid mb-3">
+                        <input type="file" id="fotoInput" accept="image/*" capture="environment" class="d-none" onchange="comprimirYProcesarFoto(this)">
+                        <button type="button" class="btn btn-danger btn-lg py-4 fw-bold shadow-sm" onclick="document.getElementById('fotoInput').click()">
+                            <i class="fas fa-camera fs-1 mb-2 d-block"></i> TOMAR FOTOGRAFÍA
+                        </button>
+                    </div>
+
+                    <!-- Previsualización -->
+                    <div id="foto-preview-container">
+                        <img id="foto-preview" src="">
+                        <button type="button" class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2" onclick="document.getElementById('fotoInput').click()"><i class="fas fa-sync"></i> Cambiar</button>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label fw-bold text-muted small">Estado / Novedad actual</label>
+                        <textarea id="comentarioInput" class="form-control" rows="2" placeholder="Ej: Operativa sin daños / Rayón profundo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success fw-bold px-4" onclick="guardarEvidencia()">Guardar <i class="fas fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIBRERÍAS DE FUNCIONAMIENTO -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    
+    <script>
+        // 1. ALTERNAR VISTAS (CARRO VS MÁQUINA)
+        function cambiarBlueprint() {
+            const tipo = document.getElementById('selectorTipoEquipo').value;
+            if (tipo === 'CARRO') {
+                document.getElementById('blueprint-carro').style.display = 'block';
+                document.getElementById('blueprint-maquina').style.display = 'none';
+            } else {
+                document.getElementById('blueprint-carro').style.display = 'none';
+                document.getElementById('blueprint-maquina').style.display = 'block';
+            }
+        }
+        // Ejecutar al cargar la página
+        cambiarBlueprint();
+
+        // 2. MOTOR DE EVIDENCIAS Y CÁMARA
+        let zonaActual = '';
+        let fotoBase64Temporal = '';
+        const evidenciasAlmacenadas = {}; 
+        const modalCamara = new bootstrap.Modal(document.getElementById('modalCamara'));
+
+        function abrirCamara(zona) {
+            zonaActual = zona;
+            document.getElementById('modalTitulo').innerText = 'Registro: ' + zona;
+            
+            // Limpiar modal
+            document.getElementById('fotoInput').value = '';
+            document.getElementById('comentarioInput').value = '';
+            document.getElementById('foto-preview-container').style.display = 'none';
+            fotoBase64Temporal = '';
+
+            // Si ya había evidencia en esa zona, cargarla
+            if(evidenciasAlmacenadas[zona]) {
+                fotoBase64Temporal = evidenciasAlmacenadas[zona].foto;
+                document.getElementById('foto-preview').src = fotoBase64Temporal;
+                document.getElementById('foto-preview-container').style.display = 'block';
+                document.getElementById('comentarioInput').value = evidenciasAlmacenadas[zona].comentario;
+            }
+
+            modalCamara.show();
+        }
+
+        // COMPRESIÓN DE IMAGEN (Evita el Error PayloadTooLarge)
+        function comprimirYProcesarFoto(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; // Resolución optimizada para PDF
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Mantener la proporción
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Exportar a JPG con calidad 60%
+                        fotoBase64Temporal = canvas.toDataURL('image/jpeg', 0.6);
+                        
+                        document.getElementById('foto-preview').src = fotoBase64Temporal;
+                        document.getElementById('foto-preview-container').style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function guardarEvidencia() {
+            if (!fotoBase64Temporal) {
+                alert('Debe tomar una fotografía para registrar el estado.');
+                return;
+            }
+            // Guardamos en memoria
+            evidenciasAlmacenadas[zonaActual] = {
+                foto: fotoBase64Temporal,
+                comentario: document.getElementById('comentarioInput').value
+            };
+            
+            // Buscar y marcar todos los puntos con el nombre de la zona actual en VERDE
+            const hotspots = document.querySelectorAll('.hotspot');
+            hotspots.forEach(hp => {
+                // Comparamos usando el onclick (hack visual)
+                if(hp.getAttribute('onclick').includes(zonaActual)) {
+                    hp.classList.add('completed');
+                    hp.innerHTML = '<i class="fas fa-check"></i>';
+                }
+            });
+            
+            modalCamara.hide();
+        }
+
+        // 3. MOTOR DE FIRMA
+        const canvas = document.getElementById('firmaCanvas');
+        function redimensionarCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+        window.addEventListener("resize", redimensionarCanvas);
+        setTimeout(redimensionarCanvas, 200); // Dar tiempo al render
+        
+        const signaturePad = new SignaturePad(canvas, { penColor: "rgb(15, 23, 42)" });
+        function limpiarFirma() { signaturePad.clear(); }
+
+        // 4. ENVIAR FORMULARIO
+        function enviarFormulario() {
+            if (signaturePad.isEmpty()) {
+                alert("Por favor, registre la firma antes de guardar.");
+                return;
+            }
+            
+            document.getElementById('evidenciasJSON').value = JSON.stringify(evidenciasAlmacenadas);
+            document.getElementById('firmaBase64').value = signaturePad.toDataURL();
+            
+            const btn = document.querySelector('button[onclick="enviarFormulario()"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GENERANDO REGISTRO...';
+            btn.disabled = true;
+
+            document.getElementById('form-patio').submit();
+        }
+    </script>
+</body>
+</html>

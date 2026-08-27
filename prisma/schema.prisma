@@ -10,12 +10,15 @@ datasource db {
 
 // Tabla de Usuarios (Admin y Conductores)
 model Usuario {
-  id           Int          @id @default(autoincrement())
-  nombre       String
-  documento    String       @unique
-  password     String
-  rol          String       @default("conductor") // "admin" o "conductor"
-  inspecciones Inspeccion[]
+  id                 Int               @id @default(autoincrement())
+  nombre             String
+  documento          String            @unique
+  password           String
+  rol                String            @default("conductor") // "admin" o "conductor"
+  
+  // Relaciones
+  inspecciones       Inspeccion[]
+  inspecciones_patio InspeccionPatio[] // <-- ¡ESTA ES LA LÍNEA QUE FALTABA!
 }
 
 // Tabla de Vehículos
@@ -45,4 +48,25 @@ model Inspeccion {
   conductor          Usuario   @relation(fields: [conductor_id], references: [id])
   vehiculo_placa     String
   vehiculo           Vehiculo  @relation(fields: [vehiculo_placa], references: [placa])
+}
+
+// ==========================================
+// NUEVO MÓDULO: INSPECCIÓN DE PATIO (ADMIN)
+// ==========================================
+model InspeccionPatio {
+  id                  Int      @id @default(autoincrement())
+  vehiculo_placa      String
+  admin_id            Int
+  tipo_movimiento     String   // "ENTRADA" o "SALIDA"
+  fecha_registro      DateTime @default(now())
+  
+  // Guardaremos un JSON con las zonas del carro, sus fotos en Base64 y comentarios
+  evidencias          Json     
+  
+  firma_admin         String   @db.Text
+  correo_enviado      Boolean  @default(false)
+  eliminado           Boolean  @default(false)
+
+  // Relación: Saber qué jefe de operaciones hizo este registro
+  admin               Usuario  @relation(fields: [admin_id], references: [id])
 }
