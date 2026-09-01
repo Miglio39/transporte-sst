@@ -143,18 +143,28 @@
             
             <div class="collapse navbar-collapse" id="navbarAdmin">
                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
-    <!-- NUEVO BOTÓN PARA EL MÓDULO DE PATIO -->
-    <li class="nav-item">
-        <a href="/admin/patio/nuevo" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: #3b82f6; color: white;">
-            <i class="fas fa-camera me-1"></i> Patio Operativo
-        </a>
-    </li>
-    
-    <li class="nav-item"><a href="/admin/conductores" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-users me-1"></i> Conductores</a></li>
-    <li class="nav-item"><a href="/admin/conductores/nuevo" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-user-plus me-1"></i> Nuevo Conductor</a></li>
-    <li class="nav-item"><a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;"><i class="fas fa-plus me-1"></i> Inspección</a></li>
-    <li class="nav-item"><a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off me-1"></i> Salir</a></li>
-</ul>
+                    
+                    <!-- BOTÓN PARA EL MÓDULO DE PATIO -->
+                    <li class="nav-item">
+                        <a href="/admin/patio/nuevo" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: #3b82f6; color: white;">
+                            <i class="fas fa-camera me-1"></i> Patio Operativo
+                        </a>
+                    </li>
+
+                    <!-- ============================================== -->
+                    <!-- NUEVO BOTÓN: HISTORIAL DE PATIO AQUÍ           -->
+                    <!-- ============================================== -->
+                    <li class="nav-item">
+                        <a href="/admin/patio/historial" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: #f59e0b; color: white;">
+                            <i class="fas fa-list-check me-1"></i> Historial Patio
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item"><a href="/admin/conductores" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-users me-1"></i> Conductores</a></li>
+                    <li class="nav-item"><a href="/admin/conductores/nuevo" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-user-plus me-1"></i> Nuevo Conductor</a></li>
+                    <li class="nav-item"><a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;"><i class="fas fa-plus me-1"></i> Inspección</a></li>
+                    <li class="nav-item"><a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off me-1"></i> Salir</a></li>
+                </ul>
             </div>
         </div>
     </nav>
@@ -189,7 +199,6 @@
         let conteoFallas = {};
 
         flotaActiva.forEach(veh => {
-            // --> SOLUCIÓN APLICADA: Acceder al objeto JSON "datos_chequeo" para leer las fechas <--
             const datos = veh.datos_chequeo || {};
             
             // A. Verificación de Vencimientos
@@ -318,8 +327,9 @@
                 </div>
             </div>
         </div>
+        
         <!-- =========================================================
-             NUEVA SECCIÓN: GENERADOR DE REPORTE MAESTRO
+             SECCIÓN: GENERADOR DE REPORTE MAESTRO
              ========================================================= -->
         <div class="data-card mb-4" style="background: #fffbeb; border-color: #fde68a;">
             <div class="data-card-header bg-transparent d-flex align-items-center">
@@ -477,6 +487,7 @@
             </div>
         </div>
     </div>
+    
     <div class="modal fade" id="modalPorVencer" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="border: none; border-radius: 8px;">

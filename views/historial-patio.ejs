@@ -2,76 +2,95 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Historial de Patio | OmegaGroup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | OmegaGroup</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style> body { background-color: #f8fafc; font-family: 'Segoe UI', sans-serif; } </style>
+    <style>
+        :root { --omega-dark: #0f172a; --omega-red: #e50914; }
+        body { background-color: #f8fafc; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px;}
+        .header-app { background: var(--omega-dark); color: white; padding: 15px 20px; border-bottom: 4px solid var(--omega-red); }
+        .badge-entrada { background-color: #dcfce7; color: #166534; border: 1px solid #166534; }
+        .badge-salida { background-color: #fef3c7; color: #92400e; border: 1px solid #92400e; }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
+    
+    <!-- Encabezado -->
+    <div class="header-app d-flex justify-content-between align-items-center mb-4 shadow-sm">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-list-check me-2"></i> Historial de Patio</h5>
+        <a href="/admin" class="btn btn-sm btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Panel Admin</a>
+    </div>
+
+    <div class="container" style="max-width: 1000px;">
+        
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold"><i class="fas fa-history text-primary me-2"></i> Historial Inspecciones de Patio</h3>
-            <a href="/admin" class="btn btn-secondary">Volver</a>
+            <h4 class="fw-bold text-dark mb-0">Auditorías 360 Registradas</h4>
+            <a href="/admin/patio/nuevo" class="btn btn-danger fw-bold shadow-sm"><i class="fas fa-plus me-1"></i> Nueva Auditoría</a>
         </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Fecha y Hora</th>
-                                <th>Placa / ID</th>
-                                <th>Movimiento</th>
-                                <th class="text-end">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% inspecciones.forEach(insp => { %>
-                                <tr>
-                                    <td class="fw-bold text-muted">#<%= insp.id %></td>
-                                    <td><%= new Date(insp.fecha_registro).toLocaleString('es-CO') %></td>
-                                    <td class="fw-bold"><%= insp.vehiculo_placa %></td>
-                                    <td><span class="badge bg-<%= insp.tipo_movimiento === 'SALIDA' ? 'primary' : 'warning' %>"><%= insp.tipo_movimiento %></span></td>
-                                    <td class="text-end">
-                                        <!-- Ver / Descargar PDF -->
-                                        <a href="/admin/patio/pdf/<%= insp.id %>" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </a>
-                                        <!-- Botón que abre el modal de enviar correo -->
-                                        <button class="btn btn-sm btn-success fw-bold shadow-sm ms-1" onclick="abrirModalCorreo(<%= insp.id %>, '<%= insp.vehiculo_placa %>')">
-                                            <i class="fas fa-envelope"></i> Enviar
-                                        </button>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
+        <% if (inspecciones.length === 0) { %>
+            <div class="alert alert-info text-center shadow-sm border-0 bg-white text-muted py-5">
+                <i class="fas fa-folder-open fs-1 d-block mb-3 text-secondary"></i> 
+                <h5 class="fw-bold">No hay registros</h5>
+                <p class="mb-0">Aún no se ha realizado ninguna auditoría de patio.</p>
             </div>
-        </div>
+        <% } else { %>
+            <div class="row g-4">
+                <% inspecciones.forEach(insp => { %>
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card shadow-sm border-0 h-100 card-hover">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-truck-moving text-secondary me-2"></i><%= insp.vehiculo_placa %></h5>
+                                    <span class="badge rounded-pill <%= insp.tipo_movimiento === 'ENTRADA' ? 'badge-entrada' : 'badge-salida' %> px-3 py-2">
+                                        <i class="fas <%= insp.tipo_movimiento === 'ENTRADA' ? 'fa-arrow-down' : 'fa-arrow-up' %> me-1"></i> <%= insp.tipo_movimiento %>
+                                    </span>
+                                </div>
+                                
+                                <p class="mb-1 small text-muted"><i class="fas fa-calendar-alt me-2 text-primary"></i> <%= new Date(insp.fecha_registro).toLocaleString('es-CO') %></p>
+                                <p class="mb-3 small text-muted"><i class="fas fa-user-shield me-2 text-primary"></i> Auditor: <strong><%= insp.admin.nombre %></strong></p>
+                                
+                                <div class="d-flex gap-2 mt-auto pt-3 border-top">
+                                    <a href="/admin/patio/pdf/<%= insp.id %>" class="btn btn-outline-dark btn-sm flex-grow-1 fw-bold" target="_blank">
+                                        <i class="fas fa-file-pdf me-1 text-danger"></i> Ver PDF
+                                    </a>
+                                    <button class="btn btn-primary btn-sm fw-bold px-3" onclick="abrirModalCorreo('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Enviar por Correo">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
     </div>
 
     <!-- Modal para Enviar Correo -->
     <div class="modal fade" id="modalCorreo" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="fas fa-paper-plane me-2"></i> Enviar Reporte</h5>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold"><i class="fas fa-envelope-open-text me-2"></i> Enviar PDF al Cliente</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="formEnviarCorreo" method="POST">
-                    <div class="modal-body">
-                        <p class="text-muted small">El sistema generará el PDF y lo enviará como archivo adjunto.</p>
+                <form id="formCorreo" method="POST">
+                    <div class="modal-body p-4">
+                        <p class="small text-muted mb-3">Se adjuntará el reporte oficial de patio del vehículo <strong id="modalPlaca" class="text-dark fs-6"></strong>.</p>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Correo electrónico del cliente/destinatario:</label>
-                            <input type="email" name="correo" class="form-control" placeholder="ejemplo@empresa.com" required>
+                            <label class="form-label fw-bold small text-dark">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-at"></i></span>
+                                <input type="email" name="correo" class="form-control" placeholder="ejemplo@cliente.com" required>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success fw-bold" onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Enviando...';">Enviar Reporte</button>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4" onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Enviando...';"><i class="fas fa-paper-plane me-1"></i> Enviar Reporte</button>
                     </div>
                 </form>
             </div>
@@ -81,7 +100,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function abrirModalCorreo(id, placa) {
-            document.getElementById('formEnviarCorreo').action = '/admin/patio/enviar-correo/' + id;
+            document.getElementById('modalPlaca').innerText = placa;
+            // Conecta con la ruta POST que ya tienes en app.js
+            document.getElementById('formCorreo').action = '/admin/patio/enviar-correo/' + id;
             new bootstrap.Modal(document.getElementById('modalCorreo')).show();
         }
     </script>
