@@ -104,6 +104,7 @@ app.get('/setup-admin', async (req, res) => {
             <h1 style="color: #27ae60;">✅ Cuentas de Administrador Configuradas</h1>
             <p><strong>Yeison:</strong> Doc: 1122141007</p>
             <p><strong>Maria F:</strong> Doc: 1123087694</p>
+            <p><small>La contraseña para ambos ha sido establecida como secreta.</small></p>
             <br><a href="/login" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Ir a Iniciar Sesión</a>
         </div>
     `);
@@ -687,8 +688,6 @@ app.post('/admin/patio/guardar', verificarRol(['admin']), async (req, res) => {
         const adminId = req.usuario ? req.usuario.id : (req.user ? req.user.id : 1); 
         const evidenciasObj = JSON.parse(evidenciasJSON);
 
-        // CORRECCIÓN 1: Usamos inspeccionPatio (igual que en el schema)
-        // CORRECCIÓN 2: El campo se llama 'evidencias' y recibe el objeto JSON directamente
         const nuevoRegistro = await prisma.inspeccionPatio.create({
             data: {
                 vehiculo_placa: placa || 'SIN-PLACA',
@@ -706,8 +705,8 @@ app.post('/admin/patio/guardar', verificarRol(['admin']), async (req, res) => {
             registro: nuevoRegistro,
             evidencias: evidenciasObj,
             datos: evidenciasObj, 
-            fechaImpresion: new Date().toLocaleString('es-CO'),
-            inspeccion: nuevoRegistro
+            inspeccion: nuevoRegistro,
+            fechaImpresion: new Date().toLocaleString('es-CO')
         });
 
         browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
@@ -748,7 +747,6 @@ app.get('/admin/patio/pdf/:id', verificarRol(['admin']), async (req, res) => {
         
         if (!inspeccion) return res.status(404).send('Inspección no encontrada');
         
-        // CORRECCIÓN 3: Leemos desde 'inspeccion.evidencias'
         const datos = typeof inspeccion.evidencias === 'string' ? JSON.parse(inspeccion.evidencias) : inspeccion.evidencias;
 
         res.render('pdf-patio', { title: `Inspección ${inspeccion.vehiculo_placa}`, inspeccion: inspeccion, registro: inspeccion, datos: datos, evidencias: datos, fechaImpresion: new Date().toLocaleString('es-CO') });
@@ -757,31 +755,89 @@ app.get('/admin/patio/pdf/:id', verificarRol(['admin']), async (req, res) => {
     }
 });
 
+// ============================================================================
+// ENVÍO DE CORREO DIRECTO (BLINDADO CON TUS CREDENCIALES)
+// ============================================================================
 app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, res) => {
+    let browser = null;
     try {
-        const id = req.params.id;
+        const id = parseInt(req.params.id);
         const correoCliente = req.body.correo;
         
-        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        // 1. Extraemos los datos de la Base de Datos
+        const inspeccion = await prisma.inspeccionPatio.findUnique({
+            where: { id: id },
+            include: { admin: true }
+        });
+
+        if (!inspeccion) return res.status(404).send('Inspección no encontrada');
+
+        const datos = typeof inspeccion.evidencias === 'string' 
+            ? JSON.parse(inspeccion.evidencias) 
+            : inspeccion.evidencias;
+
+        // 2. Armamos el PDF directamente en memoria con EJS
+        const templatePath = path.join(__dirname, 'views/pdf-patio.ejs');
+        const html = await ejs.renderFile(templatePath, {
+            registro: inspeccion,
+            evidencias: datos,
+            datos: datos, 
+            inspeccion: inspeccion,
+            fechaImpresion: new Date().toLocaleString('es-CO')
+        });
+
+        browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
         const page = await browser.newPage();
-        
-        await page.goto(`http://localhost:${process.env.PORT || 3000}/admin/patio/pdf/${id}`, { waitUntil: 'networkidle0' });
-        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '1cm', bottom: '1cm' } });
+        await page.setContent(html, { waitUntil: 'networkidle0' }); 
+        const pdfBuffer = await page.pdf({ format: 'Letter', printBackground: true, margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' } });
         await browser.close();
 
+        // 3. Nodemailer configurado con tu correo y contraseña
         const transporter = nodemailer.createTransport({
             service: 'gmail', 
             auth: {
-                user: 'tu-correo-corporativo@gmail.com', 
-                pass: 'tu-contraseña-de-aplicacion'      
+                user: 'operaciones.omegagroupsas@gmail.com', 
+                pass: 'Rosalbamoreno27.'      
             }
         });
 
+        // 4. Armamos la URL dinámica para el cliente
+        const protocolo = req.protocol; 
+        const host = req.get('host'); 
+        const urlPdf = `${protocolo}://${host}/admin/patio/pdf/${id}`;
+
         const mailOptions = {
-            from: '"OmegaGroup SST" <tu-correo-corporativo@gmail.com>',
+            from: '"OmegaGroup SST" <operaciones.omegagroupsas@gmail.com>',
             to: correoCliente,
-            subject: `Reporte de Inspección de Patio - Vehículo / Equipo`,
-            text: `Adjunto encontrará el reporte oficial de la inspección de patio generada en la plataforma OmegaGroup.`,
+            subject: `Reporte de Auditoría de Patio (Ticket #${id}) - OmegaGroup`,
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #334155; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="background-color: #0f172a; padding: 20px; text-align: center; border-bottom: 4px solid #e50914;">
+                        <h2 style="color: white; margin: 0; letter-spacing: 1px;">OMEGAGROUP | Operaciones</h2>
+                    </div>
+                    <div style="padding: 30px;">
+                        <h3 style="color: #0f172a; margin-top: 0;">Reporte Oficial de Auditoría</h3>
+                        <p>Cordial saludo,</p>
+                        <p>Se ha generado un nuevo registro de inspección de patio en nuestra plataforma de seguridad.</p>
+                        <p>Puede visualizar, imprimir y descargar el documento PDF ingresando al siguiente enlace seguro:</p>
+                        
+                        <div style="text-align: center; margin: 35px 0;">
+                            <a href="${urlPdf}" style="background-color: #e50914; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; letter-spacing: 0.5px;">📄 Abrir Reporte PDF</a>
+                        </div>
+                        
+                        <p style="font-size: 13px; color: #64748b;">Si el botón no funciona, copie y pegue esta dirección en su navegador web:</p>
+                        <p style="font-size: 13px; word-break: break-all; background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            <a href="${urlPdf}" style="color: #3b82f6; text-decoration: none;">${urlPdf}</a>
+                        </p>
+                        
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+                        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+                            Se ha adjuntado una copia física a este correo como respaldo. <br>
+                            &copy; ${new Date().getFullYear()} OmegaGroup SAS.
+                        </p>
+                    </div>
+                </div>
+            `,
             attachments: [{
                 filename: `Inspeccion_Patio_${id}.pdf`,
                 content: pdfBuffer,
@@ -790,10 +846,11 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         };
 
         await transporter.sendMail(mailOptions);
-        res.send(`<script>alert('¡Reporte enviado con éxito a ${correoCliente}!'); window.location.href='/admin/patio/historial';</script>`);
+        res.send(`<script>alert('¡Reporte enviado con éxito al correo: ${correoCliente}!'); window.location.href='/admin/patio/historial';</script>`);
     } catch (error) {
+        if (browser) await browser.close();
         console.error('Error enviando correo:', error);
-        res.status(500).send('Hubo un error al enviar el correo. Verifique la consola.');
+        res.status(500).send('Hubo un error al enviar el correo. Verifique la consola del servidor para más detalles.');
     }
 });
 
