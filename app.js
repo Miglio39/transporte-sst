@@ -59,19 +59,21 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
-        // =====================================================================
-        // 🚨 ACTUALIZACIÓN: Sesión persistente por 365 días (1 año)
-        // =====================================================================
+        // Token por 1 año
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
             process.env.JWT_SECRET, 
-            { expiresIn: '365d' } // Antes estaba en '12h'
+            { expiresIn: '365d' } 
         );
 
-        // La cookie ahora sobrevive 1 año (365 días * 24 horas * 60 min * 60 seg * 1000 ms)
+        // 🚨 BLINDAJE EXTRA: Definimos el tiempo exacto (1 año en milisegundos)
+        const tiempoUnAno = 365 * 24 * 60 * 60 * 1000;
+        
+        // Usamos maxAge y expires juntos para obligar a CUALQUIER celular a guardarlo
         res.cookie('jwt', token, { 
             httpOnly: true, 
-            maxAge: 365 * 24 * 60 * 60 * 1000 
+            maxAge: tiempoUnAno,
+            expires: new Date(Date.now() + tiempoUnAno) 
         });
         
         if (usuario.rol === 'admin') {
@@ -84,7 +86,6 @@ app.post('/login', async (req, res) => {
         res.render('login', { error: 'Error interno del servidor' });
     }
 });
-
 app.get('/logout', (req, res) => {
     res.clearCookie('jwt');
     res.redirect('/login');
