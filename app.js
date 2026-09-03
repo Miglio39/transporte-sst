@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Límite de 50MB para carga de fotos pesadas de auditoría
+// Límite de 50MB para carga de fotos pesadas de auditoría y firmas
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -34,7 +34,7 @@ app.use(cookieParser());
 
 /**
  * ============================================================================
- * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN
+ * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (BLINDADAS)
  * ============================================================================
  */
 app.get('/', (req, res) => {
@@ -59,21 +59,21 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
-        // Token firmado por 1 año
+        // Token firmado por 180 días (6 meses) - Máximo tolerado por Safari/iOS/Chrome
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: '365d' } 
+            process.env.JWT_SECRET || 'llave_de_respaldo_omega_2026', 
+            { expiresIn: '180d' } 
         );
 
-        // 🚨 CONFIGURACIÓN UNIVERSAL PARA QUE NO SE BORRE AL CERRAR
-        const tiempoUnAno = 365 * 24 * 60 * 60 * 1000; 
+        // 180 días en milisegundos
+        const tiempo6Meses = 180 * 24 * 60 * 60 * 1000; 
         
         res.cookie('jwt', token, { 
             httpOnly: true, 
-            sameSite: 'lax', // Regla de Chrome para no borrarla
-            maxAge: tiempoUnAno,
-            expires: new Date(Date.now() + tiempoUnAno) 
+            sameSite: 'lax', // Regla estricta para que el navegador móvil no la borre al cerrar la app
+            maxAge: tiempo6Meses,
+            expires: new Date(Date.now() + tiempo6Meses) 
         });
         
         if (usuario.rol === 'admin') {
@@ -86,11 +86,13 @@ app.post('/login', async (req, res) => {
         res.render('login', { error: 'Error interno del servidor' });
     }
 });
+
 app.get('/logout', (req, res) => {
     res.clearCookie('jwt');
     res.redirect('/login');
 });
 
+// Ruta para inicializar el sistema
 app.get('/setup-admin', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash('Omega2026*', salt);
@@ -112,7 +114,6 @@ app.get('/setup-admin', async (req, res) => {
             <h1 style="color: #27ae60;">✅ Cuentas de Administrador Configuradas</h1>
             <p><strong>Yeison:</strong> Doc: 1122141007</p>
             <p><strong>Maria F:</strong> Doc: 1123087694</p>
-            <p><small>La contraseña para ambos ha sido establecida como secreta.</small></p>
             <br><a href="/login" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Ir a Iniciar Sesión</a>
         </div>
     `);
@@ -296,7 +297,38 @@ app.post('/inspeccion/inicio', verificarRol(['conductor', 'admin']), async (req,
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Inspección Registrada!</h1><p>ID: #${nuevaInspeccion.id}</p><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);    
+        
+        // DISEÑO RESPONSIVE Y PREMIUM PARA "INSPECCIÓN REGISTRADA"
+        res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <title>Éxito | OmegaGroup</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            <style>
+                body { background-color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+                .success-card { background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 420px; width: 100%; border-top: 6px solid #10b981; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+                .success-icon { font-size: 5.5rem; color: #10b981; margin-bottom: 20px; }
+                .title-text { color: #0f172a; font-weight: 800; font-size: 1.8rem; margin-bottom: 10px; letter-spacing: -0.5px; }
+                .desc-text { color: #64748b; font-size: 1.05rem; margin-bottom: 0; line-height: 1.5; }
+                .btn-omega { background-color: #0f172a; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; width: 100%; margin-top: 30px; transition: all 0.2s; letter-spacing: 0.5px; }
+                .btn-omega:hover { background-color: #1e293b; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2); }
+                @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+            </style>
+        </head>
+        <body>
+            <div class="success-card">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h2 class="title-text">¡Inspección Registrada!</h2>
+                <p class="desc-text">La auditoría del vehículo se ha guardado exitosamente bajo el ticket <strong>#${nuevaInspeccion.id}</strong>.</p>
+                <a href="${urlDestino}" class="btn-omega"><i class="fas fa-arrow-left me-2"></i> VOLVER AL PANEL</a>
+            </div>
+        </body>
+        </html>
+        `);
     } catch (error) {
         console.error(error);
         res.status(500).send('Error al guardar inspección');
@@ -334,7 +366,38 @@ app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Jornada Cerrada!</h1><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);
+        
+        // DISEÑO RESPONSIVE Y PREMIUM PARA "JORNADA CERRADA"
+        res.send(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <title>Éxito | OmegaGroup</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            <style>
+                body { background-color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+                .success-card { background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 420px; width: 100%; border-top: 6px solid #f59e0b; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+                .success-icon { font-size: 5.5rem; color: #f59e0b; margin-bottom: 20px; }
+                .title-text { color: #0f172a; font-weight: 800; font-size: 1.8rem; margin-bottom: 10px; letter-spacing: -0.5px; }
+                .desc-text { color: #64748b; font-size: 1.05rem; margin-bottom: 0; line-height: 1.5; }
+                .btn-omega { background-color: #0f172a; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; width: 100%; margin-top: 30px; transition: all 0.2s; letter-spacing: 0.5px; }
+                .btn-omega:hover { background-color: #1e293b; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2); }
+                @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+            </style>
+        </head>
+        <body>
+            <div class="success-card">
+                <i class="fas fa-flag-checkered success-icon"></i>
+                <h2 class="title-text">¡Jornada Cerrada!</h2>
+                <p class="desc-text">El kilometraje de llegada ha sido registrado y el turno se finalizó con éxito.</p>
+                <a href="${urlDestino}" class="btn-omega"><i class="fas fa-arrow-left me-2"></i> VOLVER AL PANEL</a>
+            </div>
+        </body>
+        </html>
+        `);
     } catch (error) {
         res.status(500).send('Error al cerrar la jornada');
     }
@@ -440,35 +503,45 @@ app.post('/admin/inspeccion/eliminar/:id', verificarRol(['admin']), async (req, 
     }
 });
 
+// REPORTE MAESTRO CONSOLIDADO
 app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req, res) => {
     let browser = null;
     try {
         const { fechaInicio, fechaFin, placa } = req.query;
-        if (!fechaInicio || !fechaFin) return res.status(400).send("Debe seleccionar fechas.");
+        if (!fechaInicio || !fechaFin) return res.status(400).send("Debe seleccionar las fechas.");
 
         const startDate = new Date(fechaInicio + 'T00:00:00');
         const endDate = new Date(fechaFin + 'T23:59:59');
 
-        let whereClause = { eliminado: false, fecha_apertura: { gte: startDate, lte: endDate } };
-        if (placa && placa !== 'TODAS') whereClause.vehiculo_placa = placa;
+        let whereClause = { 
+            eliminado: false,
+            fecha_apertura: { gte: startDate, lte: endDate }
+        };
+        if (placa && placa !== 'TODAS') {
+            whereClause.vehiculo_placa = placa;
+        }
 
         const inspecciones = await prisma.inspeccion.findMany({
             where: whereClause,
             include: { conductor: true, vehiculo: true },
-            orderBy: { fecha_apertura: 'asc' } 
+            orderBy: { fecha_apertura: 'asc' }
         });
 
-        if(inspecciones.length === 0) return res.send('<h2>No hay registros en estas fechas.</h2>');
+        if(inspecciones.length === 0) {
+            return res.send('<h2 style="text-align:center; margin-top:50px; font-family:sans-serif;">No hay registros en estas fechas.</h2>');
+        }
 
         let total = inspecciones.length;
-        let aprobadas = 0, conDefectos = 0;
-        let tablaEjecutiva = [], inspeccionesConDefectos = [];
+        let aprobadas = 0;
+        let conDefectos = 0;
+        let tablaEjecutiva = [];
+        let inspeccionesConDefectos = [];
 
         inspecciones.forEach(insp => {
             const datos = insp.datos_chequeo || {};
             const items = datos.chequeo_items || {};
-            let fallasExtraidas = [];
             
+            let fallasExtraidas = [];
             for (const key in items) {
                 if (items[key] === 'MALO' && !key.startsWith('obs_')) {
                     fallasExtraidas.push({
@@ -486,19 +559,26 @@ app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req
                     conDefectos++;
                     estadoLegible = 'CON DEFECTOS';
                     inspeccionesConDefectos.push({
-                        id: insp.id, fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
-                        placa: insp.vehiculo_placa, conductor: insp.conductor.nombre,
-                        descripcion_defecto: datos.descripcion_defecto, fallas: fallasExtraidas
+                        id: insp.id,
+                        fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
+                        placa: insp.vehiculo_placa,
+                        conductor: insp.conductor.nombre,
+                        descripcion_defecto: datos.descripcion_defecto,
+                        fallas: fallasExtraidas
                     });
                 } else {
-                    aprobadas++; estadoLegible = 'APROBADO';
+                    aprobadas++;
+                    estadoLegible = 'APROBADO';
                 }
             }
 
             tablaEjecutiva.push({
-                ticket: insp.id, fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
-                placa: insp.vehiculo_placa, conductor: insp.conductor.nombre,
-                km_salida: insp.kilometraje_salida, km_llegada: datos.kilometraje_final || '-',
+                ticket: insp.id,
+                fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
+                placa: insp.vehiculo_placa,
+                conductor: insp.conductor.nombre,
+                km_salida: insp.kilometraje_salida,
+                km_llegada: datos.kilometraje_final || '-',
                 estado: estadoLegible
             });
         });
@@ -506,19 +586,34 @@ app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req
         let logoSrc = '';
         try {
             const logoPath = path.join(__dirname, 'public/images/logo.png');
-            if (fs.existsSync(logoPath)) logoSrc = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-        } catch (e) {}
+            if (fs.existsSync(logoPath)) {
+                logoSrc = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+            }
+        } catch (logoError) {}
 
         const templatePath = path.join(__dirname, 'views/pdf-maestro.ejs');
         const html = await ejs.renderFile(templatePath, {
-            fechaInicio, fechaFin, placaSeleccionada: placa, total, aprobadas, conDefectos, 
-            tablaEjecutiva, inspeccionesConDefectos, logoSrc, fechaImpresion: new Date().toLocaleString('es-CO')
+            fechaInicio, fechaFin, placaSeleccionada: placa,
+            total, aprobadas, conDefectos, 
+            tablaEjecutiva, inspeccionesConDefectos,
+            logoSrc: logoSrc, 
+            fechaImpresion: new Date().toLocaleString('es-CO')
         });
 
-        browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        });
+        
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
-        const pdfBytes = await page.pdf({ format: 'Letter', printBackground: true, margin: { top: '15px', bottom: '15px', right: '15px', left: '15px' }});
+        
+        const pdfBytes = await page.pdf({
+            format: 'Letter',
+            printBackground: true,
+            margin: { top: '15px', right: '15px', bottom: '15px', left: '15px' }
+        });
+
         await browser.close();
 
         res.setHeader('Content-Type', 'application/pdf');
@@ -527,8 +622,8 @@ app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req
 
     } catch (error) {
         if (browser) await browser.close(); 
-        console.error('Error Reporte Maestro:', error);
-        res.status(500).send('Error generando el Reporte Maestro.');
+        console.error('🔥 Error crítico Reporte Maestro:', error);
+        res.status(500).send('Error generando el Reporte Maestro: ' + error.message);
     }
 });
 
