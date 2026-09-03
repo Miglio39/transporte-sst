@@ -59,13 +59,20 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
+        // =====================================================================
+        // 🚨 ACTUALIZACIÓN: Sesión persistente por 365 días (1 año)
+        // =====================================================================
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
             process.env.JWT_SECRET, 
-            { expiresIn: '12h' } 
+            { expiresIn: '365d' } // Antes estaba en '12h'
         );
 
-        res.cookie('jwt', token, { httpOnly: true, maxAge: 12 * 60 * 60 * 1000 });
+        // La cookie ahora sobrevive 1 año (365 días * 24 horas * 60 min * 60 seg * 1000 ms)
+        res.cookie('jwt', token, { 
+            httpOnly: true, 
+            maxAge: 365 * 24 * 60 * 60 * 1000 
+        });
         
         if (usuario.rol === 'admin') {
             return res.redirect('/admin');
@@ -756,7 +763,7 @@ app.get('/admin/patio/pdf/:id', verificarRol(['admin']), async (req, res) => {
 });
 
 // ============================================================================
-// ENVÍO DE CORREO DIRECTO (BLINDADO CON TUS CREDENCIALES)
+// ENVÍO DE CORREO DIRECTO 
 // ============================================================================
 app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, res) => {
     let browser = null;
@@ -764,7 +771,6 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         const id = parseInt(req.params.id);
         const correoCliente = req.body.correo;
         
-        // 1. Extraemos los datos de la Base de Datos
         const inspeccion = await prisma.inspeccionPatio.findUnique({
             where: { id: id },
             include: { admin: true }
@@ -776,7 +782,6 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
             ? JSON.parse(inspeccion.evidencias) 
             : inspeccion.evidencias;
 
-        // 2. Armamos el PDF directamente en memoria con EJS
         const templatePath = path.join(__dirname, 'views/pdf-patio.ejs');
         const html = await ejs.renderFile(templatePath, {
             registro: inspeccion,
@@ -792,7 +797,6 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         const pdfBuffer = await page.pdf({ format: 'Letter', printBackground: true, margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' } });
         await browser.close();
 
-        // 3. Nodemailer configurado con tu correo y contraseña
         const transporter = nodemailer.createTransport({
             service: 'gmail', 
             auth: {
@@ -801,7 +805,6 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
             }
         });
 
-        // 4. Armamos la URL dinámica para el cliente
         const protocolo = req.protocol; 
         const host = req.get('host'); 
         const urlPdf = `${protocolo}://${host}/admin/patio/pdf/${id}`;
@@ -853,7 +856,6 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         res.status(500).send('Hubo un error al enviar el correo. Verifique la consola del servidor para más detalles.');
     }
 });
-
 
 /**
  * ============================================================================
