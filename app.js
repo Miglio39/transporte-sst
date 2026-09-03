@@ -34,7 +34,7 @@ app.use(cookieParser());
 
 /**
  * ============================================================================
- * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (BLINDADAS)
+ * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (BLINDADAS PARA APP MÓVIL)
  * ============================================================================
  */
 app.get('/', (req, res) => {
@@ -59,19 +59,21 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
-        // Token firmado por 180 días (6 meses) - Máximo tolerado por Safari/iOS/Chrome
+        // Token firmado por 180 días (6 meses)
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
             process.env.JWT_SECRET || 'llave_de_respaldo_omega_2026', 
             { expiresIn: '180d' } 
         );
 
-        // 180 días en milisegundos
         const tiempo6Meses = 180 * 24 * 60 * 60 * 1000; 
         
+        // 🚨 CONFIGURACIÓN CRÍTICA PARA QUE LA PWA (APP MÓVIL) NO CIERRE LA SESIÓN 🚨
         res.cookie('jwt', token, { 
             httpOnly: true, 
-            sameSite: 'lax', // Regla estricta para que el navegador móvil no la borre al cerrar la app
+            secure: true,      // OBLIGATORIO para móviles con PWA instalada
+            path: '/',         // OBLIGATORIO para que el sistema no lo borre al salir
+            sameSite: 'lax',   
             maxAge: tiempo6Meses,
             expires: new Date(Date.now() + tiempo6Meses) 
         });
