@@ -59,19 +59,19 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
-        // Token por 1 año
+        // Token firmado por 1 año
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
             process.env.JWT_SECRET, 
             { expiresIn: '365d' } 
         );
 
-        // 🚨 BLINDAJE EXTRA: Definimos el tiempo exacto (1 año en milisegundos)
-        const tiempoUnAno = 365 * 24 * 60 * 60 * 1000;
+        // 🚨 CONFIGURACIÓN UNIVERSAL PARA QUE NO SE BORRE AL CERRAR
+        const tiempoUnAno = 365 * 24 * 60 * 60 * 1000; 
         
-        // Usamos maxAge y expires juntos para obligar a CUALQUIER celular a guardarlo
         res.cookie('jwt', token, { 
             httpOnly: true, 
+            sameSite: 'lax', // Regla de Chrome para no borrarla
             maxAge: tiempoUnAno,
             expires: new Date(Date.now() + tiempoUnAno) 
         });
