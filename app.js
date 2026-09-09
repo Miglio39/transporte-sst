@@ -861,6 +861,59 @@ app.get('/admin/patio/pdf/:id', verificarRol(['admin']), async (req, res) => {
 });
 
 // ============================================================================
+// 1. MOSTRAR FORMULARIO DE EDICIÓN (PATIO)
+// ============================================================================
+app.get('/admin/patio/editar/:id', verificarRol(['admin']), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const registro = await prisma.inspeccionPatio.findUnique({ where: { id } });
+        
+        if (!registro) return res.redirect('/admin/patio/historial');
+
+        const vehiculos = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
+        const datos = typeof registro.evidencias === 'string' ? JSON.parse(registro.evidencias) : registro.evidencias;
+
+        res.render('patio-editar', { 
+            title: `Editar Auditoría - ${registro.vehiculo_placa}`, 
+            registro, 
+            datos, 
+            vehiculos 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al cargar la edición de patio');
+    }
+});
+
+// ============================================================================
+// 2. PROCESAR Y GUARDAR LA EDICIÓN (PATIO)
+// ============================================================================
+app.post('/admin/patio/editar/:id', verificarRol(['admin']), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { placa, tipo_movimiento, evidenciasJSON, firmaBase64 } = req.body;
+        
+        const evidenciasObj = JSON.parse(evidenciasJSON);
+
+        await prisma.inspeccionPatio.update({
+            where: { id },
+            data: {
+                vehiculo_placa: placa,
+                tipo_movimiento: tipo_movimiento,
+                evidencias: evidenciasObj,
+                firma_admin: firmaBase64
+            }
+        });
+
+        res.redirect('/admin/patio/historial');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al actualizar la auditoría de patio');
+    }
+});
+
+
+// ============================================================================
 // ENVÍO DE CORREO DIRECTO 
 // ============================================================================
 app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, res) => {

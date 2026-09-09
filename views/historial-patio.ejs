@@ -94,21 +94,26 @@
                                 
                                 <div class="d-flex gap-2 mt-auto pt-3 border-top">
                                     
-                                    <!-- 1. NUEVO BOTÓN: VISOR DE FOTOS -->
-                                    <button class="btn btn-info btn-sm text-white fw-bold px-3 shadow-sm" onclick="abrirGaleria('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Ver Evidencias">
-                                        <i class="fas fa-images"></i>
-                                    </button>
+    <!-- 1. BOTÓN: VISOR DE FOTOS -->
+    <button class="btn btn-info btn-sm text-white fw-bold px-3 shadow-sm" onclick="abrirGaleria('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Ver Evidencias">
+        <i class="fas fa-images"></i>
+    </button>
 
-                                    <!-- 2. BOTÓN PDF (ACHICADO PARA QUE QUEPAN) -->
-                                    <a href="/admin/patio/pdf/<%= insp.id %>" class="btn btn-outline-dark btn-sm flex-grow-1 fw-bold" target="_blank">
-                                        <i class="fas fa-file-pdf me-1 text-danger"></i> PDF
-                                    </a>
+    <!-- 2. NUEVO BOTÓN: EDITAR AUDITORÍA -->
+    <a href="/admin/patio/editar/<%= insp.id %>" class="btn btn-warning btn-sm text-dark fw-bold px-3 shadow-sm" title="Editar Auditoría">
+        <i class="fas fa-edit"></i>
+    </a>
 
-                                    <!-- 3. BOTÓN CORREO -->
-                                    <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm" onclick="abrirModalCorreo('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Enviar por Correo">
-                                        <i class="fas fa-envelope"></i>
-                                    </button>
-                                </div>
+    <!-- 3. BOTÓN PDF -->
+    <a href="/admin/patio/pdf/<%= insp.id %>" class="btn btn-outline-dark btn-sm flex-grow-1 fw-bold" target="_blank" title="Ver PDF">
+        <i class="fas fa-file-pdf text-danger"></i>
+    </a>
+
+    <!-- 4. BOTÓN CORREO -->
+    <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm" onclick="abrirModalCorreo('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Enviar por Correo">
+        <i class="fas fa-envelope"></i>
+    </button>
+</div>
                             </div>
                         </div>
                     </div>

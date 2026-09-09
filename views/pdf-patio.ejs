@@ -32,7 +32,6 @@
         /* MOSAICO DE FOTOS (GRANDES Y COMPLETAS) */
         .grid-fotos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
         
-        /* 3 fotos por fila para darles más espacio a lo ancho */
         .foto-card { 
             width: calc(33.33% - 6px); 
             border: 1px solid #cbd5e1; 
@@ -45,7 +44,6 @@
         }
         .foto-card.is-dano { border: 2px solid #ef4444; background: #fef2f2; }
         
-        /* object-fit: contain (para que no se corten) y altura aumentada a 160px */
         .foto-card img { 
             width: 100%; 
             height: 160px; 
@@ -67,7 +65,8 @@
         .chk-meta strong { color: #b91c1c; }
 
         /* FIRMAS Y FOOTER */
-        .firmas-container { width: 100%; margin-top: 15px; break-inside: avoid; }
+        .firmas-container { width: 100%; margin-top: 15px; break-inside: avoid; text-align: center; }
+        .firmas-container td { border: none; width: 50%; vertical-align: bottom; padding: 10px; }
         .footer { text-align: center; font-size: 7px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px; margin-top: 15px; }
     </style>
 </head>
@@ -76,7 +75,7 @@
     <!-- FUNCIONES DE FORMATEO -->
     <% 
         function formatDate(dateString) {
-            if (!dateString || dateString === 'N/A' || dateString === '') return 'N/A';
+            if (!dateString || dateString === 'N/A' || dateString === '' || dateString === 'No registrado') return 'N/A';
             if (dateString.includes('-')) {
                 const parts = dateString.split('T')[0].split('-');
                 if(parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -144,9 +143,24 @@
         </div>
     <% } %>
 
+    <!-- 2.5 DATOS DE MANTENIMIENTO (SÓLO SI ES MAQUINARIA) -->
+    <% if (datos.datos_mantenimiento && (datos.datos_mantenimiento.ultimo_mantenimiento || datos.datos_mantenimiento.proximo_mantenimiento)) { %>
+        <div class="section-title">CONTROL DE MANTENIMIENTO (MAQUINARIA)</div>
+        <table>
+            <tr>
+                <th width="50%" style="background-color: #e0f2fe; color: #0369a1;">ÚLTIMO MANTENIMIENTO REGISTRADO</th>
+                <th width="50%" style="background-color: #fef3c7; color: #92400e;">PRÓXIMO MANTENIMIENTO PROGRAMADO</th>
+            </tr>
+            <tr>
+                <td style="text-align: center; font-size: 9px; font-weight: bold;"><%= formatDate(datos.datos_mantenimiento.ultimo_mantenimiento) %></td>
+                <td style="text-align: center; font-size: 9px; font-weight: bold;"><%= formatDate(datos.datos_mantenimiento.proximo_mantenimiento) %></td>
+            </tr>
+        </table>
+    <% } %>
+
     <!-- 3. INSPECCIÓN PREOPERACIONAL (CON OBSERVACIONES Y FECHAS) -->
     <% if (datos.checklist_preoperacional && Object.keys(datos.checklist_preoperacional).length > 0) { %>
-        <div class="section-title">2. INSPECCIÓN PREOPERACIONAL DETALLADA</div>
+        <div class="section-title">INSPECCIÓN PREOPERACIONAL DETALLADA</div>
         <div class="col-2">
             <% for (let key in datos.checklist_preoperacional) { 
                 let item = datos.checklist_preoperacional[key];
@@ -170,8 +184,8 @@
     <% } %>
 
     <!-- 4. EQUIPOS DE EMERGENCIA -->
-    <% if (datos.checklist_equipos) { let eq = datos.checklist_equipos; %>
-        <div class="section-title">3. EQUIPOS DE PREVENCIÓN Y EMERGENCIAS</div>
+    <% if (datos.checklist_equipos && Object.keys(datos.checklist_equipos).length > 0) { let eq = datos.checklist_equipos; %>
+        <div class="section-title">EQUIPOS DE PREVENCIÓN Y EMERGENCIAS</div>
         
         <!-- Extintor -->
         <% if (eq.Extintor_Datos && (eq.Extintor_Datos.capacidad || eq.Extintor_Datos.clase)) { %>
@@ -225,25 +239,65 @@
         </div>
     <% } %>
 
-    <!-- 5. OBSERVACIONES GENERALES Y FIRMA -->
-    <div class="section-title">4. OBSERVACIONES GENERALES Y CIERRE</div>
-    <table class="firmas-container" style="border: none;">
+    <!-- 5. OBSERVACIONES GENERALES Y FIRMAS DE CONFORMIDAD -->
+    <div class="section-title">OBSERVACIONES GENERALES Y FIRMAS DE CONFORMIDAD</div>
+    
+    <div style="border: 1px dashed #94a3b8; padding: 8px; margin-bottom: 10px; font-size: 8px; background: #fdfdfd; border-radius: 4px; min-height: 40px;">
+        <strong style="color: #0f172a;">OBSERVACIONES REGISTRADAS POR EL AUDITOR:</strong><br>
+        <%= datos.observaciones_generales || 'Sin observaciones adicionales registradas durante la auditoría.' %>
+    </div>
+
+    <table class="firmas-container">
         <tr>
-            <td style="border: none; width: 65%; vertical-align: top; padding-right: 15px;">
-                <div style="font-weight: bold; margin-bottom: 4px;">OBSERVACIONES DEL AUDITOR:</div>
-                <div style="border: 1px dashed #94a3b8; padding: 8px; height: 60px; font-size: 8px; background: #fdfdfd; border-radius: 4px;">
-                    <%= datos.observaciones_generales || 'Sin observaciones adicionales registradas durante la auditoría.' %>
-                </div>
-            </td>
-            <td style="border: none; width: 35%; text-align: center; vertical-align: bottom;">
-                <% if(registro.firma_admin) { %>
-                    <img src="<%= registro.firma_admin %>" style="max-height: 60px; margin-bottom: 2px;"><br>
-                <% } %>
-                <div style="border-top: 1px solid #0f172a; padding-top: 4px; font-weight: bold; font-size: 9px; width: 90%; margin: 0 auto;">
-                    <%= registro.admin.nombre %><br>
-                    <span style="font-size: 7px; font-weight: normal; color: #64748b;">Auditor / Jefe de Operaciones</span>
-                </div>
-            </td>
+            <!-- LÓGICA DE FIRMA: QUIEN ENTREGA -->
+            <% if (datos.firmas_conformidad && datos.firmas_conformidad.entrega) { %>
+                <td>
+                    <!-- Imagen centrada con display: block y margin: 0 auto -->
+                    <img src="<%= datos.firmas_conformidad.entrega.firma %>" style="max-height: 60px; display: block; margin: 0 auto 5px auto;">
+                    <div style="border-top: 1px solid #0f172a; padding-top: 4px; font-weight: bold; font-size: 9px; width: 80%; margin: 0 auto;">
+                        <%= datos.firmas_conformidad.entrega.nombre %><br>
+                        <span style="font-size: 7px; font-weight: normal; color: #64748b;">Responsable / Quien Entrega</span>
+                    </div>
+                </td>
+            <% } else if (registro.firma_admin) { %>
+                <!-- Retrocompatibilidad con reportes viejos que solo tenían una firma -->
+                <td>
+                    <img src="<%= registro.firma_admin %>" style="max-height: 60px; display: block; margin: 0 auto 5px auto;">
+                    <div style="border-top: 1px solid #0f172a; padding-top: 4px; font-weight: bold; font-size: 9px; width: 80%; margin: 0 auto;">
+                        <%= registro.admin.nombre %><br>
+                        <span style="font-size: 7px; font-weight: normal; color: #64748b;">Auditor / Quien Entrega</span>
+                    </div>
+                </td>
+            <% } else { %>
+                <!-- Espacio en blanco simétrico si no hay firma -->
+                <td>
+                    <div style="height: 65px;"></div>
+                    <div style="border-top: 1px solid #0f172a; padding-top: 4px; font-weight: bold; font-size: 9px; width: 80%; margin: 0 auto;">
+                        <br>
+                        <span style="font-size: 7px; font-weight: normal; color: #64748b;">Responsable / Quien Entrega</span>
+                    </div>
+                </td>
+            <% } %>
+
+            <!-- LÓGICA DE FIRMA: QUIEN RECIBE -->
+            <% if (datos.firmas_conformidad && datos.firmas_conformidad.recibe) { %>
+                <td>
+                    <img src="<%= datos.firmas_conformidad.recibe.firma %>" style="max-height: 60px; display: block; margin: 0 auto 5px auto;">
+                    <div style="border-top: 1px solid #0f172a; padding-top: 4px; font-weight: bold; font-size: 9px; width: 80%; margin: 0 auto;">
+                        <%= datos.firmas_conformidad.recibe.nombre %><br>
+                        <span style="font-size: 7px; font-weight: normal; color: #64748b;">Responsable / Quien Recibe</span>
+                    </div>
+                </td>
+            <% } else { %>
+                <!-- Espacio en blanco simétrico si no hay firma -->
+                <td>
+                    <div style="height: 65px;"></div>
+                    <div style="border-top: 1px solid #0f172a; padding-top: 4px; font-weight: bold; font-size: 9px; width: 80%; margin: 0 auto;">
+                        <br>
+                        <span style="font-size: 7px; font-weight: normal; color: #64748b;">Responsable / Quien Recibe</span>
+                    </div>
+                </td>
+            <% } %>
         </tr>
     </table>
 
