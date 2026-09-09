@@ -14,6 +14,45 @@
         .badge-salida { background-color: #fef3c7; color: #92400e; border: 1px solid #92400e; }
         .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.1) !important; }
+
+        /* ==========================================================
+           ESTILOS PARA EL VISOR DE EVIDENCIAS (LIGHTBOX/GALERÍA)
+           ========================================================== */
+        .visor-img-principal { 
+            width: 100%; 
+            height: 55vh; 
+            object-fit: contain; 
+            background: rgba(0,0,0,0.3); 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+        }
+        
+        .thumb-container { 
+            display: flex; 
+            gap: 10px; 
+            overflow-x: auto; 
+            padding-bottom: 10px; 
+        }
+        /* Scrollbar personalizado para las miniaturas */
+        .thumb-container::-webkit-scrollbar { height: 8px; }
+        .thumb-container::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+        .thumb-container::-webkit-scrollbar-thumb { background: #64748b; border-radius: 4px; }
+        
+        .thumb-img { 
+            height: 70px; 
+            width: 90px; 
+            object-fit: cover; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            opacity: 0.6; 
+            transition: all 0.2s ease;
+            border: 2px solid transparent; 
+            flex-shrink: 0;
+        }
+        .thumb-img:hover { opacity: 0.9; }
+        .thumb-img.active { opacity: 1; border-color: #3b82f6; transform: scale(1.05); }
+        .thumb-img.is-dano { border-color: #ef4444; opacity: 0.8; }
+        .thumb-img.is-dano.active { opacity: 1; border-color: #e50914; box-shadow: 0 0 10px rgba(229, 9, 20, 0.5); }
     </style>
 </head>
 <body>
@@ -54,10 +93,19 @@
                                 <p class="mb-3 small text-muted"><i class="fas fa-user-shield me-2 text-primary"></i> Auditor: <strong><%= insp.admin.nombre %></strong></p>
                                 
                                 <div class="d-flex gap-2 mt-auto pt-3 border-top">
+                                    
+                                    <!-- 1. NUEVO BOTÓN: VISOR DE FOTOS -->
+                                    <button class="btn btn-info btn-sm text-white fw-bold px-3 shadow-sm" onclick="abrirGaleria('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Ver Evidencias">
+                                        <i class="fas fa-images"></i>
+                                    </button>
+
+                                    <!-- 2. BOTÓN PDF (ACHICADO PARA QUE QUEPAN) -->
                                     <a href="/admin/patio/pdf/<%= insp.id %>" class="btn btn-outline-dark btn-sm flex-grow-1 fw-bold" target="_blank">
-                                        <i class="fas fa-file-pdf me-1 text-danger"></i> Ver PDF
+                                        <i class="fas fa-file-pdf me-1 text-danger"></i> PDF
                                     </a>
-                                    <button class="btn btn-primary btn-sm fw-bold px-3" onclick="abrirModalCorreo('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Enviar por Correo">
+
+                                    <!-- 3. BOTÓN CORREO -->
+                                    <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm" onclick="abrirModalCorreo('<%= insp.id %>', '<%= insp.vehiculo_placa %>')" title="Enviar por Correo">
                                         <i class="fas fa-envelope"></i>
                                     </button>
                                 </div>
@@ -69,7 +117,9 @@
         <% } %>
     </div>
 
-    <!-- Modal para Enviar Correo -->
+    <!-- ==============================================================
+         MODAL 1: ENVIAR POR CORREO
+         ============================================================== -->
     <div class="modal fade" id="modalCorreo" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -97,13 +147,138 @@
         </div>
     </div>
 
+    <!-- ==============================================================
+         MODAL 2: GALERÍA DE EVIDENCIAS (LIGHTBOX)
+         ============================================================== -->
+    <div class="modal fade" id="modalGaleria" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-0 shadow-lg">
+                <div class="modal-header border-bottom border-secondary p-3">
+                    <h6 class="modal-title text-white fw-bold"><i class="fas fa-camera-retro me-2 text-info"></i> Evidencias - Placa: <span id="galeriaPlaca" class="text-warning"></span></h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3 text-center">
+                    
+                    <!-- IMAGEN GIGANTE PRINCIPAL -->
+                    <div class="position-relative">
+                        <img id="imgPrincipal" src="" class="visor-img-principal">
+                    </div>
+
+                    <!-- TEXTOS DE LA FOTO -->
+                    <div class="mb-3 mt-2 bg-black bg-opacity-50 p-2 rounded d-inline-block border border-secondary" style="min-width: 50%;">
+                        <h6 id="fotoTitulo" class="mb-1 text-white fw-bold text-uppercase" style="font-size: 0.9rem;"></h6>
+                        <p id="fotoObs" class="mb-0 text-white-50" style="font-size: 0.8rem;"></p>
+                    </div>
+
+                    <!-- CARRUSEL DE MINIATURAS (SE LLENA CON JS) -->
+                    <div class="thumb-container mt-3" id="contenedorMiniaturas">
+                        <!-- Las miniaturas se inyectan aquí -->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         LÓGICA JAVASCRIPT: ALIMENTACIÓN DEL VISOR WEB
+         ============================================================== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // 1. Convertimos las evidencias de la BD en un diccionario de JavaScript para que el Frontend las pueda leer rápidamente
+        const bdEvidencias = {
+            <% inspecciones.forEach(insp => { %>
+                "<%= insp.id %>": <%- JSON.stringify(insp.evidencias || {}) %>,
+            <% }); %>
+        };
+
+        let modalGaleriaBootstrap = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            modalGaleriaBootstrap = new bootstrap.Modal(document.getElementById('modalGaleria'));
+        });
+
+        // 2. Función del Modal de Correo (La que ya tenías)
         function abrirModalCorreo(id, placa) {
             document.getElementById('modalPlaca').innerText = placa;
-            // Conecta con la ruta POST que ya tienes en app.js
             document.getElementById('formCorreo').action = '/admin/patio/enviar-correo/' + id;
             new bootstrap.Modal(document.getElementById('modalCorreo')).show();
+        }
+
+        // 3. Función Mágica del Visor de Evidencias (Lightbox)
+        function abrirGaleria(idInspeccion, placa) {
+            const datos = bdEvidencias[idInspeccion];
+            const fotosArray = [];
+
+            // A. Extraemos las fotos de RUTINA
+            if (datos && datos.rutina) {
+                for (let zona in datos.rutina) {
+                    fotosArray.push({ titulo: zona, foto: datos.rutina[zona].foto, obs: datos.rutina[zona].comentario, isDano: false });
+                }
+            }
+            // B. Extraemos las fotos de los EQUIPOS (Botiquín, Extintor, etc.)
+            if (datos && datos.equipos) {
+                for (let zona in datos.equipos) {
+                    fotosArray.push({ titulo: zona, foto: datos.equipos[zona].foto, obs: datos.equipos[zona].comentario, isDano: false });
+                }
+            }
+            // C. Extraemos las fotos de los DAÑOS DINÁMICOS (Pines Rojos)
+            if (datos && datos.danos && datos.danos.length > 0) {
+                datos.danos.forEach((dano, index) => {
+                    fotosArray.push({ titulo: `⚠ NOVEDAD / DAÑO #${index + 1}`, foto: dano.foto, obs: dano.comentario, isDano: true });
+                });
+            }
+
+            // Preparar el Modal
+            document.getElementById('galeriaPlaca').innerText = placa;
+            const imgPrincipal = document.getElementById('imgPrincipal');
+            const fotoTitulo = document.getElementById('fotoTitulo');
+            const fotoObs = document.getElementById('fotoObs');
+            const contenedorThumbs = document.getElementById('contenedorMiniaturas');
+            
+            contenedorThumbs.innerHTML = ''; // Limpiar anteriores
+
+            if (fotosArray.length === 0) {
+                imgPrincipal.src = '';
+                fotoTitulo.innerText = 'Sin Evidencias Fotográficas';
+                fotoTitulo.className = 'mb-1 text-white fw-bold text-uppercase';
+                fotoObs.innerText = 'El auditor no registró fotografías en este reporte.';
+                modalGaleriaBootstrap.show();
+                return;
+            }
+
+            // Renderizar las miniaturas (Tira deslizable inferior)
+            fotosArray.forEach((item, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = item.foto;
+                // Si es la primera, le damos la clase "active". Si es un daño, la marcamos "is-dano"
+                thumb.className = `thumb-img ${index === 0 ? 'active' : ''} ${item.isDano ? 'is-dano' : ''}`;
+                
+                // EVENTO CLICK: Cambiar la imagen grande
+                thumb.onclick = () => {
+                    // Quitar active a todas y ponérselo a esta
+                    document.querySelectorAll('.thumb-img').forEach(el => el.classList.remove('active'));
+                    thumb.classList.add('active');
+
+                    // Cambiar la gigante y los textos
+                    imgPrincipal.src = item.foto;
+                    fotoTitulo.innerText = item.titulo;
+                    // Si es un daño, el título se pone rojo para alertar visualmente
+                    fotoTitulo.className = item.isDano ? 'mb-1 text-danger fw-bold text-uppercase' : 'mb-1 text-info fw-bold text-uppercase';
+                    fotoObs.innerText = item.obs || 'Sin observaciones adicionales.';
+                };
+                
+                contenedorThumbs.appendChild(thumb);
+            });
+
+            // Configurar la primera foto por defecto al abrir
+            imgPrincipal.src = fotosArray[0].foto;
+            fotoTitulo.innerText = fotosArray[0].titulo;
+            fotoTitulo.className = fotosArray[0].isDano ? 'mb-1 text-danger fw-bold text-uppercase' : 'mb-1 text-info fw-bold text-uppercase';
+            fotoObs.innerText = fotosArray[0].obs || 'Sin observaciones adicionales.';
+
+            // ¡Abrir el telón!
+            modalGaleriaBootstrap.show();
         }
     </script>
 </body>

@@ -898,8 +898,8 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         const transporter = nodemailer.createTransport({
             service: 'gmail', 
             auth: {
-                user: 'operaciones.omegagroupsas@gmail.com', 
-                pass: 'Rosalbamoreno27.'      
+                user: 'operaciones.omegagroupsas@gmail.com', // ⬅️ CREDENCIAL ACTUALIZADA
+                pass: 'buysyovpvbhjpvfw'                  // ⬅️ CREDENCIAL ACTUALIZADA
             }
         });
 
@@ -908,16 +908,16 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         const urlPdf = `${protocolo}://${host}/admin/patio/pdf/${id}`;
 
         const mailOptions = {
-            from: '"OmegaGroup SST" <operaciones.omegagroupsas@gmail.com>',
+            from: '"OmegaGroup SST" <operaciones.omegagroupsas@gmail.com>', // ⬅️ REMITENTE ACTUALIZADO
             to: correoCliente,
-            subject: `Reporte de Auditoría de Patio (Ticket #${id}) - OmegaGroup`,
+            subject: `Reporte de Inspección Vehicular (Ticket #${id}) - OmegaGroup`,
             html: `
                 <div style="font-family: Arial, sans-serif; color: #334155; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div style="background-color: #0f172a; padding: 20px; text-align: center; border-bottom: 4px solid #e50914;">
                         <h2 style="color: white; margin: 0; letter-spacing: 1px;">OMEGAGROUP | Operaciones</h2>
                     </div>
                     <div style="padding: 30px;">
-                        <h3 style="color: #0f172a; margin-top: 0;">Reporte Oficial de Auditoría</h3>
+                        <h3 style="color: #0f172a; margin-top: 0;">Reporte Oficial de Inspección Vehicular</h3>
                         <p>Cordial saludo,</p>
                         <p>Se ha generado un nuevo registro de inspección de patio en nuestra plataforma de seguridad.</p>
                         <p>Puede visualizar, imprimir y descargar el documento PDF ingresando al siguiente enlace seguro:</p>
