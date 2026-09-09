@@ -29,14 +29,35 @@
         .est-M { color: #b91c1c; font-weight: bold; }
         .est-NA { color: #94a3b8; }
         
-        /* MOSAICO DE FOTOS */
-        .grid-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .foto-card { width: calc(25% - 5px); border: 1px solid #cbd5e1; background: #f8fafc; padding: 3px; box-sizing: border-box; text-align: center; border-radius: 4px; break-inside: avoid; }
+        /* MOSAICO DE FOTOS (GRANDES Y COMPLETAS) */
+        .grid-fotos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        
+        /* 3 fotos por fila para darles más espacio a lo ancho */
+        .foto-card { 
+            width: calc(33.33% - 6px); 
+            border: 1px solid #cbd5e1; 
+            background: #f8fafc; 
+            padding: 5px; 
+            box-sizing: border-box; 
+            text-align: center; 
+            border-radius: 4px; 
+            break-inside: avoid; 
+        }
         .foto-card.is-dano { border: 2px solid #ef4444; background: #fef2f2; }
-        .foto-card img { width: 100%; height: 85px; object-fit: cover; border-radius: 2px; }
-        .foto-title { font-size: 7.5px; font-weight: bold; background: #0f172a; color: white; padding: 3px; margin-bottom: 3px; text-transform: uppercase; border-radius: 2px; }
+        
+        /* object-fit: contain (para que no se corten) y altura aumentada a 160px */
+        .foto-card img { 
+            width: 100%; 
+            height: 160px; 
+            object-fit: contain; 
+            border-radius: 4px; 
+            background: #ffffff; 
+            border: 1px solid #e2e8f0;
+        }
+        
+        .foto-title { font-size: 8px; font-weight: bold; background: #0f172a; color: white; padding: 4px; margin-bottom: 5px; text-transform: uppercase; border-radius: 2px; }
         .foto-card.is-dano .foto-title { background: #ef4444; }
-        .foto-obs { font-size: 7.5px; color: #b91c1c; margin-top: 3px; font-weight: bold; }
+        .foto-obs { font-size: 8px; color: #b91c1c; margin-top: 5px; font-weight: bold; }
         
         /* CHECKLIST ITEMS (DIVS PARA EVITAR CORTES DE PÁGINA) */
         .chk-item { border-bottom: 1px dashed #cbd5e1; padding-bottom: 3px; margin-bottom: 4px; break-inside: avoid; }
