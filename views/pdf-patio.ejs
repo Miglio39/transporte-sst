@@ -143,17 +143,35 @@
         </div>
     <% } %>
 
-    <!-- 2.5 DATOS DE MANTENIMIENTO (SÓLO SI ES MAQUINARIA) -->
-    <% if (datos.datos_mantenimiento && (datos.datos_mantenimiento.ultimo_mantenimiento || datos.datos_mantenimiento.proximo_mantenimiento)) { %>
+    <!-- 2.5 DATOS DE RECORRIDO Y COMBUSTIBLE (SÓLO SI ES CARRO) -->
+    <% if (datos.datos_recorrido && (datos.datos_recorrido.kilometraje || datos.datos_recorrido.nivel_combustible)) { %>
+        <div class="section-title">CONTROL DE RECORRIDO Y COMBUSTIBLE</div>
+        <table>
+            <tr>
+                <th width="50%" style="background-color: #e0f2fe; color: #0369a1;">ODÓMETRO REGISTRADO</th>
+                <th width="50%" style="background-color: #dcfce7; color: #166534;">NIVEL DE COMBUSTIBLE</th>
+            </tr>
+            <tr>
+                <td style="text-align: center; font-size: 10px; font-weight: bold;"><%= datos.datos_recorrido.kilometraje || '0' %> KM</td>
+                <td style="text-align: center; font-size: 10px; font-weight: bold; text-transform: uppercase;"><%= datos.datos_recorrido.nivel_combustible || 'N/A' %></td>
+            </tr>
+        </table>
+    <% } %>
+
+    <!-- 2.6 DATOS DE MANTENIMIENTO (SÓLO SI ES MAQUINARIA) -->
+    <% if (datos.datos_mantenimiento && (datos.datos_mantenimiento.ultimo_mantenimiento || datos.datos_mantenimiento.horometro || datos.datos_mantenimiento.proximo_mantenimiento)) { %>
         <div class="section-title">CONTROL DE MANTENIMIENTO (MAQUINARIA)</div>
         <table>
             <tr>
                 <th width="50%" style="background-color: #e0f2fe; color: #0369a1;">ÚLTIMO MANTENIMIENTO REGISTRADO</th>
-                <th width="50%" style="background-color: #fef3c7; color: #92400e;">PRÓXIMO MANTENIMIENTO PROGRAMADO</th>
+                <!-- Lógica inteligente para saber si imprime Horómetro o Próximo Mantenimiento según lo viejo o nuevo del reporte -->
+                <th width="50%" style="background-color: #fef3c7; color: #92400e;"><%= datos.datos_mantenimiento.horometro ? 'HORÓMETRO ACTUAL' : 'PRÓXIMO MANTENIMIENTO PROGRAMADO' %></th>
             </tr>
             <tr>
-                <td style="text-align: center; font-size: 9px; font-weight: bold;"><%= formatDate(datos.datos_mantenimiento.ultimo_mantenimiento) %></td>
-                <td style="text-align: center; font-size: 9px; font-weight: bold;"><%= formatDate(datos.datos_mantenimiento.proximo_mantenimiento) %></td>
+                <td style="text-align: center; font-size: 10px; font-weight: bold;"><%= formatDate(datos.datos_mantenimiento.ultimo_mantenimiento) %></td>
+                <td style="text-align: center; font-size: 10px; font-weight: bold;">
+                    <%= datos.datos_mantenimiento.horometro ? datos.datos_mantenimiento.horometro : formatDate(datos.datos_mantenimiento.proximo_mantenimiento) %>
+                </td>
             </tr>
         </table>
     <% } %>
