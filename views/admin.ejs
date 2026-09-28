@@ -46,6 +46,13 @@
         .nav-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
         .nav-btn-danger { color: #fca5a5; background: rgba(239, 68, 68, 0.15); }
         .nav-btn-danger:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
+        
+        /* ESTILOS DE LOS MENÚS DESPLEGABLES */
+        .dropdown-menu { border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .dropdown-item { padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: all 0.2s; }
+        .dropdown-item:hover { background-color: #f1f5f9; color: var(--omega-dark); }
+        .dropdown-item i { width: 20px; text-align: center; }
+
         .navbar-toggler { border: 1px solid rgba(255,255,255,0.2) !important; padding: 0.5rem 0.75rem; }
         .navbar-toggler i { color: #ffffff; font-size: 1.5rem; }
 
@@ -71,15 +78,7 @@
         .icon-orange { background: #fff7ed; color: #f97316; }
 
         /* TÍTULOS DE GRÁFICOS */
-        .chart-header {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--omega-dark);
-            font-weight: 700;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+        .chart-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); color: var(--omega-dark); font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px; text-transform: uppercase; }
         .chart-body { padding: 1rem; position: relative; height: 260px; width: 100%; }
 
         /* TABLA DE DATOS */
@@ -144,26 +143,51 @@
             <div class="collapse navbar-collapse" id="navbarAdmin">
                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
                     
-                    <!-- BOTÓN PARA EL MÓDULO DE PATIO -->
-                    <li class="nav-item">
-                        <a href="/admin/patio/nuevo" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: #3b82f6; color: white;">
-                            <i class="fas fa-camera me-1"></i> Inspección Vehicular
-                        </a>
+                    <!-- 1. MENÚ DESPLEGABLE: SATELITAL / GPS -->
+                    <li class="nav-item dropdown w-100">
+                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #0f172a; border: 1px solid #6366f1; color: white;">
+                            <i class="fas fa-satellite-dish me-1 text-primary"></i> Satelital GPS
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
+                            <li><a class="dropdown-item fw-bold text-success py-2" href="/admin/auditoria-horas"><i class="fas fa-user-clock me-2"></i> Auditoría de Horas</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-muted py-2" href="/test-traccar"><i class="fas fa-flask me-2"></i> Laboratorio Global-GPS</a></li>
+                        </ul>
                     </li>
 
-                    <!-- ============================================== -->
-                    <!-- NUEVO BOTÓN: HISTORIAL DE PATIO AQUÍ           -->
-                    <!-- ============================================== -->
-                    <li class="nav-item">
-                        <a href="/admin/patio/historial" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: #f59e0b; color: white;">
-                            <i class="fas fa-list-check me-1"></i> Historial de Inspecciones
+                    <!-- 2. MENÚ DESPLEGABLE: PATIO -->
+                    <li class="nav-item dropdown w-100">
+                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #3b82f6; color: white;">
+                            <i class="fas fa-warehouse me-1"></i> Módulo Patio
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
+                            <li><a class="dropdown-item py-2 fw-bold" href="/admin/patio/nuevo"><i class="fas fa-camera me-2 text-primary"></i> Nueva Inspección</a></li>
+                            <li><a class="dropdown-item py-2 fw-bold" href="/admin/patio/historial"><i class="fas fa-list-check me-2 text-warning"></i> Historial de Patio</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- 3. MENÚ DESPLEGABLE: CONDUCTORES -->
+                    <li class="nav-item dropdown w-100">
+                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: rgba(255,255,255,0.08); color: white;">
+                            <i class="fas fa-users me-1"></i> Conductores
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
+                            <li><a class="dropdown-item py-2" href="/admin/conductores"><i class="fas fa-list me-2 text-secondary"></i> Ver Lista</a></li>
+                            <li><a class="dropdown-item py-2" href="/admin/conductores/nuevo"><i class="fas fa-user-plus me-2 text-success"></i> Nuevo Conductor</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- BOTONES DIRECTOS (INSPECCIÓN Y SALIR) -->
+                    <li class="nav-item w-100">
+                        <a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;">
+                            <i class="fas fa-plus me-1"></i> Inspección App
                         </a>
                     </li>
-                    
-                    <li class="nav-item"><a href="/admin/conductores" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-users me-1"></i> Conductores</a></li>
-                    <li class="nav-item"><a href="/admin/conductores/nuevo" class="btn nav-btn w-100 text-start text-lg-center"><i class="fas fa-user-plus me-1"></i> Nuevo Conductor</a></li>
-                    <li class="nav-item"><a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;"><i class="fas fa-plus me-1"></i> Inspección</a></li>
-                    <li class="nav-item"><a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center"><i class="fas fa-power-off me-1"></i> Salir</a></li>
+                    <li class="nav-item w-100">
+                        <a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center">
+                            <i class="fas fa-power-off"></i>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

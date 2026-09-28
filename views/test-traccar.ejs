@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio Global-GPS | OmegaGroup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .sandbox-card { max-width: 800px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <div class="sandbox-card border-top border-primary border-5">
+        <h3 class="fw-bold text-primary mb-1"><i class="fas fa-satellite-dish me-2"></i> Laboratorio API Global</h3>
+        <p class="text-muted small mb-4">Entorno de prueba aislado para extracción de telemetría.</p>
+
+        <!-- ALERTA DE ERROR DE CONEXIÓN -->
+        <% if (errorConexion) { %>
+            <div class="alert alert-danger shadow-sm fw-bold border-danger">
+                <i class="fas fa-wifi text-danger fs-4 d-block mb-2"></i>
+                <%= errorConexion %>
+                <hr>
+                <small class="fw-normal">Revisa que la URL 'https://app.labtesting.online' esté operativa y el Token sea válido.</small>
+            </div>
+        <% } %>
+
+        <!-- FORMULARIO: SOLO SE MUESTRA SI HAY CONEXIÓN EXITOSA -->
+        <% if (!errorConexion) { %>
+            <div class="alert alert-success small py-2 fw-bold"><i class="fas fa-check-circle me-1"></i> Conexión establecida con el servidor GPS.</div>
+            
+            <form action="/test-traccar" method="GET" class="row g-3 mb-4 p-4 bg-light rounded border">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold text-dark small">Unidad Satelital (Placa):</label>
+                    <select name="placa" class="form-select border-primary fw-bold" required>
+                        <option value="">-- Seleccionar Vehículo --</option>
+                        <% devices.forEach(d => { %>
+                            <option value="<%= d.name %>" <%= placaSeleccionada === d.name ? 'selected' : '' %>>
+                                <%= d.name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-dark small">Fecha de Operación:</label>
+                    <input type="date" name="fecha" class="form-control border-primary" value="<%= fechaFiltro %>" required>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="fas fa-download me-2"></i> Extraer</button>
+                </div>
+            </form>
+        <% } %>
+
+        <!-- RESULTADOS DE EXTRACCIÓN -->
+        <% if (resultado) { %>
+            <% if (resultado.encontrado) { %>
+                <div class="p-4 border border-success rounded bg-white shadow-sm text-center">
+                    <h5 class="fw-bold text-success mb-4">Datos extraídos para <%= resultado.placa %></h5>
+                    <div class="row">
+                        <div class="col-6 border-end">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Hora Inicio (Motor ON)</div>
+                            <div class="fs-2 fw-bold text-dark"><%= resultado.inicio %></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted small fw-bold text-uppercase mb-1">Hora Fin (Motor OFF)</div>
+                            <div class="fs-2 fw-bold text-danger"><%= resultado.fin %></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-center gap-4 text-muted small fw-bold">
+                        <span><i class="fas fa-route text-primary me-1"></i> Distancia: <%= resultado.distancia %> km</span>
+                        <span><i class="fas fa-map-marker-alt text-warning me-1"></i> Viajes registrados: <%= resultado.totalViajes %></span>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="alert alert-warning text-center fw-bold mt-4 border-warning">
+                    <i class="fas fa-sleep fs-4 text-warning d-block mb-2"></i>
+                    <%= resultado.mensaje %>
+                </div>
+            <% } %>
+        <% } %>
+
+    </div>
+
+</body>
+</html>

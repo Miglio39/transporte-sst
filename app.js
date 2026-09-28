@@ -34,7 +34,7 @@ app.use(cookieParser());
 
 /**
  * ============================================================================
- * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (BLINDADAS PARA APP MÓVIL)
+ * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (SESIÓN DE 365 DÍAS)
  * ============================================================================
  */
 app.get('/', (req, res) => {
@@ -59,23 +59,21 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
-        // Token firmado por 180 días (6 meses)
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
             process.env.JWT_SECRET || 'llave_de_respaldo_omega_2026', 
-            { expiresIn: '180d' } 
+            { expiresIn: '365d' } 
         );
 
-        const tiempo6Meses = 180 * 24 * 60 * 60 * 1000; 
+        const tiempoUnAno = 365 * 24 * 60 * 60 * 1000; 
         
-        // 🚨 CONFIGURACIÓN CRÍTICA PARA QUE LA PWA (APP MÓVIL) NO CIERRE LA SESIÓN 🚨
         res.cookie('jwt', token, { 
             httpOnly: true, 
-            secure: true,      // OBLIGATORIO para móviles con PWA instalada
-            path: '/',         // OBLIGATORIO para que el sistema no lo borre al salir
+            secure: true,      
+            path: '/',         
             sameSite: 'lax',   
-            maxAge: tiempo6Meses,
-            expires: new Date(Date.now() + tiempo6Meses) 
+            maxAge: tiempoUnAno,
+            expires: new Date(Date.now() + tiempoUnAno) 
         });
         
         if (usuario.rol === 'admin') {
@@ -94,31 +92,17 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
-// Ruta para inicializar el sistema
 app.get('/setup-admin', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash('Omega2026*', salt);
+    const hash = await bcrypt.hash('Rosalbamoreno27.', salt);
     
     await prisma.usuario.upsert({
-        where: { documento: '1122141007' },
-        update: { password: hash }, 
-        create: { nombre: 'Yeison Uriel Vargas Vesga', documento: '1122141007', password: hash, rol: 'admin' }
+        where: { documento: 'operaciones.omegagroupsas@gmail.com' },
+        update: { password: hash, nombre: 'Admin Operaciones' },
+        create: { nombre: 'Admin Operaciones', documento: 'operaciones.omegagroupsas@gmail.com', password: hash, rol: 'admin' }
     });
 
-    await prisma.usuario.upsert({
-        where: { documento: '1123087694' },
-        update: { password: hash },
-        create: { nombre: 'Maria Fernanda Ladino Vega', documento: '1123087694', password: hash, rol: 'admin' }
-    });
-
-    res.send(`
-        <div style="text-align: center; padding: 50px; font-family: Arial;">
-            <h1 style="color: #27ae60;">✅ Cuentas de Administrador Configuradas</h1>
-            <p><strong>Yeison:</strong> Doc: 1122141007</p>
-            <p><strong>Maria F:</strong> Doc: 1123087694</p>
-            <br><a href="/login" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Ir a Iniciar Sesión</a>
-        </div>
-    `);
+    res.send('✅ Administrador configurado exitosamente. <br><br> Usuario: operaciones.omegagroupsas@gmail.com <br> Contraseña: Rosalbamoreno27. <br><br> <a href="/login">Ir a Iniciar Sesión</a>');
 });
 
 /**
@@ -299,38 +283,7 @@ app.post('/inspeccion/inicio', verificarRol(['conductor', 'admin']), async (req,
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        
-        // DISEÑO RESPONSIVE Y PREMIUM PARA "INSPECCIÓN REGISTRADA"
-        res.send(`
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <title>Éxito | OmegaGroup</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            <style>
-                body { background-color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-                .success-card { background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 420px; width: 100%; border-top: 6px solid #10b981; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-                .success-icon { font-size: 5.5rem; color: #10b981; margin-bottom: 20px; }
-                .title-text { color: #0f172a; font-weight: 800; font-size: 1.8rem; margin-bottom: 10px; letter-spacing: -0.5px; }
-                .desc-text { color: #64748b; font-size: 1.05rem; margin-bottom: 0; line-height: 1.5; }
-                .btn-omega { background-color: #0f172a; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; width: 100%; margin-top: 30px; transition: all 0.2s; letter-spacing: 0.5px; }
-                .btn-omega:hover { background-color: #1e293b; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2); }
-                @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-            </style>
-        </head>
-        <body>
-            <div class="success-card">
-                <i class="fas fa-check-circle success-icon"></i>
-                <h2 class="title-text">¡Inspección Registrada!</h2>
-                <p class="desc-text">La auditoría del vehículo se ha guardado exitosamente bajo el ticket <strong>#${nuevaInspeccion.id}</strong>.</p>
-                <a href="${urlDestino}" class="btn-omega"><i class="fas fa-arrow-left me-2"></i> VOLVER AL PANEL</a>
-            </div>
-        </body>
-        </html>
-        `);
+        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Inspección Registrada!</h1><p>ID: #${nuevaInspeccion.id}</p><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);
     } catch (error) {
         console.error(error);
         res.status(500).send('Error al guardar inspección');
@@ -368,43 +321,11 @@ app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        
-        // DISEÑO RESPONSIVE Y PREMIUM PARA "JORNADA CERRADA"
-        res.send(`
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <title>Éxito | OmegaGroup</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            <style>
-                body { background-color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-                .success-card { background: white; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 420px; width: 100%; border-top: 6px solid #f59e0b; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-                .success-icon { font-size: 5.5rem; color: #f59e0b; margin-bottom: 20px; }
-                .title-text { color: #0f172a; font-weight: 800; font-size: 1.8rem; margin-bottom: 10px; letter-spacing: -0.5px; }
-                .desc-text { color: #64748b; font-size: 1.05rem; margin-bottom: 0; line-height: 1.5; }
-                .btn-omega { background-color: #0f172a; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; width: 100%; margin-top: 30px; transition: all 0.2s; letter-spacing: 0.5px; }
-                .btn-omega:hover { background-color: #1e293b; color: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(15, 23, 42, 0.2); }
-                @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-            </style>
-        </head>
-        <body>
-            <div class="success-card">
-                <i class="fas fa-flag-checkered success-icon"></i>
-                <h2 class="title-text">¡Jornada Cerrada!</h2>
-                <p class="desc-text">El kilometraje de llegada ha sido registrado y el turno se finalizó con éxito.</p>
-                <a href="${urlDestino}" class="btn-omega"><i class="fas fa-arrow-left me-2"></i> VOLVER AL PANEL</a>
-            </div>
-        </body>
-        </html>
-        `);
+        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Jornada Cerrada!</h1><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);
     } catch (error) {
         res.status(500).send('Error al cerrar la jornada');
     }
 });
-
 
 /**
  * ============================================================================
@@ -505,7 +426,6 @@ app.post('/admin/inspeccion/eliminar/:id', verificarRol(['admin']), async (req, 
     }
 });
 
-// REPORTE MAESTRO CONSOLIDADO
 app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req, res) => {
     let browser = null;
     try {
@@ -628,7 +548,6 @@ app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req
         res.status(500).send('Error generando el Reporte Maestro: ' + error.message);
     }
 });
-
 
 /**
  * ============================================================================
@@ -860,62 +779,6 @@ app.get('/admin/patio/pdf/:id', verificarRol(['admin']), async (req, res) => {
     }
 });
 
-// ============================================================================
-// 1. MOSTRAR FORMULARIO DE EDICIÓN (PATIO)
-// ============================================================================
-app.get('/admin/patio/editar/:id', verificarRol(['admin']), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const registro = await prisma.inspeccionPatio.findUnique({ where: { id } });
-        
-        if (!registro) return res.redirect('/admin/patio/historial');
-
-        const vehiculos = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
-        const datos = typeof registro.evidencias === 'string' ? JSON.parse(registro.evidencias) : registro.evidencias;
-
-        res.render('patio-editar', { 
-            title: `Editar Auditoría - ${registro.vehiculo_placa}`, 
-            registro, 
-            datos, 
-            vehiculos 
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Error al cargar la edición de patio');
-    }
-});
-
-// ============================================================================
-// 2. PROCESAR Y GUARDAR LA EDICIÓN (PATIO)
-// ============================================================================
-app.post('/admin/patio/editar/:id', verificarRol(['admin']), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const { placa, tipo_movimiento, evidenciasJSON, firmaBase64 } = req.body;
-        
-        const evidenciasObj = JSON.parse(evidenciasJSON);
-
-        await prisma.inspeccionPatio.update({
-            where: { id },
-            data: {
-                vehiculo_placa: placa,
-                tipo_movimiento: tipo_movimiento,
-                evidencias: evidenciasObj,
-                firma_admin: firmaBase64
-            }
-        });
-
-        res.redirect('/admin/patio/historial');
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Error al actualizar la auditoría de patio');
-    }
-});
-
-
-// ============================================================================
-// ENVÍO DE CORREO DIRECTO 
-// ============================================================================
 app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, res) => {
     let browser = null;
     try {
@@ -951,8 +814,8 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         const transporter = nodemailer.createTransport({
             service: 'gmail', 
             auth: {
-                user: 'operaciones.omegagroupsas@gmail.com', // ⬅️ CREDENCIAL ACTUALIZADA
-                pass: 'buysyovpvbhjpvfw'                  // ⬅️ CREDENCIAL ACTUALIZADA
+                user: 'operaciones.omegagroupsas@gmail.com', 
+                pass: 'Rosalbamoreno27.'      
             }
         });
 
@@ -961,16 +824,16 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
         const urlPdf = `${protocolo}://${host}/admin/patio/pdf/${id}`;
 
         const mailOptions = {
-            from: '"OmegaGroup SST" <operaciones.omegagroupsas@gmail.com>', // ⬅️ REMITENTE ACTUALIZADO
+            from: '"OmegaGroup SST" <operaciones.omegagroupsas@gmail.com>',
             to: correoCliente,
-            subject: `Reporte de Inspección Vehicular (Ticket #${id}) - OmegaGroup`,
+            subject: `Reporte de Auditoría de Patio (Ticket #${id}) - OmegaGroup`,
             html: `
                 <div style="font-family: Arial, sans-serif; color: #334155; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div style="background-color: #0f172a; padding: 20px; text-align: center; border-bottom: 4px solid #e50914;">
                         <h2 style="color: white; margin: 0; letter-spacing: 1px;">OMEGAGROUP | Operaciones</h2>
                     </div>
                     <div style="padding: 30px;">
-                        <h3 style="color: #0f172a; margin-top: 0;">Reporte Oficial de Inspección Vehicular</h3>
+                        <h3 style="color: #0f172a; margin-top: 0;">Reporte Oficial de Auditoría</h3>
                         <p>Cordial saludo,</p>
                         <p>Se ha generado un nuevo registro de inspección de patio en nuestra plataforma de seguridad.</p>
                         <p>Puede visualizar, imprimir y descargar el documento PDF ingresando al siguiente enlace seguro:</p>
@@ -1010,7 +873,235 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
 
 /**
  * ============================================================================
- * 8. INICIO DEL SERVIDOR
+ * 8. MÓDULO: AUDITORÍA ESTADÍSTICA DE HORAS (APP VS GPS) - MENSUAL GLOBAL
+ * ============================================================================
+ */
+app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
+    try {
+        const mesActual = req.query.mes || new Date().toISOString().slice(0, 7); 
+        const placaSeleccionada = req.query.placa || 'TODOS';
+        
+        const vehiculosDB = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
+
+        // Ajuste de Fechas a Zona Horaria Colombia (UTC-5)
+        const year = parseInt(mesActual.split('-')[0]);
+        const month = parseInt(mesActual.split('-')[1]) - 1;
+        const startDateLocal = new Date(year, month, 1, 0, 0, 0);
+        const endDateLocal = new Date(year, month + 1, 0, 23, 59, 59);
+        
+        const fromStr = new Date(startDateLocal.getTime() + (5 * 3600000)).toISOString();
+        const toStr = new Date(endDateLocal.getTime() + (5 * 3600000)).toISOString();
+
+        // CREDENCIALES DEL NUEVO SERVIDOR TRACCAR
+        const TRACCAR_URL = 'https://api.globalmonitorgps.com'; 
+        const TRACCAR_TOKEN = 'RzBFAiEAtDXlCJ0WnZ_XAG5xqrA-8SeIlkWsmTFdsaTUk_-DCC8CIGxpnyl_suINh63nvf4xWosnaqanlFCfSfyujnp17SxjeyJpIjo5MTM3MzU3NTY1NzM5MDM1ODAzLCJ1IjoxLCJlIjoiMjAzMC0xMi0zMVQwNTowMDowMC4wMDArMDA6MDAifQ';
+
+        let auditoria = [];
+        let traccarDays = {}; 
+
+        // 1. OBTENER DATOS DE TRACCAR (Solo si seleccionó un carro)
+        if (placaSeleccionada !== 'TODOS') {
+            try {
+                const resDevices = await fetch(`${TRACCAR_URL}/api/devices`, {
+                    headers: { 'Authorization': `Bearer ${TRACCAR_TOKEN}`, 'Accept': 'application/json' },
+                    signal: AbortSignal.timeout(8000)
+                });
+                
+                if (resDevices.ok) {
+                    const devices = await resDevices.json();
+                    const device = devices.find(d => d.name.toUpperCase() === placaSeleccionada.toUpperCase() || (d.uniqueId && d.uniqueId.toUpperCase() === placaSeleccionada.toUpperCase()));
+
+                    if (device) {
+                        const tripsUrl = `${TRACCAR_URL}/api/reports/trips?deviceId=${device.id}&from=${encodeURIComponent(fromStr)}&to=${encodeURIComponent(toStr)}`;
+                        const tripsRes = await fetch(tripsUrl, {
+                            headers: { 'Authorization': `Bearer ${TRACCAR_TOKEN}`, 'Accept': 'application/json' }
+                        });
+                        
+                        if (tripsRes.ok) {
+                            const trips = await tripsRes.json();
+                            
+                            trips.forEach(trip => {
+                                const tStart = new Date(trip.startTime);
+                                const tEnd = new Date(trip.endTime);
+                                const dateStr = new Date(tStart.getTime() - (5 * 3600000)).toISOString().split('T')[0];
+                                
+                                if (!traccarDays[dateStr]) {
+                                    traccarDays[dateStr] = {
+                                        inicio: tStart, fin: tEnd,
+                                        distancia: trip.distance, duracion: trip.duration, maxVelocidad: trip.maxSpeed
+                                    };
+                                } else {
+                                    if (tStart < traccarDays[dateStr].inicio) traccarDays[dateStr].inicio = tStart;
+                                    if (tEnd > traccarDays[dateStr].fin) traccarDays[dateStr].fin = tEnd;
+                                    traccarDays[dateStr].distancia += trip.distance;
+                                    traccarDays[dateStr].duracion += trip.duration;
+                                    if (trip.maxSpeed > traccarDays[dateStr].maxVelocidad) traccarDays[dateStr].maxVelocidad = trip.maxSpeed;
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.log("Aviso: No se pudo conectar a Traccar:", err.message);
+            }
+        }
+
+        // 2. OBTENER INSPECCIONES APP
+        let whereClause = { estado: 'Finalizada', eliminado: false, fecha_apertura: { gte: startDateLocal, lte: endDateLocal } };
+        if (placaSeleccionada !== 'TODOS') whereClause.vehiculo_placa = placaSeleccionada;
+
+        const inspecciones = await prisma.inspeccion.findMany({ where: whereClause, include: { conductor: true } });
+        let inspData = {}; 
+        inspecciones.forEach(insp => {
+            const dateStr = new Date(insp.fecha_apertura.getTime() - (5 * 3600000)).toISOString().split('T')[0];
+            // Si hizo varias en el día, guardamos la primera
+            if(!inspData[dateStr] || new Date(insp.fecha_apertura) < new Date(inspData[dateStr].fecha_apertura)) {
+                inspData[dateStr] = insp;
+            }
+        });
+
+        // 3. CRUZAR LA INFORMACIÓN DEL MES
+        if (placaSeleccionada !== 'TODOS') {
+            const todosLosDias = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
+            const diasOrdenados = Array.from(todosLosDias).sort((a,b) => b.localeCompare(a)); 
+            
+            diasOrdenados.forEach(dateStr => {
+                const trData = traccarDays[dateStr];
+                const inData = inspData[dateStr];
+                
+                let inicioApp = inData ? new Date(inData.fecha_apertura) : null;
+                let inicioGPS = trData ? trData.inicio : null;
+                
+                let distKm = trData ? (trData.distancia / 1000).toFixed(2) : '0.00';
+                let hMotor = trData ? Math.floor(Math.floor(trData.duracion / 60000) / 60) : 0;
+                let mMotor = trData ? Math.floor(trData.duracion / 60000) % 60 : 0;
+
+                let fila = {
+                    fecha: dateStr,
+                    placa: placaSeleccionada,
+                    conductor: inData ? inData.conductor.nombre : 'N/A (Sin App)',
+                    inicioApp: inData ? inicioApp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
+                    inicioGPS: trData ? trData.inicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
+                    finGPS: trData ? trData.fin.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
+                    distancia: distKm,
+                    horasMotor: `${hMotor}h ${mMotor}m`,
+                    diffMinutos: '-',
+                    estadoNumero: 0, estadoTexto: '', claseEstado: ''
+                };
+
+                if (inicioGPS && inicioApp) {
+                    let diff = (inicioGPS - inicioApp) / (1000 * 60);
+                    if (diff < 0) diff = 0; 
+                    fila.diffMinutos = Math.round(diff);
+
+                    fila.estadoNumero = 1; fila.estadoTexto = 'ÓPTIMO'; fila.claseEstado = 'success';
+                    if (diff > 30) { fila.estadoNumero = 3; fila.estadoTexto = 'CRÍTICO'; fila.claseEstado = 'danger'; }
+                    else if (diff >= 20) { fila.estadoNumero = 2; fila.estadoTexto = 'REVISAR'; fila.claseEstado = 'warning'; }
+                
+                } else if (inicioGPS && !inicioApp) {
+                    fila.estadoNumero = 4; fila.estadoTexto = 'MOVIMIENTO SIN APP'; fila.claseEstado = 'dark';
+                    fila.diffMinutos = 'Fuga Detectada';
+                } else if (!inicioGPS && inicioApp) {
+                    fila.estadoNumero = 5; fila.estadoTexto = 'INSPECCIÓN SIN GPS'; fila.claseEstado = 'info';
+                    fila.diffMinutos = 'Vehículo Apagado';
+                }
+                
+                auditoria.push(fila);
+            });
+        }
+
+        res.render('auditoria-horas', {
+            title: 'Dashboard Auditoría GPS',
+            registros: auditoria,
+            mesActual: mesActual,
+            placaSeleccionada: placaSeleccionada,
+            vehiculos: vehiculosDB,
+            usuario: req.usuario
+        });
+
+    } catch (error) {
+        console.error("Error en módulo estadístico:", error);
+        res.status(500).send('Error generando análisis.');
+    }
+});
+// ============================================================================
+// MÓDULO DE PRUEBAS: EXTRACCIÓN PURA DE TRACCAR (SANDBOX)
+// ============================================================================
+app.get('/test-traccar', async (req, res) => {
+    // ACTUALIZADO: Nuevo servidor Traccar y Nuevo Token
+    const TRACCAR_URL = 'https://api.globalmonitorgps.com'; 
+    const TRACCAR_TOKEN = 'RzBFAiEAtDXlCJ0WnZ_XAG5xqrA-8SeIlkWsmTFdsaTUk_-DCC8CIGxpnyl_suINh63nvf4xWosnaqanlFCfSfyujnp17SxjeyJpIjo5MTM3MzU3NTY1NzM5MDM1ODAzLCJ1IjoxLCJlIjoiMjAzMC0xMi0zMVQwNTowMDowMC4wMDArMDA6MDAifQ';
+
+    let devices = [];
+    let errorConexion = null;
+    let resultado = null;
+    const placaSeleccionada = req.query.placa;
+    const fechaFiltro = req.query.fecha || new Date().toISOString().split('T')[0];
+
+    try {
+        const resDevices = await fetch(`${TRACCAR_URL}/api/devices`, {
+            headers: { 
+                'Authorization': `Bearer ${TRACCAR_TOKEN}`,
+                'Accept': 'application/json' 
+            },
+            signal: AbortSignal.timeout(8000) 
+        });
+        
+        if (!resDevices.ok) {
+            const errorText = await resDevices.text();
+            throw new Error(`Error ${resDevices.status}: ${errorText || 'Acceso denegado (Token inválido o mal configurado)'}`);
+        }
+        
+        devices = await resDevices.json();
+
+        if (placaSeleccionada && devices.length > 0) {
+            const device = devices.find(d => d.name === placaSeleccionada || d.uniqueId === placaSeleccionada);
+            
+            if (device) {
+                const fromStr = encodeURIComponent(new Date(`${fechaFiltro}T00:00:00-05:00`).toISOString());
+                const toStr = encodeURIComponent(new Date(`${fechaFiltro}T23:59:59-05:00`).toISOString());
+
+                const tripsRes = await fetch(`${TRACCAR_URL}/api/reports/trips?deviceId=${device.id}&from=${fromStr}&to=${toStr}`, {
+                    headers: { 
+                        'Authorization': `Bearer ${TRACCAR_TOKEN}`,
+                        'Accept': 'application/json' 
+                    }
+                });
+
+                if (tripsRes.ok) {
+                    const trips = await tripsRes.json();
+                    
+                    if (trips.length > 0) {
+                        const primerViaje = trips[0];
+                        const ultimoViaje = trips[trips.length - 1];
+
+                        resultado = {
+                            encontrado: true,
+                            placa: placaSeleccionada,
+                            inicio: new Date(primerViaje.startTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                            fin: new Date(ultimoViaje.endTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                            totalViajes: trips.length,
+                            distancia: (trips.reduce((acc, t) => acc + t.distance, 0) / 1000).toFixed(2)
+                        };
+                    } else {
+                        resultado = { encontrado: false, mensaje: "La plataforma satelital no registró movimiento para este vehículo en la fecha seleccionada." };
+                    }
+                } else {
+                    const errorTrips = await tripsRes.text();
+                    throw new Error(`Error obteniendo recorridos: ${errorTrips}`);
+                }
+            }
+        }
+    } catch (error) {
+        errorConexion = `Fallo de conexión: El servidor GPS respondió con error: ${error.message}`;
+    }
+
+    res.render('test-traccar', { devices, errorConexion, resultado, placaSeleccionada, fechaFiltro });
+});
+
+/**
+ * ============================================================================
+ * 9. INICIO DEL SERVIDOR
  * ============================================================================
  */
 app.listen(PORT, () => {

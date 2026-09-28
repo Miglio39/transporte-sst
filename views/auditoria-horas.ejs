@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | OmegaGroup SAS</title>
+    <link rel="icon" type="image/jpeg" href="/images/logo-app.jpg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* =========================================================
+           DISEÑO EMPRESARIAL Y ESTILO POWER BI
+           ========================================================= */
+        :root {
+            --surface-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --omega-dark: #0f172a;
+            --omega-red: #e50914;
+        }
+
+        body { background-color: var(--surface-bg); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 40px; }
+
+        /* NAVBAR CORPORATIVO Y BOTONES DESPLEGABLES */
+        .navbar-custom { background-color: var(--omega-dark); border-bottom: 3px solid var(--omega-red); padding: 0.8rem 1.5rem; }
+        .navbar-brand img { border-radius: 4px; background-color: white; padding: 3px; object-fit: contain; }
+        .nav-btn { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; padding: 0.5rem 1rem; border-radius: 6px; color: #f8fafc; background: rgba(255, 255, 255, 0.08); border: 1px solid transparent; transition: all 0.2s ease; }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        .nav-btn-danger { color: #fca5a5; background: rgba(239, 68, 68, 0.15); }
+        .nav-btn-danger:hover { background: rgba(239, 68, 68, 0.3); color: #ffffff; }
+        .dropdown-menu { border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .dropdown-item { padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: all 0.2s; }
+        .dropdown-item:hover { background-color: #f1f5f9; color: var(--omega-dark); }
+        .dropdown-item i { width: 20px; text-align: center; }
+        .navbar-toggler { border: 1px solid rgba(255,255,255,0.2) !important; padding: 0.5rem 0.75rem; }
+        .navbar-toggler i { color: #ffffff; font-size: 1.5rem; }
+
+        /* TARJETAS DE INDICADORES (KPIs) ESTILO POWER BI */
+        .kpi-card { background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s ease; }
+        .kpi-card:hover { box-shadow: 0 8px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .kpi-title { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-value { color: var(--omega-dark); font-size: 2rem; font-weight: 800; line-height: 1; margin-top: 5px; }
+        .kpi-icon-wrapper { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+        
+        .kpi-green { border-left: 4px solid #10b981; }
+        .icon-green { background: #dcfce7; color: #10b981; }
+        .kpi-orange { border-left: 4px solid #f59e0b; }
+        .icon-orange { background: #fef3c7; color: #f59e0b; }
+        .kpi-red { border-left: 4px solid #ef4444; }
+        .icon-red { background: #fef2f2; color: #ef4444; }
+        .kpi-dark { border-left: 4px solid #0f172a; }
+        .icon-dark { background: #e2e8f0; color: #0f172a; }
+
+        /* TABLAS Y DATA CARDS */
+        .data-card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .table > :not(caption) > * > * { vertical-align: middle; }
+        .table thead th { background-color: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.05em; }
+        
+        /* ESTADOS INDICADORES DE FILA */
+        .estado-box { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; display: inline-block; min-width: 120px; text-align: center; }
+        .row-estado-1 { border-left: 5px solid #10b981; } 
+        .badge-optimo { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .row-estado-2 { border-left: 5px solid #f59e0b; background-color: #fffbeb; } 
+        .badge-revisar { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .row-estado-3 { border-left: 5px solid #ef4444; background-color: #fef2f2; } 
+        .badge-critico { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .row-estado-4 { border-left: 5px solid #0f172a; background-color: #f1f5f9; } 
+        .badge-fuga { background-color: #0f172a; color: #ffffff; border: 1px solid #000; }
+        .row-estado-5 { border-left: 5px solid #3b82f6; } 
+        .badge-falsa { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+        .time-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVEGACIÓN EMPRESARIAL -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="/admin">
+                <img src="/images/logo.png" alt="Logo OmegaGroup" height="35" class="me-3 shadow-sm" onerror="this.style.display='none'">
+                <span style="letter-spacing: 1px; font-size: 1.1rem; color: #ffffff;">OMEGAGROUP <span style="color: #94a3b8; font-weight: 400;">| Operaciones</span></span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarAdmin">
+               <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
+                    <!-- MENÚ DESPLEGABLE: SATELITAL / GPS -->
+                    <li class="nav-item dropdown w-100">
+                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #0f172a; border: 1px solid #6366f1; color: white;">
+                            <i class="fas fa-satellite-dish me-1 text-primary"></i> Satelital GPS
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
+                            <li><a class="dropdown-item fw-bold text-success py-2" href="/admin/auditoria-horas"><i class="fas fa-chart-pie me-2"></i> Dashboard Auditoría GPS</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-muted py-2" href="/test-traccar"><i class="fas fa-flask me-2"></i> Laboratorio Traccar</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- MENÚ DESPLEGABLE: PATIO -->
+                    <li class="nav-item dropdown w-100">
+                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #3b82f6; color: white;">
+                            <i class="fas fa-warehouse me-1"></i> Módulo Patio
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
+                            <li><a class="dropdown-item py-2 fw-bold" href="/admin/patio/nuevo"><i class="fas fa-camera me-2 text-primary"></i> Nueva Inspección</a></li>
+                            <li><a class="dropdown-item py-2 fw-bold" href="/admin/patio/historial"><i class="fas fa-list-check me-2 text-warning"></i> Historial de Patio</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- MENÚ DESPLEGABLE: CONDUCTORES -->
+                    <li class="nav-item dropdown w-100">
+                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: rgba(255,255,255,0.08); color: white;">
+                            <i class="fas fa-users me-1"></i> Conductores
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
+                            <li><a class="dropdown-item py-2" href="/admin/conductores"><i class="fas fa-list me-2 text-secondary"></i> Ver Lista</a></li>
+                            <li><a class="dropdown-item py-2" href="/admin/conductores/nuevo"><i class="fas fa-user-plus me-2 text-success"></i> Nuevo Conductor</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item w-100">
+                        <a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;">
+                            <i class="fas fa-plus me-1"></i> Inspección App
+                        </a>
+                    </li>
+                    <li class="nav-item w-100">
+                        <a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center">
+                            <i class="fas fa-power-off"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <% 
+        let totales = { optimos: 0, revisar: 0, criticos: 0, fugas: 0 };
+        registros.forEach(r => {
+            if(r.estadoNumero === 1) totales.optimos++;
+            if(r.estadoNumero === 2) totales.revisar++;
+            if(r.estadoNumero === 3) totales.criticos++;
+            if(r.estadoNumero === 4) totales.fugas++;
+        });
+    %>
+
+    <div class="container-fluid px-lg-4 mb-4">
+        
+        <!-- PANEL DE CONTROL Y FILTRO (ESTILO POWER BI) -->
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-satellite me-2" style="color: #10b981;"></i> Dashboard Auditoría Mensual</h5>
+        </div>
+
+        <div class="data-card p-4 mb-4 bg-white border-0 shadow-sm" style="border-top: 4px solid #10b981 !important;">
+            <form action="/admin/auditoria-horas" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label mb-1 fw-bold text-muted small">Vehículo a Analizar (Placa):</label>
+                    <select name="placa" class="form-select fw-bold border-secondary">
+                        <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Seleccione una placa --</option>
+                        <% vehiculos.forEach(v => { %>
+                            <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-1 fw-bold text-muted small">Mes de Análisis:</label>
+                    <input type="month" name="mes" class="form-control fw-bold border-secondary" value="<%= mesActual %>">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-dark w-100 fw-bold"><i class="fas fa-sync-alt me-2"></i> Generar Cruce Satelital</button>
+                </div>
+            </form>
+        </div>
+
+        <% if (placaSeleccionada === 'TODOS') { %>
+            <div class="alert alert-primary shadow-sm fw-bold border-0 text-center py-5 rounded-3">
+                <i class="fas fa-search fs-1 mb-3 d-block opacity-75"></i>
+                Selecciona una placa en el panel superior para descargar el historial de Traccar del mes completo y cruzarlo con las inspecciones de la App.
+            </div>
+        <% } else { %>
+
+            <!-- 1. FILA DE KPIS (ESTILO POWER BI) -->
+            <div class="row g-3 mb-4">
+                <!-- KPI ÓPTIMO -->
+                <div class="col-md-3">
+                    <div class="card kpi-card kpi-green h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-title">Días Óptimos (< 20m)</div>
+                                <div class="kpi-value text-success"><%= totales.optimos %></div>
+                            </div>
+                            <div class="kpi-icon-wrapper icon-green"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI REVISAR -->
+                <div class="col-md-3">
+                    <div class="card kpi-card kpi-orange h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-title">Para Revisar (20-30m)</div>
+                                <div class="kpi-value text-warning"><%= totales.revisar %></div>
+                            </div>
+                            <div class="kpi-icon-wrapper icon-orange"><i class="fas fa-exclamation-triangle"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI CRÍTICO -->
+                <div class="col-md-3">
+                    <div class="card kpi-card kpi-red h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-title">Críticos (> 30m)</div>
+                                <div class="kpi-value text-danger"><%= totales.criticos %></div>
+                            </div>
+                            <div class="kpi-icon-wrapper icon-red"><i class="fas fa-times-circle"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI FUGAS -->
+                <div class="col-md-3">
+                    <div class="card kpi-card kpi-dark h-100">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-title">Fugas (Sin App)</div>
+                                <div class="kpi-value text-dark"><%= totales.fugas %></div>
+                            </div>
+                            <div class="kpi-icon-wrapper icon-dark"><i class="fas fa-user-slash"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA ESTADÍSTICA DE REPORTE DIARIO -->
+            <div class="data-card mb-5">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-muted me-2"></i> Reporte Mensual Consolidado - <%= placaSeleccionada %> (<%= registros.length %> registros)</h6>
+                </div>
+                
+                <div class="table-responsive" style="min-height: 400px;">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Día / Fecha</th>
+                                <th>Conductor App</th>
+                                <th class="text-center bg-light text-primary">Tiempos Satelitales (GlobalGPS)</th>
+                                <th class="text-center">Hora App</th>
+                                <th class="text-center">Recorrido</th>
+                                <th class="text-center pe-3">Auditoría</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if(registros.length === 0) { %>
+                                <tr><td colspan="6" class="text-center py-5 text-muted fw-bold">No hay movimientos satelitales ni en la App para este mes.</td></tr>
+                            <% } %>
+
+                            <% registros.forEach(reg => { 
+                                let claseFila = `row-estado-${reg.estadoNumero}`;
+                                let badgeClase = '';
+                                if(reg.estadoNumero === 1) badgeClase = 'badge-optimo';
+                                if(reg.estadoNumero === 2) badgeClase = 'badge-revisar';
+                                if(reg.estadoNumero === 3) badgeClase = 'badge-critico';
+                                if(reg.estadoNumero === 4) badgeClase = 'badge-fuga';
+                                if(reg.estadoNumero === 5) badgeClase = 'badge-falsa';
+                            %>
+                            <tr class="<%= claseFila %>">
+                                <td class="fw-bold ps-3"><%= reg.fecha %></td>
+                                
+                                <td>
+                                    <small class="fw-bold text-secondary"><i class="fas fa-user-tie me-1"></i> <%= reg.conductor %></small>
+                                </td>
+                                
+                                <!-- TIEMPOS TRACcar -->
+                                <td class="text-center border-start" style="background-color: rgba(248, 250, 252, 0.5);">
+                                    <% if(reg.inicioGPS !== '--:--') { %>
+                                        <span class="time-badge border-primary text-primary fw-bold" title="Motor ON"><i class="fas fa-play"></i> <%= reg.inicioGPS %></span>
+                                        <span class="time-badge border-primary text-primary fw-bold" title="Motor OFF"><i class="fas fa-stop"></i> <%= reg.finGPS %></span>
+                                    <% } else { %>
+                                        <span class="text-muted small"><i class="fas fa-parking"></i> Vehículo Apagado</span>
+                                    <% } %>
+                                </td>
+
+                                <!-- TIEMPOS APP -->
+                                <td class="text-center border-start">
+                                    <% if(reg.inicioApp !== '--:--') { %>
+                                        <span class="time-badge bg-white"><i class="fas fa-mobile-alt text-muted me-1"></i> <%= reg.inicioApp %></span>
+                                    <% } else { %>
+                                        <span class="text-danger fw-bold small"><i class="fas fa-times"></i> Sin registro</span>
+                                    <% } %>
+                                </td>
+
+                                <!-- INFO ADICIONAL (DISTANCIA / HORAS) -->
+                                <td class="text-center border-start text-muted small fw-bold">
+                                    <div class="mb-1"><i class="fas fa-route text-primary"></i> <%= reg.distancia %> km</div>
+                                    <div><i class="fas fa-stopwatch text-success"></i> <%= reg.horasMotor %></div>
+                                </td>
+
+                                <!-- ESTADO INDICADOR -->
+                                <td class="text-center pe-3 border-start">
+                                    <div class="estado-box <%= badgeClase %> shadow-sm mb-1 d-block w-100">
+                                        <%= reg.estadoTexto %>
+                                    </div>
+                                    <% if(reg.estadoNumero >= 1 && reg.estadoNumero <= 3) { %>
+                                        <span class="fw-bold <%= reg.estadoNumero === 3 ? 'text-danger' : 'text-dark' %>" style="font-size: 0.8rem;">
+                                            <%= reg.diffMinutos %> min dif.
+                                        </span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
