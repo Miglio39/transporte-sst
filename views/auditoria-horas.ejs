@@ -36,9 +36,9 @@
         .navbar-toggler { border: 1px solid rgba(255,255,255,0.2) !important; padding: 0.5rem 0.75rem; }
         .navbar-toggler i { color: #ffffff; font-size: 1.5rem; }
 
-        /* TARJETAS DE INDICADORES (KPIs) ESTILO POWER BI */
-        .kpi-card { background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s ease; }
-        .kpi-card:hover { box-shadow: 0 8px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        /* TARJETAS DE INDICADORES (KPIs) Y GRÁFICOS ESTILO POWER BI */
+        .kpi-card, .chart-card { background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s ease; }
+        .kpi-card:hover, .chart-card:hover { box-shadow: 0 8px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .kpi-title { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .kpi-value { color: var(--omega-dark); font-size: 2rem; font-weight: 800; line-height: 1; margin-top: 5px; }
         .kpi-icon-wrapper { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
@@ -51,6 +51,10 @@
         .icon-red { background: #fef2f2; color: #ef4444; }
         .kpi-dark { border-left: 4px solid #0f172a; }
         .icon-dark { background: #e2e8f0; color: #0f172a; }
+
+        /* TÍTULOS DE GRÁFICOS */
+        .chart-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); color: var(--omega-dark); font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px; text-transform: uppercase; }
+        .chart-body { padding: 1rem; position: relative; height: 260px; width: 100%; }
 
         /* TABLAS Y DATA CARDS */
         .data-card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -70,7 +74,8 @@
         .row-estado-5 { border-left: 5px solid #3b82f6; } 
         .badge-falsa { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
-        .time-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; }
+        .time-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; display: block; margin-bottom: 4px; }
+        .time-badge:last-child { margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -89,7 +94,6 @@
             
             <div class="collapse navbar-collapse" id="navbarAdmin">
                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
-                    <!-- MENÚ DESPLEGABLE: SATELITAL / GPS -->
                     <li class="nav-item dropdown w-100">
                         <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #0f172a; border: 1px solid #6366f1; color: white;">
                             <i class="fas fa-satellite-dish me-1 text-primary"></i> Satelital GPS
@@ -101,7 +105,6 @@
                         </ul>
                     </li>
 
-                    <!-- MENÚ DESPLEGABLE: PATIO -->
                     <li class="nav-item dropdown w-100">
                         <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #3b82f6; color: white;">
                             <i class="fas fa-warehouse me-1"></i> Módulo Patio
@@ -112,7 +115,6 @@
                         </ul>
                     </li>
 
-                    <!-- MENÚ DESPLEGABLE: CONDUCTORES -->
                     <li class="nav-item dropdown w-100">
                         <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: rgba(255,255,255,0.08); color: white;">
                             <i class="fas fa-users me-1"></i> Conductores
@@ -152,7 +154,7 @@
         
         <!-- PANEL DE CONTROL Y FILTRO (ESTILO POWER BI) -->
         <div class="d-flex justify-content-between align-items-end mb-3">
-            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-satellite me-2" style="color: #10b981;"></i> Dashboard Auditoría Mensual</h5>
+            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-satellite me-2" style="color: #10b981;"></i> Dashboard Auditoría Satelital</h5>
         </div>
 
         <div class="data-card p-4 mb-4 bg-white border-0 shadow-sm" style="border-top: 4px solid #10b981 !important;">
@@ -160,7 +162,7 @@
                 <div class="col-md-4">
                     <label class="form-label mb-1 fw-bold text-muted small">Vehículo a Analizar (Placa):</label>
                     <select name="placa" class="form-select fw-bold border-secondary">
-                        <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Seleccione una placa --</option>
+                        <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Todas las placas (Flota Completa) --</option>
                         <% vehiculos.forEach(v => { %>
                             <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
                         <% }) %>
@@ -171,77 +173,90 @@
                     <input type="month" name="mes" class="form-control fw-bold border-secondary" value="<%= mesActual %>">
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-dark w-100 fw-bold"><i class="fas fa-sync-alt me-2"></i> Generar Cruce Satelital</button>
+                    <button type="submit" class="btn btn-dark w-100 fw-bold"><i class="fas fa-sync-alt me-2"></i> Generar Analítica GPS</button>
                 </div>
             </form>
         </div>
 
-        <% if (placaSeleccionada === 'TODOS') { %>
+        <!-- 1. FILA DE KPIS (ESTILO POWER BI) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card kpi-card kpi-green h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Días Óptimos (< 20m)</div>
+                            <div class="kpi-value text-success"><%= totales.optimos %></div>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-green"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card kpi-card kpi-orange h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Para Revisar (20-30m)</div>
+                            <div class="kpi-value text-warning"><%= totales.revisar %></div>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-orange"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card kpi-card kpi-red h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Críticos (> 30m)</div>
+                            <div class="kpi-value text-danger"><%= totales.criticos %></div>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-red"><i class="fas fa-times-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card kpi-card kpi-dark h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-title">Fugas (Sin App)</div>
+                            <div class="kpi-value text-dark"><%= totales.fugas %></div>
+                        </div>
+                        <div class="kpi-icon-wrapper icon-dark"><i class="fas fa-user-slash"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% if (registros.length === 0) { %>
             <div class="alert alert-primary shadow-sm fw-bold border-0 text-center py-5 rounded-3">
                 <i class="fas fa-search fs-1 mb-3 d-block opacity-75"></i>
-                Selecciona una placa en el panel superior para descargar el historial de Traccar del mes completo y cruzarlo con las inspecciones de la App.
+                Selecciona una placa o toda la flota en el panel superior para procesar los datos de Traccar y mostrar los gráficos de inteligencia operativa.
             </div>
         <% } else { %>
 
-            <!-- 1. FILA DE KPIS (ESTILO POWER BI) -->
+            <!-- 2. FILA DE GRÁFICOS (CHART.JS) -->
             <div class="row g-3 mb-4">
-                <!-- KPI ÓPTIMO -->
-                <div class="col-md-3">
-                    <div class="card kpi-card kpi-green h-100">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="kpi-title">Días Óptimos (< 20m)</div>
-                                <div class="kpi-value text-success"><%= totales.optimos %></div>
-                            </div>
-                            <div class="kpi-icon-wrapper icon-green"><i class="fas fa-check-circle"></i></div>
+                <div class="col-md-5">
+                    <div class="chart-card h-100">
+                        <div class="chart-header"><i class="fas fa-trophy me-2 text-warning"></i> Top 5: Mejores Conductores (Días Óptimos)</div>
+                        <div class="chart-body d-flex justify-content-center align-items-center">
+                            <canvas id="conductoresChart"></canvas>
                         </div>
                     </div>
                 </div>
-
-                <!-- KPI REVISAR -->
-                <div class="col-md-3">
-                    <div class="card kpi-card kpi-orange h-100">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="kpi-title">Para Revisar (20-30m)</div>
-                                <div class="kpi-value text-warning"><%= totales.revisar %></div>
-                            </div>
-                            <div class="kpi-icon-wrapper icon-orange"><i class="fas fa-exclamation-triangle"></i></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- KPI CRÍTICO -->
-                <div class="col-md-3">
-                    <div class="card kpi-card kpi-red h-100">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="kpi-title">Críticos (> 30m)</div>
-                                <div class="kpi-value text-danger"><%= totales.criticos %></div>
-                            </div>
-                            <div class="kpi-icon-wrapper icon-red"><i class="fas fa-times-circle"></i></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- KPI FUGAS -->
-                <div class="col-md-3">
-                    <div class="card kpi-card kpi-dark h-100">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="kpi-title">Fugas (Sin App)</div>
-                                <div class="kpi-value text-dark"><%= totales.fugas %></div>
-                            </div>
-                            <div class="kpi-icon-wrapper icon-dark"><i class="fas fa-user-slash"></i></div>
+                <div class="col-md-7">
+                    <div class="chart-card h-100">
+                        <div class="chart-header"><i class="fas fa-chart-column me-2 text-primary"></i> Desempeño Operativo por Vehículo</div>
+                        <div class="chart-body">
+                            <canvas id="placasChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TABLA ESTADÍSTICA DE REPORTE DIARIO -->
+            <!-- 3. TABLA ESTADÍSTICA DE REPORTE DIARIO -->
             <div class="data-card mb-5">
                 <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-muted me-2"></i> Reporte Mensual Consolidado - <%= placaSeleccionada %> (<%= registros.length %> registros)</h6>
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-muted me-2"></i> Base de Datos Consolidada (<%= registros.length %> registros)</h6>
                 </div>
                 
                 <div class="table-responsive" style="min-height: 400px;">
@@ -249,18 +264,14 @@
                         <thead>
                             <tr>
                                 <th class="ps-3">Día / Fecha</th>
-                                <th>Conductor App</th>
-                                <th class="text-center bg-light text-primary">Tiempos Satelitales (GlobalGPS)</th>
-                                <th class="text-center">Hora App</th>
+                                <th>Conductor y Placa</th>
+                                <th class="text-center bg-light text-primary">Tiempos Satelitales (Traccar)</th>
+                                <th class="text-center">Tiempos App (Inspección)</th>
                                 <th class="text-center">Recorrido</th>
                                 <th class="text-center pe-3">Auditoría</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% if(registros.length === 0) { %>
-                                <tr><td colspan="6" class="text-center py-5 text-muted fw-bold">No hay movimientos satelitales ni en la App para este mes.</td></tr>
-                            <% } %>
-
                             <% registros.forEach(reg => { 
                                 let claseFila = `row-estado-${reg.estadoNumero}`;
                                 let badgeClase = '';
@@ -274,11 +285,12 @@
                                 <td class="fw-bold ps-3"><%= reg.fecha %></td>
                                 
                                 <td>
+                                    <span class="badge bg-dark mb-1"><%= reg.placa %></span><br>
                                     <small class="fw-bold text-secondary"><i class="fas fa-user-tie me-1"></i> <%= reg.conductor %></small>
                                 </td>
                                 
-                                <!-- TIEMPOS TRACcar -->
-                                <td class="text-center border-start" style="background-color: rgba(248, 250, 252, 0.5);">
+                                <!-- TIEMPOS TRACCAR -->
+                                <td class="text-center border-start" style="background-color: rgba(248, 250, 252, 0.5); min-width: 140px;">
                                     <% if(reg.inicioGPS !== '--:--') { %>
                                         <span class="time-badge border-primary text-primary fw-bold" title="Motor ON"><i class="fas fa-play"></i> <%= reg.inicioGPS %></span>
                                         <span class="time-badge border-primary text-primary fw-bold" title="Motor OFF"><i class="fas fa-stop"></i> <%= reg.finGPS %></span>
@@ -287,10 +299,13 @@
                                     <% } %>
                                 </td>
 
-                                <!-- TIEMPOS APP -->
-                                <td class="text-center border-start">
+                                <!-- TIEMPOS APP (INICIO Y FIN) -->
+                                <td class="text-center border-start" style="min-width: 140px;">
                                     <% if(reg.inicioApp !== '--:--') { %>
-                                        <span class="time-badge bg-white"><i class="fas fa-mobile-alt text-muted me-1"></i> <%= reg.inicioApp %></span>
+                                        <div class="d-flex flex-column align-items-center w-100">
+                                            <span class="time-badge bg-white border-primary text-primary w-100 text-center" title="Hora Inicio Inspección"><i class="fas fa-play me-1"></i> <%= reg.inicioApp %></span>
+                                            <span class="time-badge bg-white border-danger text-danger w-100 text-center" title="Hora Fin (Salida)"><i class="fas fa-stop me-1"></i> <%= reg.finApp %></span>
+                                        </div>
                                     <% } else { %>
                                         <span class="text-danger fw-bold small"><i class="fas fa-times"></i> Sin registro</span>
                                     <% } %>
@@ -323,5 +338,102 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const rawData = <%- JSON.stringify(registros || []) %>;
+        
+        if (rawData && rawData.length > 0) {
+            
+            // 1. PROCESAMIENTO MATEMÁTICO
+            const conductoresOptimos = {};
+            const placasStats = {};
+
+            rawData.forEach(r => {
+                if (r.estadoNumero === 1 && r.conductor !== 'N/A (Sin App)') {
+                    conductoresOptimos[r.conductor] = (conductoresOptimos[r.conductor] || 0) + 1;
+                }
+
+                if (!placasStats[r.placa]) {
+                    placasStats[r.placa] = { optimos: 0, revisar: 0, criticos: 0, fugas: 0 };
+                }
+                if (r.estadoNumero === 1) placasStats[r.placa].optimos++;
+                if (r.estadoNumero === 2) placasStats[r.placa].revisar++;
+                if (r.estadoNumero === 3) placasStats[r.placa].criticos++;
+                if (r.estadoNumero === 4) placasStats[r.placa].fugas++;
+            });
+
+            const topConductores = Object.entries(conductoresOptimos)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            let labelsConductores = topConductores.map(c => c[0]);
+            let dataConductores = topConductores.map(c => c[1]);
+
+            if (labelsConductores.length === 0) {
+                labelsConductores = ['Sin días óptimos este mes'];
+                dataConductores = [0];
+            }
+
+            const labelsPlacas = Object.keys(placasStats);
+            const dataOptimos = labelsPlacas.map(p => placasStats[p].optimos);
+            const dataRevisar = labelsPlacas.map(p => placasStats[p].revisar);
+            const dataCriticos = labelsPlacas.map(p => placasStats[p].criticos);
+            const dataFugas = labelsPlacas.map(p => placasStats[p].fugas);
+
+
+            // 2. GRÁFICO: TOP CONDUCTORES
+            const ctxCond = document.getElementById('conductoresChart').getContext('2d');
+            new Chart(ctxCond, {
+                type: 'bar',
+                data: {
+                    labels: labelsConductores,
+                    datasets: [{
+                        label: 'Días Laborados en Estado Óptimo',
+                        data: dataConductores,
+                        backgroundColor: '#10b981', 
+                        borderRadius: 4,
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11, family: "'Segoe UI', sans-serif" } } }
+                    }
+                }
+            });
+
+            // 3. GRÁFICO: COMPARATIVA POR PLACA
+            const ctxPlacas = document.getElementById('placasChart').getContext('2d');
+            new Chart(ctxPlacas, {
+                type: 'bar',
+                data: {
+                    labels: labelsPlacas,
+                    datasets: [
+                        { label: 'Óptimos', data: dataOptimos, backgroundColor: '#10b981', borderRadius: 2 },
+                        { label: 'Para Revisar', data: dataRevisar, backgroundColor: '#f59e0b', borderRadius: 2 },
+                        { label: 'Críticos', data: dataCriticos, backgroundColor: '#ef4444', borderRadius: 2 },
+                        { label: 'Fugas', data: dataFugas, backgroundColor: '#0f172a', borderRadius: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11, family: "'Segoe UI', sans-serif" } } }
+                    },
+                    scales: {
+                        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        x: { stacked: true, grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

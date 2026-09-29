@@ -873,7 +873,7 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
 
 /**
  * ============================================================================
- * 8. MÓDULO: AUDITORÍA ESTADÍSTICA DE HORAS (APP VS GPS) - MENSUAL GLOBAL
+ * 8. MÓDULO: AUDITORÍA ESTADÍSTICA DE HORAS (APP VS GPS)
  * ============================================================================
  */
 app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
@@ -883,7 +883,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         
         const vehiculosDB = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
 
-        // Ajuste de Fechas a Zona Horaria Colombia (UTC-5)
         const year = parseInt(mesActual.split('-')[0]);
         const month = parseInt(mesActual.split('-')[1]) - 1;
         const startDateLocal = new Date(year, month, 1, 0, 0, 0);
@@ -892,14 +891,12 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const fromStr = new Date(startDateLocal.getTime() + (5 * 3600000)).toISOString();
         const toStr = new Date(endDateLocal.getTime() + (5 * 3600000)).toISOString();
 
-        // CREDENCIALES DEL NUEVO SERVIDOR TRACCAR
         const TRACCAR_URL = 'https://api.globalmonitorgps.com'; 
         const TRACCAR_TOKEN = 'RzBFAiEAtDXlCJ0WnZ_XAG5xqrA-8SeIlkWsmTFdsaTUk_-DCC8CIGxpnyl_suINh63nvf4xWosnaqanlFCfSfyujnp17SxjeyJpIjo5MTM3MzU3NTY1NzM5MDM1ODAzLCJ1IjoxLCJlIjoiMjAzMC0xMi0zMVQwNTowMDowMC4wMDArMDA6MDAifQ';
 
         let auditoria = [];
         let traccarDays = {}; 
 
-        // 1. OBTENER DATOS DE TRACCAR (Solo si seleccionó un carro)
         if (placaSeleccionada !== 'TODOS') {
             try {
                 const resDevices = await fetch(`${TRACCAR_URL}/api/devices`, {
@@ -919,17 +916,13 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                         
                         if (tripsRes.ok) {
                             const trips = await tripsRes.json();
-                            
                             trips.forEach(trip => {
                                 const tStart = new Date(trip.startTime);
                                 const tEnd = new Date(trip.endTime);
                                 const dateStr = new Date(tStart.getTime() - (5 * 3600000)).toISOString().split('T')[0];
                                 
                                 if (!traccarDays[dateStr]) {
-                                    traccarDays[dateStr] = {
-                                        inicio: tStart, fin: tEnd,
-                                        distancia: trip.distance, duracion: trip.duration, maxVelocidad: trip.maxSpeed
-                                    };
+                                    traccarDays[dateStr] = { inicio: tStart, fin: tEnd, distancia: trip.distance, duracion: trip.duration, maxVelocidad: trip.maxSpeed };
                                 } else {
                                     if (tStart < traccarDays[dateStr].inicio) traccarDays[dateStr].inicio = tStart;
                                     if (tEnd > traccarDays[dateStr].fin) traccarDays[dateStr].fin = tEnd;
@@ -946,7 +939,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             }
         }
 
-        // 2. OBTENER INSPECCIONES APP
         let whereClause = { estado: 'Finalizada', eliminado: false, fecha_apertura: { gte: startDateLocal, lte: endDateLocal } };
         if (placaSeleccionada !== 'TODOS') whereClause.vehiculo_placa = placaSeleccionada;
 
@@ -954,13 +946,11 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         let inspData = {}; 
         inspecciones.forEach(insp => {
             const dateStr = new Date(insp.fecha_apertura.getTime() - (5 * 3600000)).toISOString().split('T')[0];
-            // Si hizo varias en el día, guardamos la primera
             if(!inspData[dateStr] || new Date(insp.fecha_apertura) < new Date(inspData[dateStr].fecha_apertura)) {
                 inspData[dateStr] = insp;
             }
         });
 
-        // 3. CRUZAR LA INFORMACIÓN DEL MES
         if (placaSeleccionada !== 'TODOS') {
             const todosLosDias = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
             const diasOrdenados = Array.from(todosLosDias).sort((a,b) => b.localeCompare(a)); 
@@ -970,6 +960,8 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 const inData = inspData[dateStr];
                 
                 let inicioApp = inData ? new Date(inData.fecha_apertura) : null;
+                // EXTRAEMOS LA HORA DE CIERRE/SALIDA
+                let finApp = (inData && inData.fecha_cierre) ? new Date(inData.fecha_cierre) : null;
                 let inicioGPS = trData ? trData.inicio : null;
                 
                 let distKm = trData ? (trData.distancia / 1000).toFixed(2) : '0.00';
@@ -980,7 +972,9 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     fecha: dateStr,
                     placa: placaSeleccionada,
                     conductor: inData ? inData.conductor.nombre : 'N/A (Sin App)',
+                    // FORMATEAMOS AMBAS HORAS PARA ENVIARLAS A LA VISTA
                     inicioApp: inData ? inicioApp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
+                    finApp: finApp ? finApp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : (inData ? 'En curso' : '--:--'),
                     inicioGPS: trData ? trData.inicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
                     finGPS: trData ? trData.fin.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
                     distancia: distKm,
@@ -1024,6 +1018,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         res.status(500).send('Error generando análisis.');
     }
 });
+
 // ============================================================================
 // MÓDULO DE PRUEBAS: EXTRACCIÓN PURA DE TRACCAR (SANDBOX)
 // ============================================================================
