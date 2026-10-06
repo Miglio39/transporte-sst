@@ -83,7 +83,6 @@
 
         /* TABLA DE DATOS */
         .data-card { background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; }
-        .data-card-header { background: #ffffff; border-bottom: 1px solid var(--border-color); padding: 1rem 1.25rem; color: var(--omega-dark); }
         .table > :not(caption) > * > * { padding: 0.85rem 1rem; border-bottom-color: #f1f5f9; vertical-align: middle; }
         .table thead th { background-color: #f8fafc; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; border-bottom: 1px solid var(--border-color); }
         .table tbody td { font-size: 0.85rem; color: var(--text-main); }
@@ -143,15 +142,17 @@
             <div class="collapse navbar-collapse" id="navbarAdmin">
                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mt-3 mt-lg-0 align-items-lg-center gap-2">
                     
-                    <!-- 1. MENÚ DESPLEGABLE: SATELITAL / GPS -->
+                   <!-- MENÚ DESPLEGABLE: SATELITAL / GPS -->
                     <li class="nav-item dropdown w-100">
                         <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #0f172a; border: 1px solid #6366f1; color: white;">
                             <i class="fas fa-satellite-dish me-1 text-primary"></i> Satelital GPS
                         </button>
                         <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
-                            <li><a class="dropdown-item fw-bold text-success py-2" href="/admin/auditoria-horas"><i class="fas fa-user-clock me-2"></i> Auditoría de Horas</a></li>
+                            <li><a class="dropdown-item fw-bold text-success py-2" href="/admin/auditoria-horas"><i class="fas fa-chart-pie me-2"></i> Dashboard Auditoría GPS</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-muted py-2" href="/test-traccar"><i class="fas fa-flask me-2"></i> Laboratorio Global-GPS</a></li>
+                            <!-- BOTONES DE LABORATORIO -->
+                            <li><a class="dropdown-item text-muted py-2" href="/test-traccar"><i class="fas fa-flask me-2 text-primary"></i> Laboratorio Traccar</a></li>
+                            <li><a class="dropdown-item text-muted py-2" href="/test-plaspy"><i class="fas fa-vial me-2 text-success"></i> Laboratorio Plaspy</a></li>
                         </ul>
                     </li>
 
@@ -356,11 +357,11 @@
              SECCIÓN: GENERADOR DE REPORTE MAESTRO
              ========================================================= -->
         <div class="data-card mb-4" style="background: #fffbeb; border-color: #fde68a;">
-            <div class="data-card-header bg-transparent d-flex align-items-center">
-                <h6 class="mb-0 fw-bold" style="color: #92400e;"><i class="fas fa-file-export me-2"></i> Exportar Reporte Consolidado (Auditoría)</h6>
-            </div>
             <div class="card-body p-3">
                 <form action="/admin/inspeccion/reporte-maestro" method="GET" target="_blank" class="row g-2 align-items-end">
+                    <div class="col-12 mb-1">
+                        <h6 class="mb-0 fw-bold" style="color: #92400e;"><i class="fas fa-file-export me-2"></i> Exportar Reporte Consolidado (Auditoría)</h6>
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: bold;">Fecha Inicio</label>
                         <input type="date" name="fechaInicio" class="form-control form-control-sm border-warning" required>
@@ -380,17 +381,66 @@
                     </div>
                     <div class="col-md-3">
                         <button type="submit" class="btn btn-sm btn-danger w-100 fw-bold shadow-sm py-2">
-                            <i class="fas fa-file-pdf me-1"></i> Generar Reporte Maestro
+                            <i class="fas fa-file-pdf me-1"></i> Generar Reporte
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- 3. TABLA EMPRESARIAL HISTÓRICA -->
+        <!-- =========================================================
+             3. TABLA EMPRESARIAL HISTÓRICA CON FILTROS DINÁMICOS
+             ========================================================= -->
         <div class="data-card">
-            <div class="data-card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold">Registro General de Inspecciones</h6>
+            <!-- PANEL DE FILTROS EN TIEMPO REAL -->
+            <div class="data-card-header bg-white border-bottom p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list-alt me-2 text-primary"></i> Registro General de Inspecciones</h6>
+                    <span class="badge bg-primary rounded-pill"><%= inspecciones.length %> Registros totales</span>
+                </div>
+                
+                <div class="row g-2">
+                    <!-- Filtro por Placa -->
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-car text-muted"></i></span>
+                            <select id="filtroPlaca" class="form-select fw-bold" onchange="filtrarTabla()">
+                                <option value="TODAS">Placa: TODAS</option>
+                                <% flotaActiva.forEach(veh => { %>
+                                    <option value="<%= veh.vehiculo_placa %>"><%= veh.vehiculo_placa %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Filtro por Mes -->
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-calendar text-muted"></i></span>
+                            <select id="filtroMes" class="form-select fw-bold" onchange="filtrarTabla()">
+                                <option value="TODOS">Mes: TODOS</option>
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Búsqueda Libre -->
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="filtroTexto" class="form-control" placeholder="Buscar ticket o conductor..." onkeyup="filtrarTabla()">
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="table-responsive">
@@ -540,6 +590,53 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        // =========================================================
+        // MOTOR DE FILTRADO PARA LA TABLA DE INSPECCIONES
+        // =========================================================
+        function filtrarTabla() {
+            const placaFiltro = document.getElementById('filtroPlaca').value.toUpperCase();
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const textoFiltro = document.getElementById('filtroTexto').value.toLowerCase();
+            
+            // Seleccionamos todas las filas del tbody
+            const filas = document.querySelectorAll('.mobile-cards tbody tr');
+
+            filas.forEach(fila => {
+                // Saltar la fila de "No hay registros disponibles"
+                if (fila.children.length === 1) return;
+
+                const textoFila = fila.innerText.toLowerCase();
+                
+                // Obtener valores específicos de la fila actual
+                const placaElement = fila.querySelector('td[data-label="Vehículo:"]');
+                const fechaElement = fila.querySelector('td[data-label="Fecha:"] span.fw-semibold');
+                
+                if (!placaElement || !fechaElement) return;
+
+                const placaFila = placaElement.innerText.toUpperCase();
+                
+                // La fecha EJS se renderiza típicamente como D/M/YYYY o DD/MM/YYYY en es-ES
+                const fechaCelda = fechaElement.innerText.trim(); 
+                const partesFecha = fechaCelda.split('/');
+                const mesFila = partesFecha.length > 1 ? parseInt(partesFecha[1], 10).toString() : null;
+
+                // Evaluamos si cumple con los 3 filtros
+                const coincidePlaca = (placaFiltro === 'TODAS' || placaFila.includes(placaFiltro));
+                const coincideMes = (mesFiltro === 'TODOS' || mesFila === mesFiltro);
+                const coincideTexto = (textoFiltro === '' || textoFila.includes(textoFiltro));
+
+                // Ocultamos o mostramos
+                if (coincidePlaca && coincideMes && coincideTexto) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        // =========================================================
+        // GRÁFICOS
+        // =========================================================
         const dataEstadosArray = <%- JSON.stringify(dataEstados) %>;
         const labelsEstadosArray = <%- JSON.stringify(labelsEstados) %>;
         

@@ -871,153 +871,7 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
     }
 });
 
-/**
- * ============================================================================
- * 8. MÓDULO: AUDITORÍA ESTADÍSTICA DE HORAS (APP VS GPS)
- * ============================================================================
- */
-app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
-    try {
-        const mesActual = req.query.mes || new Date().toISOString().slice(0, 7); 
-        const placaSeleccionada = req.query.placa || 'TODOS';
-        
-        const vehiculosDB = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
 
-        const year = parseInt(mesActual.split('-')[0]);
-        const month = parseInt(mesActual.split('-')[1]) - 1;
-        const startDateLocal = new Date(year, month, 1, 0, 0, 0);
-        const endDateLocal = new Date(year, month + 1, 0, 23, 59, 59);
-        
-        const fromStr = new Date(startDateLocal.getTime() + (5 * 3600000)).toISOString();
-        const toStr = new Date(endDateLocal.getTime() + (5 * 3600000)).toISOString();
-
-        const TRACCAR_URL = 'https://api.globalmonitorgps.com'; 
-        const TRACCAR_TOKEN = 'RzBFAiEAtDXlCJ0WnZ_XAG5xqrA-8SeIlkWsmTFdsaTUk_-DCC8CIGxpnyl_suINh63nvf4xWosnaqanlFCfSfyujnp17SxjeyJpIjo5MTM3MzU3NTY1NzM5MDM1ODAzLCJ1IjoxLCJlIjoiMjAzMC0xMi0zMVQwNTowMDowMC4wMDArMDA6MDAifQ';
-
-        let auditoria = [];
-        let traccarDays = {}; 
-
-        if (placaSeleccionada !== 'TODOS') {
-            try {
-                const resDevices = await fetch(`${TRACCAR_URL}/api/devices`, {
-                    headers: { 'Authorization': `Bearer ${TRACCAR_TOKEN}`, 'Accept': 'application/json' },
-                    signal: AbortSignal.timeout(8000)
-                });
-                
-                if (resDevices.ok) {
-                    const devices = await resDevices.json();
-                    const device = devices.find(d => d.name.toUpperCase() === placaSeleccionada.toUpperCase() || (d.uniqueId && d.uniqueId.toUpperCase() === placaSeleccionada.toUpperCase()));
-
-                    if (device) {
-                        const tripsUrl = `${TRACCAR_URL}/api/reports/trips?deviceId=${device.id}&from=${encodeURIComponent(fromStr)}&to=${encodeURIComponent(toStr)}`;
-                        const tripsRes = await fetch(tripsUrl, {
-                            headers: { 'Authorization': `Bearer ${TRACCAR_TOKEN}`, 'Accept': 'application/json' }
-                        });
-                        
-                        if (tripsRes.ok) {
-                            const trips = await tripsRes.json();
-                            trips.forEach(trip => {
-                                const tStart = new Date(trip.startTime);
-                                const tEnd = new Date(trip.endTime);
-                                const dateStr = new Date(tStart.getTime() - (5 * 3600000)).toISOString().split('T')[0];
-                                
-                                if (!traccarDays[dateStr]) {
-                                    traccarDays[dateStr] = { inicio: tStart, fin: tEnd, distancia: trip.distance, duracion: trip.duration, maxVelocidad: trip.maxSpeed };
-                                } else {
-                                    if (tStart < traccarDays[dateStr].inicio) traccarDays[dateStr].inicio = tStart;
-                                    if (tEnd > traccarDays[dateStr].fin) traccarDays[dateStr].fin = tEnd;
-                                    traccarDays[dateStr].distancia += trip.distance;
-                                    traccarDays[dateStr].duracion += trip.duration;
-                                    if (trip.maxSpeed > traccarDays[dateStr].maxVelocidad) traccarDays[dateStr].maxVelocidad = trip.maxSpeed;
-                                }
-                            });
-                        }
-                    }
-                }
-            } catch (err) {
-                console.log("Aviso: No se pudo conectar a Traccar:", err.message);
-            }
-        }
-
-        let whereClause = { estado: 'Finalizada', eliminado: false, fecha_apertura: { gte: startDateLocal, lte: endDateLocal } };
-        if (placaSeleccionada !== 'TODOS') whereClause.vehiculo_placa = placaSeleccionada;
-
-        const inspecciones = await prisma.inspeccion.findMany({ where: whereClause, include: { conductor: true } });
-        let inspData = {}; 
-        inspecciones.forEach(insp => {
-            const dateStr = new Date(insp.fecha_apertura.getTime() - (5 * 3600000)).toISOString().split('T')[0];
-            if(!inspData[dateStr] || new Date(insp.fecha_apertura) < new Date(inspData[dateStr].fecha_apertura)) {
-                inspData[dateStr] = insp;
-            }
-        });
-
-        if (placaSeleccionada !== 'TODOS') {
-            const todosLosDias = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
-            const diasOrdenados = Array.from(todosLosDias).sort((a,b) => b.localeCompare(a)); 
-            
-            diasOrdenados.forEach(dateStr => {
-                const trData = traccarDays[dateStr];
-                const inData = inspData[dateStr];
-                
-                let inicioApp = inData ? new Date(inData.fecha_apertura) : null;
-                // EXTRAEMOS LA HORA DE CIERRE/SALIDA
-                let finApp = (inData && inData.fecha_cierre) ? new Date(inData.fecha_cierre) : null;
-                let inicioGPS = trData ? trData.inicio : null;
-                
-                let distKm = trData ? (trData.distancia / 1000).toFixed(2) : '0.00';
-                let hMotor = trData ? Math.floor(Math.floor(trData.duracion / 60000) / 60) : 0;
-                let mMotor = trData ? Math.floor(trData.duracion / 60000) % 60 : 0;
-
-                let fila = {
-                    fecha: dateStr,
-                    placa: placaSeleccionada,
-                    conductor: inData ? inData.conductor.nombre : 'N/A (Sin App)',
-                    // FORMATEAMOS AMBAS HORAS PARA ENVIARLAS A LA VISTA
-                    inicioApp: inData ? inicioApp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
-                    finApp: finApp ? finApp.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : (inData ? 'En curso' : '--:--'),
-                    inicioGPS: trData ? trData.inicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
-                    finGPS: trData ? trData.fin.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--',
-                    distancia: distKm,
-                    horasMotor: `${hMotor}h ${mMotor}m`,
-                    diffMinutos: '-',
-                    estadoNumero: 0, estadoTexto: '', claseEstado: ''
-                };
-
-                if (inicioGPS && inicioApp) {
-                    let diff = (inicioGPS - inicioApp) / (1000 * 60);
-                    if (diff < 0) diff = 0; 
-                    fila.diffMinutos = Math.round(diff);
-
-                    fila.estadoNumero = 1; fila.estadoTexto = 'ÓPTIMO'; fila.claseEstado = 'success';
-                    if (diff > 30) { fila.estadoNumero = 3; fila.estadoTexto = 'CRÍTICO'; fila.claseEstado = 'danger'; }
-                    else if (diff >= 20) { fila.estadoNumero = 2; fila.estadoTexto = 'REVISAR'; fila.claseEstado = 'warning'; }
-                
-                } else if (inicioGPS && !inicioApp) {
-                    fila.estadoNumero = 4; fila.estadoTexto = 'MOVIMIENTO SIN APP'; fila.claseEstado = 'dark';
-                    fila.diffMinutos = 'Fuga Detectada';
-                } else if (!inicioGPS && inicioApp) {
-                    fila.estadoNumero = 5; fila.estadoTexto = 'INSPECCIÓN SIN GPS'; fila.claseEstado = 'info';
-                    fila.diffMinutos = 'Vehículo Apagado';
-                }
-                
-                auditoria.push(fila);
-            });
-        }
-
-        res.render('auditoria-horas', {
-            title: 'Dashboard Auditoría GPS',
-            registros: auditoria,
-            mesActual: mesActual,
-            placaSeleccionada: placaSeleccionada,
-            vehiculos: vehiculosDB,
-            usuario: req.usuario
-        });
-
-    } catch (error) {
-        console.error("Error en módulo estadístico:", error);
-        res.status(500).send('Error generando análisis.');
-    }
-});
 
 // ============================================================================
 // MÓDULO DE PRUEBAS: EXTRACCIÓN PURA DE TRACCAR (SANDBOX)
@@ -1093,6 +947,132 @@ app.get('/test-traccar', async (req, res) => {
 
     res.render('test-traccar', { devices, errorConexion, resultado, placaSeleccionada, fechaFiltro });
 });
+
+// ============================================================================
+// MÓDULO DE PRUEBAS: LABORATORIO PLASPY (MODO RESUMEN DE ACTIVIDAD)
+// ============================================================================
+app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
+    const { plaspy_user, plaspy_cred, tipo_cred, dispositivo_id, fecha_viaje } = req.query;
+
+    let devices = [];
+    let errorConexion = null;
+    let resumenActividad = null; // Variable para la tabla tipo Plaspy
+
+    const usuarioFijo = plaspy_user || 'oscarf07@hotmail.com';
+    const credencialFija = plaspy_cred || '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=';
+    const tipoCredFijo = tipo_cred || 'apikey';
+
+    if (usuarioFijo && credencialFija) {
+        try {
+            const PLASPY_URL = 'https://api.plaspy.com';
+            
+            // 1. AUTENTICACIÓN
+            let bodyDataAuth = { UserName: usuarioFijo };
+            if (tipoCredFijo === 'password') bodyDataAuth.Password = credencialFija;
+            else bodyDataAuth.ApiKey = credencialFija;
+
+            const authResponse = await fetch(`${PLASPY_URL}/api/Auth/Token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(bodyDataAuth),
+                signal: AbortSignal.timeout(8000)
+            });
+
+            if (!authResponse.ok) throw new Error(`HTTP ${authResponse.status}`);
+            const authData = await authResponse.json();
+            const token = authData.token || authData.access_token || authData.ApiKey;
+
+            // 2. DESCARGAR VEHÍCULOS
+            const resDevices = await fetch(`${PLASPY_URL}/api/devices`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            });
+            const data = await resDevices.json();
+            devices = Array.isArray(data) ? data : (data.devices || []);
+
+            // 3. DESCARGAR PUNTOS GPS Y CALCULAR RESUMEN
+            if (dispositivo_id && fecha_viaje) {
+                const dateFrom = `${fecha_viaje}T00:00:00`;
+                const dateTo = `${fecha_viaje}T23:59:59`;
+
+                const ruta = `${PLASPY_URL}/api/devices/${dispositivo_id}/locations`;
+                const tripsRes = await fetch(ruta, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from: dateFrom, to: dateTo }),
+                    signal: AbortSignal.timeout(8000)
+                });
+
+                if (tripsRes.ok) {
+                    const tempText = await tripsRes.text();
+                    if (!tempText.includes('<!DOCTYPE html>')) {
+                        const dataTrips = JSON.parse(tempText);
+                        const locs = Array.isArray(dataTrips) ? dataTrips : (dataTrips.locations || []);
+                        
+                        const vehiculoEncontrado = devices.find(d => (d.id || d.Id) == dispositivo_id);
+                        const nombreVehiculo = vehiculoEncontrado ? (vehiculoEncontrado.name || vehiculoEncontrado.Name) : 'Desconocido';
+
+                        if (locs.length > 0) {
+                            // Algoritmo matemático para emular el reporte de Plaspy
+                            let maxSpeed = 0;
+                            let sumSpeed = 0;
+                            let movingCount = 0;
+                            let firstMove = null;
+                            let lastMove = null;
+
+                            for (let loc of locs) {
+                                // Buscar Velocidad Máxima
+                                if (loc.speed > maxSpeed) maxSpeed = loc.speed;
+                                
+                                // Filtrar solo los momentos en movimiento para el promedio
+                                if (loc.speed > 2) {
+                                    sumSpeed += loc.speed;
+                                    movingCount++;
+                                    if (!firstMove) firstMove = loc;
+                                    lastMove = loc;
+                                }
+                            }
+
+                            const minMilleage = locs[0].milleage || 0;
+                            const maxMilleage = locs[locs.length - 1].milleage || 0;
+                            const dist = maxMilleage - minMilleage;
+                            const avgSpeed = movingCount > 0 ? (sumSpeed / movingCount) : 0;
+
+                            resumenActividad = {
+                                placa: nombreVehiculo,
+                                fecha: new Date(`${fecha_viaje}T12:00:00`).toLocaleDateString('es-CO'),
+                                kilometraje: dist > 0 ? dist.toFixed(3).replace('.', ',') : '0,000',
+                                velMaxima: maxSpeed > 0 ? maxSpeed.toFixed(2).replace('.', ',') : '0,00',
+                                velPromedio: avgSpeed > 0 ? avgSpeed.toFixed(3).replace('.', ',') : '0,000',
+                                primerMovimiento: firstMove ? new Date(firstMove.dateTime).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : 'Sin mov.',
+                                ultimoMovimiento: lastMove ? new Date(lastMove.dateTime).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : 'Sin mov.'
+                            };
+                        } else {
+                            resumenActividad = {
+                                placa: nombreVehiculo, fecha: fecha_viaje,
+                                kilometraje: '0,000', velMaxima: '0,00', velPromedio: '0,000',
+                                primerMovimiento: 'N/A', ultimoMovimiento: 'N/A'
+                            };
+                        }
+                    }
+                } else {
+                    errorConexion = "Error al descargar telemetría.";
+                }
+            }
+
+        } catch (error) {
+            errorConexion = error.message;
+        }
+    }
+
+    res.render('test-plaspy', { 
+        devices, errorConexion, resumenActividad,
+        plaspy_user: usuarioFijo, plaspy_cred: credencialFija, tipo_cred: tipoCredFijo,
+        dispositivo_id: dispositivo_id || '',
+        fecha_viaje: fecha_viaje || new Date().toISOString().split('T')[0]
+    });
+});
+
 
 /**
  * ============================================================================
