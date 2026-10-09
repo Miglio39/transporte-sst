@@ -15,7 +15,7 @@ const nodemailer = require('nodemailer');
 const ejs = require('ejs');
 
 const { PrismaClient } = require('./prisma/generated/client');
-const { verificarRol } = require('./middleware/auth'); 
+const { verificarRol } = require('./middleware/auth');
 
 dotenv.config();
 
@@ -30,15 +30,15 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cookieParser()); 
+app.use(cookieParser());
 
 /**
  * ============================================================================
- * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (SESIÓN DE 365 DÍAS)
+ * 2. RUTAS PÚBLICAS Y DE AUTENTICACIÓN (BLINDADAS PARA APP MÓVIL)
  * ============================================================================
  */
 app.get('/', (req, res) => {
-    res.redirect('/login'); 
+    res.redirect('/login');
 });
 
 app.get('/login', (req, res) => {
@@ -59,27 +59,29 @@ app.post('/login', async (req, res) => {
             return res.render('login', { error: 'Documento o contraseña incorrectos' });
         }
 
+        // Token firmado por 180 días (6 meses)
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol }, 
             process.env.JWT_SECRET || 'llave_de_respaldo_omega_2026', 
-            { expiresIn: '365d' } 
+            { expiresIn: '180d' }
         );
 
-        const tiempoUnAno = 365 * 24 * 60 * 60 * 1000; 
+        const tiempo6Meses = 180 * 24 * 60 * 60 * 1000;
         
+        // 🚨 CONFIGURACIÓN CRÍTICA PARA QUE LA PWA (APP MÓVIL) NO CIERRE LA SESIÓN 🚨
         res.cookie('jwt', token, { 
             httpOnly: true, 
-            secure: true,      
-            path: '/',         
-            sameSite: 'lax',   
-            maxAge: tiempoUnAno,
-            expires: new Date(Date.now() + tiempoUnAno) 
+            secure: true,      // OBLIGATORIO para móviles con PWA instalada
+            path: '/',         // OBLIGATORIO para que el sistema no lo borre al salir
+            sameSite: 'lax',
+            maxAge: tiempo6Meses,
+            expires: new Date(Date.now() + tiempo6Meses)
         });
         
         if (usuario.rol === 'admin') {
             return res.redirect('/admin');
         } else {
-            return res.redirect('/panel-conductor'); 
+            return res.redirect('/panel-conductor');
         }
     } catch (error) {
         console.error(error);
@@ -92,17 +94,31 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 });
 
+// Ruta para inicializar el sistema
 app.get('/setup-admin', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash('Rosalbamoreno27.', salt);
+    const hash = await bcrypt.hash('Omega2026*', salt);
     
     await prisma.usuario.upsert({
-        where: { documento: 'operaciones.omegagroupsas@gmail.com' },
-        update: { password: hash, nombre: 'Admin Operaciones' },
-        create: { nombre: 'Admin Operaciones', documento: 'operaciones.omegagroupsas@gmail.com', password: hash, rol: 'admin' }
+        where: { documento: '1122141007' },
+        update: { password: hash }, 
+        create: { nombre: 'Yeison Uriel Vargas Vesga', documento: '1122141007', password: hash, rol: 'admin' }
     });
 
-    res.send('✅ Administrador configurado exitosamente. <br><br> Usuario: operaciones.omegagroupsas@gmail.com <br> Contraseña: Rosalbamoreno27. <br><br> <a href="/login">Ir a Iniciar Sesión</a>');
+    await prisma.usuario.upsert({
+        where: { documento: '1123087694' },
+        update: { password: hash },
+        create: { nombre: 'Maria Fernanda Ladino Vega', documento: '1123087694', password: hash, rol: 'admin' }
+    });
+
+    res.send(`
+        <div style="text-align: center; padding: 50px; font-family: Arial;">
+            <h1 style="color: #27ae60;">✅ Cuentas de Administrador Configuradas</h1>
+            <p><strong>Yeison:</strong> Doc: 1122141007</p>
+            <p><strong>Maria F:</strong> Doc: 1123087694</p>
+            <br><a href="/login" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Ir a Iniciar Sesión</a>
+        </div>
+    `);
 });
 
 /**
@@ -226,6 +242,7 @@ app.post('/admin/conductores/eliminar/:id', verificarRol(['admin']), async (req,
     }
 });
 
+
 /**
  * ============================================================================
  * 4. MÓDULO CONDUCTOR: PANEL E INSPECCIÓN
@@ -283,7 +300,7 @@ app.post('/inspeccion/inicio', verificarRol(['conductor', 'admin']), async (req,
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Inspección Registrada!</h1><p>ID: #${nuevaInspeccion.id}</p><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);
+        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Inspección Registrada!</h1><p>ID: #${nuevaInspeccion.id}</p><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);    
     } catch (error) {
         console.error(error);
         res.status(500).send('Error al guardar inspección');
@@ -327,9 +344,10 @@ app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (
     }
 });
 
+
 /**
  * ============================================================================
- * 5. MÓDULO ADMINISTRATIVO: GESTIÓN DE INSPECCIONES Y REPORTE MAESTRO
+ * 5. MÓDULO ADMINISTRATIVO: DETALLES, FIRMA MASIVA Y EDICIÓN
  * ============================================================================
  */
 app.get('/admin/inspeccion/detalle/:id', verificarRol(['admin']), async (req, res) => {
@@ -426,44 +444,78 @@ app.post('/admin/inspeccion/eliminar/:id', verificarRol(['admin']), async (req, 
     }
 });
 
+// ==========================================
+// 🚀 NUEVO: FIRMA MASIVA DE INSPECCIONES
+// ==========================================
+app.post('/admin/inspeccion/firma-masiva', verificarRol(['admin']), async (req, res) => {
+    try {
+        const { ids, firma_base64 } = req.body;
+        
+        if (!ids || ids.length === 0 || !firma_base64) {
+            return res.status(400).json({ success: false, message: 'Faltan datos o no hay inspecciones seleccionadas.' });
+        }
+
+        const adminNombre = req.usuario.nombre;
+        const adminDoc = req.usuario.documento;
+
+        for (const id of ids) {
+            const insp = await prisma.inspeccion.findUnique({ where: { id: parseInt(id) } });
+            
+            if (insp) {
+                let datos = insp.datos_chequeo || {};
+                datos.firma_coordinador_img = firma_base64;
+                datos.nombre_coordinador = adminNombre;
+                datos.cc_coordinador = adminDoc;
+
+                await prisma.inspeccion.update({
+                    where: { id: parseInt(id) },
+                    data: { datos_chequeo: datos }
+                });
+            }
+        }
+
+        res.json({ success: true, message: `${ids.length} inspecciones firmadas exitosamente.` });
+    } catch (error) {
+        console.error('Error en firma masiva:', error);
+        res.status(500).json({ success: false, message: 'Error interno al firmar.' });
+    }
+});
+
+
+/**
+ * ============================================================================
+ * 6. MÓDULO EXPORTACIÓN PDF (INDIVIDUAL, MAESTRO Y DESCARGA MASIVA)
+ * ============================================================================
+ */
 app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req, res) => {
     let browser = null;
     try {
         const { fechaInicio, fechaFin, placa } = req.query;
-        if (!fechaInicio || !fechaFin) return res.status(400).send("Debe seleccionar las fechas.");
+        if (!fechaInicio || !fechaFin) return res.status(400).send("Debe seleccionar fechas.");
 
         const startDate = new Date(fechaInicio + 'T00:00:00');
         const endDate = new Date(fechaFin + 'T23:59:59');
 
-        let whereClause = { 
-            eliminado: false,
-            fecha_apertura: { gte: startDate, lte: endDate }
-        };
-        if (placa && placa !== 'TODAS') {
-            whereClause.vehiculo_placa = placa;
-        }
+        let whereClause = { eliminado: false, fecha_apertura: { gte: startDate, lte: endDate } };
+        if (placa && placa !== 'TODAS') whereClause.vehiculo_placa = placa;
 
         const inspecciones = await prisma.inspeccion.findMany({
             where: whereClause,
             include: { conductor: true, vehiculo: true },
-            orderBy: { fecha_apertura: 'asc' }
+            orderBy: { fecha_apertura: 'asc' } 
         });
 
-        if(inspecciones.length === 0) {
-            return res.send('<h2 style="text-align:center; margin-top:50px; font-family:sans-serif;">No hay registros en estas fechas.</h2>');
-        }
+        if(inspecciones.length === 0) return res.send('<h2>No hay registros en estas fechas.</h2>');
 
         let total = inspecciones.length;
-        let aprobadas = 0;
-        let conDefectos = 0;
-        let tablaEjecutiva = [];
-        let inspeccionesConDefectos = [];
+        let aprobadas = 0, conDefectos = 0;
+        let tablaEjecutiva = [], inspeccionesConDefectos = [];
 
         inspecciones.forEach(insp => {
             const datos = insp.datos_chequeo || {};
             const items = datos.chequeo_items || {};
-            
             let fallasExtraidas = [];
+            
             for (const key in items) {
                 if (items[key] === 'MALO' && !key.startsWith('obs_')) {
                     fallasExtraidas.push({
@@ -481,26 +533,19 @@ app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req
                     conDefectos++;
                     estadoLegible = 'CON DEFECTOS';
                     inspeccionesConDefectos.push({
-                        id: insp.id,
-                        fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
-                        placa: insp.vehiculo_placa,
-                        conductor: insp.conductor.nombre,
-                        descripcion_defecto: datos.descripcion_defecto,
-                        fallas: fallasExtraidas
+                        id: insp.id, fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
+                        placa: insp.vehiculo_placa, conductor: insp.conductor.nombre,
+                        descripcion_defecto: datos.descripcion_defecto, fallas: fallasExtraidas
                     });
                 } else {
-                    aprobadas++;
-                    estadoLegible = 'APROBADO';
+                    aprobadas++; estadoLegible = 'APROBADO';
                 }
             }
 
             tablaEjecutiva.push({
-                ticket: insp.id,
-                fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
-                placa: insp.vehiculo_placa,
-                conductor: insp.conductor.nombre,
-                km_salida: insp.kilometraje_salida,
-                km_llegada: datos.kilometraje_final || '-',
+                ticket: insp.id, fecha: new Date(insp.fecha_apertura).toLocaleDateString('es-CO'),
+                placa: insp.vehiculo_placa, conductor: insp.conductor.nombre,
+                km_salida: insp.kilometraje_salida, km_llegada: datos.kilometraje_final || '-',
                 estado: estadoLegible
             });
         });
@@ -508,52 +553,187 @@ app.get('/admin/inspeccion/reporte-maestro', verificarRol(['admin']), async (req
         let logoSrc = '';
         try {
             const logoPath = path.join(__dirname, 'public/images/logo.png');
-            if (fs.existsSync(logoPath)) {
-                logoSrc = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-            }
-        } catch (logoError) {}
+            if (fs.existsSync(logoPath)) logoSrc = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        } catch (e) {}
 
         const templatePath = path.join(__dirname, 'views/pdf-maestro.ejs');
         const html = await ejs.renderFile(templatePath, {
-            fechaInicio, fechaFin, placaSeleccionada: placa,
-            total, aprobadas, conDefectos, 
-            tablaEjecutiva, inspeccionesConDefectos,
-            logoSrc: logoSrc, 
-            fechaImpresion: new Date().toLocaleString('es-CO')
+            fechaInicio, fechaFin, placaSeleccionada: placa, total, aprobadas, conDefectos, 
+            tablaEjecutiva, inspeccionesConDefectos, logoSrc, fechaImpresion: new Date().toLocaleString('es-CO')
         });
 
-        browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-        });
-        
+        browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
-        
-        const pdfBytes = await page.pdf({
-            format: 'Letter',
-            printBackground: true,
-            margin: { top: '15px', right: '15px', bottom: '15px', left: '15px' }
-        });
-
+        const pdfBytes = await page.pdf({ format: 'Letter', printBackground: true, margin: { top: '15px', bottom: '15px', right: '15px', left: '15px' }});
         await browser.close();
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="Auditoria_OmegaGroup_${fechaInicio}_al_${fechaFin}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="Resumen_Ejecutivo_${fechaInicio}_al_${fechaFin}.pdf"`);
         res.end(Buffer.from(pdfBytes));
 
     } catch (error) {
         if (browser) await browser.close(); 
-        console.error('🔥 Error crítico Reporte Maestro:', error);
-        res.status(500).send('Error generando el Reporte Maestro: ' + error.message);
+        console.error('Error Reporte Maestro:', error);
+        res.status(500).send('Error generando el Reporte Maestro.');
     }
 });
 
-/**
- * ============================================================================
- * 6. MÓDULO EXPORTACIÓN PDF (INSPECCIONES DIARIAS)
- * ============================================================================
- */
+// ==========================================
+// 🚀 NUEVO: DESCARGA MASIVA (LIBRO DETALLADO)
+// ==========================================
+app.get('/admin/inspeccion/descarga-masiva', verificarRol(['admin']), async (req, res) => {
+    let browser = null;
+    try {
+        const { fechaInicio, fechaFin, placa } = req.query;
+        if (!fechaInicio || !fechaFin) return res.status(400).send("Debe seleccionar fechas.");
+
+        const startDate = new Date(fechaInicio + 'T00:00:00');
+        const endDate = new Date(fechaFin + 'T23:59:59');
+
+        let whereClause = { eliminado: false, fecha_apertura: { gte: startDate, lte: endDate } };
+        if (placa && placa !== 'TODAS') whereClause.vehiculo_placa = placa;
+
+        const inspecciones = await prisma.inspeccion.findMany({
+            where: whereClause,
+            include: { conductor: true, vehiculo: true },
+            orderBy: { fecha_apertura: 'asc' } 
+        });
+
+        if(inspecciones.length === 0) return res.send('<h2 style="text-align:center; padding:50px;">No hay registros en este rango de fechas para descargar.</h2>');
+
+        let logoSrc = '';
+        try {
+            const logoPath = path.join(__dirname, 'public/images/logo.png');
+            if (fs.existsSync(logoPath)) logoSrc = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+        } catch (e) {}
+
+        const templatePath = path.join(__dirname, 'views/pdf-template.ejs');
+        let htmlCompilado = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>.page-break { page-break-after: always; }</style></head><body>`;
+
+        for (let i = 0; i < inspecciones.length; i++) {
+            const insp = inspecciones[i];
+            const datos = insp.datos_chequeo || {};
+            const items = datos.chequeo_items || {};
+
+            let total_bueno = 0, total_malo = 0, total_na = 0;
+            for (const key in items) {
+                if (items[key] === 'BUENO') total_bueno++;
+                if (items[key] === 'MALO') total_malo++;
+                if (items[key] === 'NA') total_na++;
+            }
+
+            let estadoReal = 'pendiente';
+            if (insp.estado === 'Finalizada') {
+                if (total_malo > 0 || (datos.descripcion_defecto && datos.descripcion_defecto.trim() !== '')) estadoReal = 'con_defectos';
+                else estadoReal = 'aprobado';
+            }
+
+            const inspeccionFormateada = {
+                id: insp.id, placa: insp.vehiculo_placa, codigo_inspeccion: insp.id,
+                fecha_inspeccion: insp.fecha_apertura,
+                hora_inspeccion: new Date(insp.fecha_apertura).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}),
+                hora_salida: insp.fecha_cierre ? new Date(insp.fecha_cierre).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) : '',
+                estado: estadoReal, nombre_conductor: insp.conductor.nombre, cc_conductor: insp.conductor.documento,
+                tipo_vehiculo: insp.vehiculo.tipo, licencia_conductor: datos.licencia_conductor || items.licencia_conductor,
+                categoria_licencia: datos.categoria_licencia || items.categoria_licencia,
+                modelo_vehiculo: insp.vehiculo.modelo, empresa: datos.empresa || items.empresa,
+                vigencia_licencia: datos.vigencia_licencia || items.vigencia_licencia,
+                doc_licencia_transito: datos.doc_licencia_transito || items.doc_licencia_transito || '',
+                fecha_vencimiento_soat: datos.fecha_vencimiento_soat || items.fecha_vencimiento_soat || '',
+                fecha_revision: datos.fecha_revision || items.fecha_revision || '',
+                doc_poliza_rcc: datos.doc_poliza_rcc || items.doc_poliza_rcc || '',
+                doc_poliza_todo_riesgo: datos.doc_poliza_todo_riesgo || items.doc_poliza_todo_riesgo || '',
+                doc_tarjeta_operacion: datos.doc_tarjeta_operacion || items.doc_tarjeta_operacion || '',
+                fecha_cambio_aceite: datos.fecha_cambio_aceite || items.fecha_cambio_aceite || '',
+                kilometraje_entrada: insp.kilometraje_salida, kilometraje_salida: datos.kilometraje_final,
+                distancia_recorrida: datos.kilometraje_final ? (parseFloat(datos.kilometraje_final) - parseFloat(insp.kilometraje_salida)).toFixed(1) : 0,
+                total_bueno, total_malo, total_na, observaciones_generales: datos.observaciones_generales,
+                tiene_defectos: (total_malo > 0 || items.defecto_frontal || items.defecto_trasero || items.defecto_lateral_izq || items.defecto_lateral_der || items.defecto_motor || items.defecto_chasis || datos.descripcion_defecto) ? 1 : 0,
+                defecto_frontal: !!items.defecto_frontal, defecto_trasero: !!items.defecto_trasero,
+                defecto_lateral_izq: !!items.defecto_lateral_izq, defecto_lateral_der: !!items.defecto_lateral_der,
+                defecto_motor: !!items.defecto_motor, defecto_chasis: !!items.defecto_chasis,
+                descripcion_defecto: datos.descripcion_defecto, firma_conductor: datos.firma_conductor, 
+                nombre_firma_conductor: datos.nombre_firma_conductor || insp.conductor.nombre,
+                firma_coordinador_img: datos.firma_coordinador_img || null,
+                firma_coordinador: datos.nombre_coordinador || req.usuario?.nombre, 
+                cc_coordinador: datos.cc_coordinador || req.usuario?.documento
+            };
+
+            const categorias = {
+                niveles: [
+                    { label: 'Líquido refrigerante', valor: items.nivel_refrigerante, obs: items.obs_nivel_refrigerante },
+                    { label: 'Líquido de frenos', valor: items.nivel_frenos, obs: items.obs_nivel_frenos },
+                    { label: 'Aceite motor', valor: items.nivel_aceite, obs: items.obs_nivel_aceite },
+                    { label: 'Líquido hidráulico', valor: items.nivel_hidraulico, obs: items.obs_nivel_hidraulico },
+                    { label: 'Agua limpiavidrios', valor: items.nivel_agua, obs: items.obs_nivel_agua }
+                ],
+                pedales: [
+                    { label: 'Acelerador', valor: items.pedal_acelerador, obs: items.obs_pedal_acelerador },
+                    { label: 'Clutch/Embrague', valor: items.pedal_clutch, obs: items.obs_pedal_clutch },
+                    { label: 'Freno', valor: items.pedal_freno, obs: items.obs_pedal_freno }
+                ],
+                luces: [
+                    { label: 'Luces principales', valor: items.luz_principales, obs: items.obs_luz_principales },
+                    { label: 'Direccionales', valor: items.luz_direccionales, obs: items.obs_luz_direccionales },
+                    { label: 'Estacionarias', valor: items.luz_estacionarias, obs: items.obs_luz_estacionarias },
+                    { label: 'Stops/Frenos', valor: items.luz_stops, obs: items.obs_luz_stops },
+                    { label: 'Testigos tablero', valor: items.luz_testigos, obs: items.obs_luz_testigos },
+                    { label: 'Luz reversa', valor: items.luz_reversa, obs: items.obs_luz_reversa },
+                    { label: 'Luces internas', valor: items.luz_internas, obs: items.obs_luz_internas }
+                ],
+                equipo: [
+                    { label: 'Extintor', valor: items.equipo_extintor, obs: items.obs_equipo_extintor },
+                    { label: 'Fecha Venc. Extintor', valor: items.equipo_fecha_extintor, obs: items.obs_equipo_fecha_extintor },
+                    { label: 'Llanta de repuesto', valor: items.equipo_llanta, obs: items.obs_equipo_llanta },
+                    { label: 'Señales reflectivas', valor: items.equipo_senales, obs: items.obs_equipo_senales },
+                    { label: 'Caja herramientas', valor: items.equipo_herramientas, obs: items.obs_equipo_herramientas },
+                    { label: 'Botiquín', valor: items.equipo_botiquin, obs: items.obs_equipo_botiquin },
+                    { label: 'Kit de Carreteras', valor: items.equipo_carreteras, obs: items.obs_equipo_carreteras },
+                    { label: 'Kit Ambiental', valor: items.equipo_ambiental, obs: items.obs_equipo_ambiental }
+                ],
+                varios: [
+                    { label: 'Llantas', valor: items.varios_llantas, obs: items.obs_varios_llantas },
+                    { label: 'Batería', valor: items.varios_bateria, obs: items.obs_varios_bateria },
+                    { label: 'Rines', valor: items.varios_rines, obs: items.obs_varios_rines },
+                    { label: 'Cinturones', valor: items.varios_cinturones, obs: items.obs_varios_cinturones },
+                    { label: 'Espejos', valor: items.varios_espejos, obs: items.obs_varios_espejos }
+                ]
+            };
+
+            const htmlUnico = await ejs.renderFile(templatePath, {
+                inspeccion: inspeccionFormateada,
+                categorias: categorias, 
+                logoSrc: logoSrc, 
+                fechaImpresion: new Date().toLocaleString('es-ES'),
+                adminSolicitante: req.usuario.nombre,
+                formatoCodigo: 'SST-F-01'
+            });
+
+            htmlCompilado += `<div class="page-break">${htmlUnico}</div>`;
+        }
+        
+        htmlCompilado += `</body></html>`;
+
+        browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const page = await browser.newPage();
+        await page.setContent(htmlCompilado, { waitUntil: 'networkidle0' });
+        
+        const pdfBytes = await page.pdf({ format: 'Letter', printBackground: true, margin: { top: '10px', right: '10px', bottom: '10px', left: '10px' }});
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="Libro_Detallado_${fechaInicio}_al_${fechaFin}.pdf"`);
+        res.end(Buffer.from(pdfBytes));
+
+    } catch (error) {
+        if (browser) await browser.close(); 
+        console.error('Error generando Descarga Masiva:', error);
+        res.status(500).send('Error al generar el Libro Detallado PDF.');
+    }
+});
+
+// PDF Individual
 app.get('/admin/inspeccion/pdf/:id', verificarRol(['admin']), async (req, res) => {
     let browser = null; 
     try {
@@ -779,6 +959,9 @@ app.get('/admin/patio/pdf/:id', verificarRol(['admin']), async (req, res) => {
     }
 });
 
+// ============================================================================
+// 8. ENVÍO DE CORREO DIRECTO (CONFIGURADO CON TUS CREDENCIALES)
+// ============================================================================
 app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, res) => {
     let browser = null;
     try {
@@ -871,212 +1054,19 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
     }
 });
 
-
-
-// ============================================================================
-// MÓDULO DE PRUEBAS: EXTRACCIÓN PURA DE TRACCAR (SANDBOX)
-// ============================================================================
-app.get('/test-traccar', async (req, res) => {
-    // ACTUALIZADO: Nuevo servidor Traccar y Nuevo Token
-    const TRACCAR_URL = 'https://api.globalmonitorgps.com'; 
-    const TRACCAR_TOKEN = 'RzBFAiEAtDXlCJ0WnZ_XAG5xqrA-8SeIlkWsmTFdsaTUk_-DCC8CIGxpnyl_suINh63nvf4xWosnaqanlFCfSfyujnp17SxjeyJpIjo5MTM3MzU3NTY1NzM5MDM1ODAzLCJ1IjoxLCJlIjoiMjAzMC0xMi0zMVQwNTowMDowMC4wMDArMDA6MDAifQ';
-
-    let devices = [];
-    let errorConexion = null;
-    let resultado = null;
-    const placaSeleccionada = req.query.placa;
-    const fechaFiltro = req.query.fecha || new Date().toISOString().split('T')[0];
-
-    try {
-        const resDevices = await fetch(`${TRACCAR_URL}/api/devices`, {
-            headers: { 
-                'Authorization': `Bearer ${TRACCAR_TOKEN}`,
-                'Accept': 'application/json' 
-            },
-            signal: AbortSignal.timeout(8000) 
-        });
-        
-        if (!resDevices.ok) {
-            const errorText = await resDevices.text();
-            throw new Error(`Error ${resDevices.status}: ${errorText || 'Acceso denegado (Token inválido o mal configurado)'}`);
-        }
-        
-        devices = await resDevices.json();
-
-        if (placaSeleccionada && devices.length > 0) {
-            const device = devices.find(d => d.name === placaSeleccionada || d.uniqueId === placaSeleccionada);
-            
-            if (device) {
-                const fromStr = encodeURIComponent(new Date(`${fechaFiltro}T00:00:00-05:00`).toISOString());
-                const toStr = encodeURIComponent(new Date(`${fechaFiltro}T23:59:59-05:00`).toISOString());
-
-                const tripsRes = await fetch(`${TRACCAR_URL}/api/reports/trips?deviceId=${device.id}&from=${fromStr}&to=${toStr}`, {
-                    headers: { 
-                        'Authorization': `Bearer ${TRACCAR_TOKEN}`,
-                        'Accept': 'application/json' 
-                    }
-                });
-
-                if (tripsRes.ok) {
-                    const trips = await tripsRes.json();
-                    
-                    if (trips.length > 0) {
-                        const primerViaje = trips[0];
-                        const ultimoViaje = trips[trips.length - 1];
-
-                        resultado = {
-                            encontrado: true,
-                            placa: placaSeleccionada,
-                            inicio: new Date(primerViaje.startTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
-                            fin: new Date(ultimoViaje.endTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }),
-                            totalViajes: trips.length,
-                            distancia: (trips.reduce((acc, t) => acc + t.distance, 0) / 1000).toFixed(2)
-                        };
-                    } else {
-                        resultado = { encontrado: false, mensaje: "La plataforma satelital no registró movimiento para este vehículo en la fecha seleccionada." };
-                    }
-                } else {
-                    const errorTrips = await tripsRes.text();
-                    throw new Error(`Error obteniendo recorridos: ${errorTrips}`);
-                }
-            }
-        }
-    } catch (error) {
-        errorConexion = `Fallo de conexión: El servidor GPS respondió con error: ${error.message}`;
-    }
-
-    res.render('test-traccar', { devices, errorConexion, resultado, placaSeleccionada, fechaFiltro });
+/**
+ * ============================================================================
+ * 9. RUTA PLACEHOLDER: AUDITORÍA DE HORAS GPS
+ * ============================================================================
+ */
+app.get('/admin/auditoria-horas', verificarRol(['admin']), (req, res) => {
+    // Esta ruta se deja preparada para la interfaz visual solicitada anteriormente
+    res.send('<h2 style="text-align:center; padding: 50px;">Módulo de Auditoría de Horas GPS en construcción...</h2><br><center><a href="/admin">Volver</a></center>');
 });
-
-// ============================================================================
-// MÓDULO DE PRUEBAS: LABORATORIO PLASPY (MODO RESUMEN DE ACTIVIDAD)
-// ============================================================================
-app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
-    const { plaspy_user, plaspy_cred, tipo_cred, dispositivo_id, fecha_viaje } = req.query;
-
-    let devices = [];
-    let errorConexion = null;
-    let resumenActividad = null; // Variable para la tabla tipo Plaspy
-
-    const usuarioFijo = plaspy_user || 'oscarf07@hotmail.com';
-    const credencialFija = plaspy_cred || '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=';
-    const tipoCredFijo = tipo_cred || 'apikey';
-
-    if (usuarioFijo && credencialFija) {
-        try {
-            const PLASPY_URL = 'https://api.plaspy.com';
-            
-            // 1. AUTENTICACIÓN
-            let bodyDataAuth = { UserName: usuarioFijo };
-            if (tipoCredFijo === 'password') bodyDataAuth.Password = credencialFija;
-            else bodyDataAuth.ApiKey = credencialFija;
-
-            const authResponse = await fetch(`${PLASPY_URL}/api/Auth/Token`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify(bodyDataAuth),
-                signal: AbortSignal.timeout(8000)
-            });
-
-            if (!authResponse.ok) throw new Error(`HTTP ${authResponse.status}`);
-            const authData = await authResponse.json();
-            const token = authData.token || authData.access_token || authData.ApiKey;
-
-            // 2. DESCARGAR VEHÍCULOS
-            const resDevices = await fetch(`${PLASPY_URL}/api/devices`, {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-            });
-            const data = await resDevices.json();
-            devices = Array.isArray(data) ? data : (data.devices || []);
-
-            // 3. DESCARGAR PUNTOS GPS Y CALCULAR RESUMEN
-            if (dispositivo_id && fecha_viaje) {
-                const dateFrom = `${fecha_viaje}T00:00:00`;
-                const dateTo = `${fecha_viaje}T23:59:59`;
-
-                const ruta = `${PLASPY_URL}/api/devices/${dispositivo_id}/locations`;
-                const tripsRes = await fetch(ruta, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ from: dateFrom, to: dateTo }),
-                    signal: AbortSignal.timeout(8000)
-                });
-
-                if (tripsRes.ok) {
-                    const tempText = await tripsRes.text();
-                    if (!tempText.includes('<!DOCTYPE html>')) {
-                        const dataTrips = JSON.parse(tempText);
-                        const locs = Array.isArray(dataTrips) ? dataTrips : (dataTrips.locations || []);
-                        
-                        const vehiculoEncontrado = devices.find(d => (d.id || d.Id) == dispositivo_id);
-                        const nombreVehiculo = vehiculoEncontrado ? (vehiculoEncontrado.name || vehiculoEncontrado.Name) : 'Desconocido';
-
-                        if (locs.length > 0) {
-                            // Algoritmo matemático para emular el reporte de Plaspy
-                            let maxSpeed = 0;
-                            let sumSpeed = 0;
-                            let movingCount = 0;
-                            let firstMove = null;
-                            let lastMove = null;
-
-                            for (let loc of locs) {
-                                // Buscar Velocidad Máxima
-                                if (loc.speed > maxSpeed) maxSpeed = loc.speed;
-                                
-                                // Filtrar solo los momentos en movimiento para el promedio
-                                if (loc.speed > 2) {
-                                    sumSpeed += loc.speed;
-                                    movingCount++;
-                                    if (!firstMove) firstMove = loc;
-                                    lastMove = loc;
-                                }
-                            }
-
-                            const minMilleage = locs[0].milleage || 0;
-                            const maxMilleage = locs[locs.length - 1].milleage || 0;
-                            const dist = maxMilleage - minMilleage;
-                            const avgSpeed = movingCount > 0 ? (sumSpeed / movingCount) : 0;
-
-                            resumenActividad = {
-                                placa: nombreVehiculo,
-                                fecha: new Date(`${fecha_viaje}T12:00:00`).toLocaleDateString('es-CO'),
-                                kilometraje: dist > 0 ? dist.toFixed(3).replace('.', ',') : '0,000',
-                                velMaxima: maxSpeed > 0 ? maxSpeed.toFixed(2).replace('.', ',') : '0,00',
-                                velPromedio: avgSpeed > 0 ? avgSpeed.toFixed(3).replace('.', ',') : '0,000',
-                                primerMovimiento: firstMove ? new Date(firstMove.dateTime).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : 'Sin mov.',
-                                ultimoMovimiento: lastMove ? new Date(lastMove.dateTime).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : 'Sin mov.'
-                            };
-                        } else {
-                            resumenActividad = {
-                                placa: nombreVehiculo, fecha: fecha_viaje,
-                                kilometraje: '0,000', velMaxima: '0,00', velPromedio: '0,000',
-                                primerMovimiento: 'N/A', ultimoMovimiento: 'N/A'
-                            };
-                        }
-                    }
-                } else {
-                    errorConexion = "Error al descargar telemetría.";
-                }
-            }
-
-        } catch (error) {
-            errorConexion = error.message;
-        }
-    }
-
-    res.render('test-plaspy', { 
-        devices, errorConexion, resumenActividad,
-        plaspy_user: usuarioFijo, plaspy_cred: credencialFija, tipo_cred: tipoCredFijo,
-        dispositivo_id: dispositivo_id || '',
-        fecha_viaje: fecha_viaje || new Date().toISOString().split('T')[0]
-    });
-});
-
 
 /**
  * ============================================================================
- * 9. INICIO DEL SERVIDOR
+ * 10. INICIO DEL SERVIDOR
  * ============================================================================
  */
 app.listen(PORT, () => {

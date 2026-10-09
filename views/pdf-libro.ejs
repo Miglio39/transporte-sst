@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Libro de Inspecciones Diarias</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #334155; font-size: 10px; margin: 0; padding: 0; background-color: #ffffff; }
+        .doc-header { background-color: #0f172a; color: #ffffff; padding: 15px 20px; border-bottom: 4px solid #e50914; margin-bottom: 15px; border-radius: 4px; }
+        .header-table { width: 100%; border: none; margin: 0; }
+        .header-table td { border: none; padding: 0; background: transparent; }
+        .doc-header h2 { margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .doc-header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 10px; }
+        .badge-ticket { background-color: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; border: 1px solid rgba(255,255,255,0.3); color: white; display: inline-block; }
+        .section-title { color: #0f172a; font-weight: bold; text-transform: uppercase; font-size: 11px; margin: 15px 0 8px 0; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        table.data-table th, table.data-table td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; }
+        table.data-table th { background-color: #f8fafc; font-weight: bold; color: #475569; font-size: 9px; text-transform: uppercase; width: 25%; }
+        table.data-table td { font-size: 10px; font-weight: 500; color: #0f172a; }
+        .checklist-container { column-count: 2; column-gap: 15px; width: 100%; }
+        .cat-box { break-inside: avoid; margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .cat-title { background-color: #0f172a; color: white; padding: 4px 8px; font-weight: bold; font-size: 9px; }
+        .check-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+        .check-table td { border-bottom: 1px solid #f1f5f9; padding: 4px 6px; }
+        .check-table tr:last-child td { border-bottom: none; }
+        .check-name { color: #475569; font-weight: bold; width: 60%; }
+        .pill { padding: 3px 8px; border-radius: 12px; font-size: 8px; font-weight: bold; text-align: center; display: inline-block; min-width: 45px; }
+        .pill-bueno { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .pill-malo { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .pill-na { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+        .obs-text { display: block; font-size: 8px; color: #ef4444; margin-top: 2px; font-style: italic; }
+        .text-box-danger { background-color: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 4px; color: #991b1b; font-size: 10px; margin-bottom: 10px; }
+        .text-box-success { background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 4px; color: #166534; font-size: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        .firmas-table { width: 100%; margin-top: 20px; text-align: center; border: none; break-inside: avoid; }
+        .firmas-table td { border: none; padding: 10px; width: 50%; vertical-align: bottom; }
+        .linea-firma { border-top: 1px solid #334155; width: 70%; margin: 0 auto 3px auto; }
+        .footer { text-align: center; font-size: 8px; color: #94a3b8; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+        /* SALTO DE PÁGINA */
+        .page-break { page-break-after: always; }
+    </style>
+</head>
+<body>
+
+    <% 
+        function formatStatus(val) {
+            if(val === 'BUENO') return '<span class="pill pill-bueno">✓ BUENO</span>';
+            if(val === 'MALO') return '<span class="pill pill-malo">❌ MALO</span>';
+            return '<span class="pill pill-na">- N/A</span>';
+        }
+        function formatDate(dateInput) {
+            if (!dateInput) return 'N/A';
+            if (typeof dateInput === 'string' && dateInput.includes('-')) {
+                const parts = dateInput.split('T')[0].split('-');
+                if(parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return dateInput; 
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            return `${dia}/${mes}/${d.getFullYear()}`;
+        }
+        const nombresCategorias = { niveles: '1. NIVELES', pedales: '2. PEDALES', luces: '3. LUCES', equipo: '4. EQUIPO DE PREVENCIÓN', varios: '5. VARIOS' }; 
+    %>
+
+    <% inspecciones.forEach(function(inspeccion, index) { 
+        const categorias = inspeccion.categorias;
+    %>
+        <!-- CABECERA PRINCIPAL -->
+        <div class="doc-header">
+            <table class="header-table">
+                <tr>
+                    <td width="70%">
+                        <h2>Auditoría Preoperacional</h2>
+                        <p>Formato: <%= formatoCodigo || 'SST-F-01' %> | Operador: <%= inspeccion.nombre_conductor %></p>
+                    </td>
+                    <td width="30%" style="text-align: right;">
+                        <span class="badge-ticket">ID: #<%= String(inspeccion.codigo_inspeccion || inspeccion.id).padStart(4, '0') %></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- DATOS DE OPERACIÓN -->
+        <div class="section-title">Información General de la Operación</div>
+        <table class="data-table">
+            <tr>
+                <th>Fecha Inspección</th><td><%= formatDate(inspeccion.fecha_inspeccion) %></td>
+                <th>Placa Vehículo</th><td><strong><%= inspeccion.placa %></strong> (<%= inspeccion.tipo_vehiculo || 'N/A' %>)</td>
+            </tr>
+            <tr>
+                <th>Hora Entrada / Salida</th><td><%= inspeccion.hora_inspeccion %> - <%= inspeccion.hora_salida || 'En Curso' %></td>
+                <th>Empresa Asignada</th><td><%= inspeccion.empresa || 'N/A' %></td>
+            </tr>
+            <tr>
+                <th>Km Salida</th><td><%= inspeccion.kilometraje_salida || '-' %> km</td>
+                <th>Km Llegada</th><td><%= inspeccion.kilometraje_final || '-' %> km</td>
+            </tr>
+        </table>
+
+        <!-- DOCUMENTACIÓN LEGAL -->
+        <div class="section-title">Documentación y Vencimientos</div>
+        <table class="data-table">
+            <tr>
+                <th>Vencimiento SOAT</th><td><%= formatDate(inspeccion.fecha_vencimiento_soat) %></td>
+                <th>Tecnomecánica</th><td><%= formatDate(inspeccion.fecha_revision) %></td>
+            </tr>
+            <tr>
+                <th>Licencia Conductor</th><td><%= formatDate(inspeccion.vigencia_licencia) %> (Cat. <%= inspeccion.categoria_licencia %>)</td>
+                <th>Tarjeta Operación</th><td><%= formatDate(inspeccion.doc_tarjeta_operacion) %></td>
+            </tr>
+            <tr>
+                <th>Poliza Extracontractual</th><td><%= formatDate(inspeccion.doc_poliza_rcc) %></td>
+                <th>Poliza Todo Riesgo</th><td><%= formatDate(inspeccion.doc_poliza_todo_riesgo) %></td>
+            </tr>
+        </table>
+
+        <!-- LISTA DE CHEQUEO -->
+        <div class="section-title">Lista de Chequeo Detallada</div>
+        <div class="checklist-container">
+            <% for(let key in categorias) { %>
+                <div class="cat-box">
+                    <div class="cat-title"><%= nombresCategorias[key] || key.toUpperCase() %></div>
+                    <table class="check-table">
+                        <% categorias[key].forEach(function(item) { %>
+                            <tr>
+                                <td class="check-name">
+                                    <%= item.label %>
+                                    <% if(item.obs) { %><span class="obs-text">Nota: <%= item.obs %></span><% } %>
+                                </td>
+                                <td style="text-align: right; width: 40%; vertical-align: middle;">
+                                    <%- formatStatus(item.valor) %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- NOVEDADES Y OBSERVACIONES -->
+        <div class="section-title">Reporte de Daños y Novedades</div>
+        <% if (inspeccion.tiene_defectos === 1 || inspeccion.tiene_defectos === true) { %>
+            <div class="text-box-danger">
+                <strong>⚠ SE HAN DETECTADO NOVEDADES EN CARROCERÍA/MECÁNICA:</strong><br>
+                <span style="display:inline-block; margin-top:5px; margin-bottom:5px;">
+                    <strong>Áreas:</strong>
+                    <%= inspeccion.defecto_frontal ? '[Frontal] ' : '' %>
+                    <%= inspeccion.defecto_trasero ? '[Trasero] ' : '' %>
+                    <%= inspeccion.defecto_lateral_izq ? '[Lat. Izquierdo] ' : '' %>
+                    <%= inspeccion.defecto_lateral_der ? '[Lat. Derecho] ' : '' %>
+                    <%= inspeccion.defecto_motor ? '[Motor] ' : '' %>
+                    <%= inspeccion.defecto_chasis ? '[Chasis]' : '' %>
+                </span><br>
+                <strong>Descripción del Conductor:</strong> <%= inspeccion.descripcion_defecto || 'Daño reportado sin descripción adicional.' %>
+            </div>
+        <% } else { %>
+            <div class="text-box-success">
+                ✓ El vehículo no presenta novedades ni daños reportados en la carrocería.
+            </div>
+        <% } %>
+
+        <% if (inspeccion.observaciones_generales) { %>
+            <table class="data-table">
+                <tr><th style="width: 100%;">Observaciones Adicionales / Novedades Generales</th></tr>
+                <tr><td style="color: #64748b; font-style: italic;"><%= inspeccion.observaciones_generales %></td></tr>
+            </table>
+        <% } %>
+
+        <!-- FIRMAS -->
+        <table class="firmas-table">
+            <tr>
+                <td>
+                    <% if (inspeccion.firma_conductor) { %>
+                        <img src="<%= inspeccion.firma_conductor %>" style="max-height: 60px; margin-bottom: 5px;"><br>
+                    <% } else { %>
+                        <div class="linea-firma"></div>
+                    <% } %>
+                    <strong style="color: #0f172a;"><%= inspeccion.nombre_conductor %></strong><br>
+                    <span style="color: #64748b; font-size: 9px;">Conductor (CC: <%= inspeccion.cc_conductor %>)</span>
+                </td>
+                <td>
+                    <% if (inspeccion.firma_coordinador_img) { %>
+                        <img src="<%= inspeccion.firma_coordinador_img %>" style="max-height: 60px; margin-bottom: 5px;"><br>
+                    <% } else { %>
+                        <div class="linea-firma"></div>
+                    <% } %>
+                    <strong style="color: #0f172a;"><%= inspeccion.firma_coordinador || 'Pendiente de firma' %></strong><br>
+                    <span style="color: #64748b; font-size: 9px;">Supervisor / Jefe de Operaciones</span>
+                </td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            Documento de Auditoría y Control - OmegaGroup SAS | Impreso el <%= fechaImpresion %>
+        </div>
+
+        <!-- SALTO DE PÁGINA (Aplica a todos excepto al último) -->
+        <% if (index < inspecciones.length - 1) { %>
+            <div class="page-break"></div>
+        <% } %>
+    <% }); %>
+
+</body>
+</html>
