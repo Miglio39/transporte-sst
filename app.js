@@ -1068,11 +1068,10 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
 
 /**
  * ============================================================================
- * 9. MÓDULO SATELITAL GPS: AUDITORÍA DE HORAS, REGISTRO MANUAL Y LABORATORIOS
+ * 9. MÓDULO SATELITAL GPS: MOTOR HÍBRIDO (TRIPS + POSITIONS BD) Y MANUAL
  * ============================================================================
  */
 
-// Servidores Traccar configurados en el proyecto (Principal y Respaldo)
 const TRACCAR_SERVERS = [
     {
         url: 'https://api.globalmonitorgps.com',
@@ -1086,6 +1085,37 @@ const TRACCAR_SERVERS = [
 
 function limpiarPlaca(str) {
     return (str || '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+// Garantiza formato exacto HH:mm (24h) en hora de Colombia (UTC-5) para <input type="time">
+function formatearHora24Colombia(fechaInput) {
+    if (!fechaInput) return '';
+    // Si ya viene como HH:mm o H:mm manual, normalizar a 2 dígitos
+    if (typeof fechaInput === 'string' && /^\d{1,2}:\d{2}/.test(fechaInput.trim())) {
+        const partes = fechaInput.trim().split(':');
+        return `${partes[0].padStart(2, '0')}:${partes[1].slice(0, 2)}`;
+    }
+    const d = new Date(fechaInput);
+    if (isNaN(d.getTime())) return '';
+    const colTime = new Date(d.getTime() - (5 * 3600000));
+    const hh = String(colTime.getUTCHours()).padStart(2, '0');
+    const mm = String(colTime.getUTCMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+}
+
+function formatearHora12Colombia(fechaInput) {
+    const h24 = formatearHora24Colombia(fechaInput);
+    if (!h24) return '--:--';
+    let [hh, mm] = h24.split(':').map(Number);
+    const ampm = hh >= 12 ? 'p. m.' : 'a. m.';
+    hh = hh % 12 || 12;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} ${ampm}`;
+}
+
+function obtenerFechaColombiaYYYYMMDD(fechaInput) {
+    const d = new Date(fechaInput);
+    const colTime = new Date(d.getTime() - (5 * 3600000));
+    return colTime.toISOString().split('T')[0];
 }
 
 async function obtenerDispositivosTraccar() {
@@ -1107,6 +1137,87 @@ async function obtenerDispositivosTraccar() {
     return { devices: [], serverUrl: TRACCAR_SERVERS[0].url, token: TRACCAR_SERVERS[0].token };
 }
 
+// Función Híbrida: Extrae un día de Traccar combinando /api/reports/trips y /api/positions (BD cruda)
+async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMMDD) {
+    const fromStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T00:00:00-05:00`).toISOString());
+    const toStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T23:59:59-05:00`).toISOString());
+    const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
+
+    let inicioDate = null;
+    let finDate = null;
+    let distanciaMetros = 0;
+    let duracionMs = 0;
+    let totalEventos = 0;
+
+    // 1. Intentar primero con /api/reports/trips
+    try {
+        const tripsRes = await fetchConTimeout(
+            `${serverUrl}/api/reports/trips?deviceId=${deviceId}&from=${fromStr}&to=${toStr}`,
+            { headers },
+            7000
+        );
+        if (tripsRes.ok) {
+            const trips = await tripsRes.json();
+            if (Array.isArray(trips) && trips.length > 0) {
+                inicioDate = new Date(trips[0].startTime);
+                finDate = new Date(trips[trips.length - 1].endTime);
+                distanciaMetros = trips.reduce((acc, t) => acc + (t.distance || 0), 0);
+                duracionMs = trips.reduce((acc, t) => acc + (t.duration || 0), 0);
+                totalEventos = trips.length;
+            }
+        }
+    } catch (e) {}
+
+    // 2. Si no hubo trips, o si el trip fue de 0 km / misma hora de inicio y fin, consultar BD cruda (/api/positions)
+    const mismoMinuto = inicioDate && finDate && formatearHora24Colombia(inicioDate) === formatearHora24Colombia(finDate);
+    if (!inicioDate || mismoMinuto || distanciaMetros < 50) {
+        try {
+            const posRes = await fetchConTimeout(
+                `${serverUrl}/api/positions?deviceId=${deviceId}&from=${fromStr}&to=${toStr}`,
+                { headers },
+                8000
+            );
+            if (posRes.ok) {
+                const positions = await posRes.json();
+                if (Array.isArray(positions) && positions.length > 0) {
+                    // Filtrar posiciones donde el vehículo estuvo encendido o en movimiento
+                    const activos = positions.filter(p =>
+                        (p.speed && p.speed > 0) ||
+                        p.attributes?.ignition === true ||
+                        p.attributes?.motion === true
+                    );
+                    const listaUsar = activos.length > 0 ? activos : positions;
+
+                    const pInicio = new Date(listaUsar[0].fixTime || listaUsar[0].deviceTime || listaUsar[0].serverTime);
+                    const pFin = new Date(listaUsar[listaUsar.length - 1].fixTime || listaUsar[listaUsar.length - 1].deviceTime || listaUsar[listaUsar.length - 1].serverTime);
+
+                    if (!inicioDate || pInicio < inicioDate) inicioDate = pInicio;
+                    if (!finDate || pFin > finDate) finDate = pFin;
+
+                    // Calcular distancia desde el odómetro (totalDistance) de las posiciones si trips dio 0
+                    const distOdo = (positions[positions.length - 1].attributes?.totalDistance || 0) - (positions[0].attributes?.totalDistance || 0);
+                    if (distOdo > distanciaMetros) distanciaMetros = distOdo;
+
+                    if (finDate > inicioDate) {
+                        duracionMs = Math.max(duracionMs, finDate.getTime() - inicioDate.getTime());
+                    }
+                    totalEventos = Math.max(totalEventos, listaUsar.length);
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (!inicioDate) return null;
+
+    return {
+        inicio: inicioDate,
+        fin: finDate || inicioDate,
+        distancia: distanciaMetros,
+        duracion: duracionMs,
+        totalViajes: totalEventos
+    };
+}
+
 // 9.1 DASHBOARD PRINCIPAL DE AUDITORÍA GPS
 app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
     try {
@@ -1116,10 +1227,9 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const vehiculosDB = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
         const conductoresDB = await prisma.usuario.findMany({ where: { rol: 'conductor' }, orderBy: { nombre: 'asc' } });
 
-        // 1. Obtener lista de vehículos reales desde Traccar
         const { devices: traccarDevices, serverUrl, token } = await obtenerDispositivosTraccar();
 
-        // Unificar placas de Base de Datos + Dispositivos de Traccar para el filtro superior
+        // Unificar placas de BD + Traccar
         const mapaPlacas = new Map();
         vehiculosDB.forEach(v => mapaPlacas.set(limpiarPlaca(v.placa), v.placa.toUpperCase()));
         traccarDevices.forEach(d => {
@@ -1130,83 +1240,36 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         });
         const listaPlacasUnificada = Array.from(mapaPlacas.values()).sort().map(p => ({ placa: p }));
 
-        // Rango del mes en Zona Horaria Colombia (UTC-5)
+        // Si entra por primera vez desde el menú sin parámetros, carga la interfaz rápido
+        if (!req.query.placa && !req.query.mes) {
+            return res.render('auditoria-horas', {
+                title: 'Dashboard Auditoría GPS',
+                registros: [],
+                mesActual,
+                placaSeleccionada,
+                vehiculos: listaPlacasUnificada,
+                conductores: conductoresDB,
+                traccarDevices,
+                usuario: req.usuario
+            });
+        }
+
+        // Fechas exactas en Zona Horaria Colombia (-05:00)
         const [yearStr, monthStr] = mesActual.split('-');
         const year = parseInt(yearStr);
         const month = parseInt(monthStr) - 1;
-        const startDateLocal = new Date(year, month, 1, 0, 0, 0);
-        const ultimoDiaMes = new Date(year, month + 1, 0, 23, 59, 59);
+        const ultimoDiaNum = new Date(year, month + 1, 0).getDate();
+
+        const startDateISO = new Date(`${mesActual}-01T00:00:00-05:00`);
+        const endDateISO = new Date(`${mesActual}-${String(ultimoDiaNum).padStart(2, '0')}T23:59:59-05:00`);
         const ahora = new Date();
-        const endDateConsulta = ultimoDiaMes > ahora ? ahora : ultimoDiaMes;
+        const toDateConsulta = endDateISO > ahora ? ahora : endDateISO;
 
-        const fromStr = new Date(startDateLocal.getTime() + (5 * 3600000)).toISOString();
-        const toStr = new Date(endDateConsulta.getTime() + (5 * 3600000)).toISOString();
-
-        // 2. Consultar viajes en vivo de Traccar (igual que el laboratorio cuando se elige una placa)
-        let traccarDays = {}; 
-        if (traccarDevices.length > 0) {
-            try {
-                let devicesToQuery = [];
-                if (placaSeleccionada !== 'TODOS') {
-                    const placaLimpia = limpiarPlaca(placaSeleccionada);
-                    devicesToQuery = traccarDevices.filter(d => 
-                        limpiarPlaca(d.name) === placaLimpia || 
-                        limpiarPlaca(d.uniqueId) === placaLimpia ||
-                        limpiarPlaca(d.name).includes(placaLimpia)
-                    );
-                } else {
-                    // Si es TODOS, consultamos máximo los primeros 8 dispositivos activos para no bloquear Traccar
-                    devicesToQuery = traccarDevices.slice(0, 8);
-                }
-
-                if (devicesToQuery.length > 0) {
-                    const deviceIdsParam = devicesToQuery.map(d => `deviceId=${d.id}`).join('&');
-                    const tripsUrl = `${serverUrl}/api/reports/trips?${deviceIdsParam}&from=${encodeURIComponent(fromStr)}&to=${encodeURIComponent(toStr)}`;
-                    
-                    const tripsRes = await fetchConTimeout(tripsUrl, {
-                        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                    }, 9000);
-
-                    if (tripsRes.ok) {
-                        const trips = await tripsRes.json();
-                        trips.forEach(trip => {
-                            const dev = traccarDevices.find(d => d.id === trip.deviceId);
-                            const placaNombre = dev ? dev.name.toUpperCase() : placaSeleccionada.toUpperCase();
-                            const clavePlaca = limpiarPlaca(placaNombre);
-
-                            const tStart = new Date(trip.startTime);
-                            const tEnd = new Date(trip.endTime);
-                            const dateStr = new Date(tStart.getTime() - (5 * 3600000)).toISOString().split('T')[0];
-
-                            if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: placaNombre, dias: {} };
-
-                            if (!traccarDays[clavePlaca].dias[dateStr]) {
-                                traccarDays[clavePlaca].dias[dateStr] = {
-                                    inicio: tStart,
-                                    fin: tEnd,
-                                    distancia: trip.distance || 0,
-                                    duracion: trip.duration || 0,
-                                    deviceId: dev ? dev.id : ''
-                                };
-                            } else {
-                                if (tStart < traccarDays[clavePlaca].dias[dateStr].inicio) traccarDays[clavePlaca].dias[dateStr].inicio = tStart;
-                                if (tEnd > traccarDays[clavePlaca].dias[dateStr].fin) traccarDays[clavePlaca].dias[dateStr].fin = tEnd;
-                                traccarDays[clavePlaca].dias[dateStr].distancia += (trip.distance || 0);
-                                traccarDays[clavePlaca].dias[dateStr].duracion += (trip.duration || 0);
-                            }
-                        });
-                    }
-                }
-            } catch (err) {
-                console.log("Aviso consulta de viajes Traccar:", err.message);
-            }
-        }
-
-        // 3. Obtener inspecciones y registros manuales de la Base de Datos
+        // 1. Obtener inspecciones de la Base de Datos
         const inspecciones = await prisma.inspeccion.findMany({
-            where: { eliminado: false, fecha_apertura: { gte: startDateLocal, lte: ultimoDiaMes } },
+            where: { eliminado: false, fecha_apertura: { gte: startDateISO, lte: endDateISO } },
             include: { conductor: true },
-            orderBy: { fecha_apertura: 'asc' }
+            orderBy: { fecha_apertura: 'desc' }
         });
 
         let inspData = {};
@@ -1214,10 +1277,112 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             const clavePlaca = limpiarPlaca(insp.vehiculo_placa);
             if (placaSeleccionada !== 'TODOS' && clavePlaca !== limpiarPlaca(placaSeleccionada)) return;
 
-            const dateStr = new Date(insp.fecha_apertura.getTime() - (5 * 3600000)).toISOString().split('T')[0];
+            const dateStr = obtenerFechaColombiaYYYYMMDD(insp.fecha_apertura);
             if (!inspData[clavePlaca]) inspData[clavePlaca] = { nombreOriginal: insp.vehiculo_placa.toUpperCase(), dias: {} };
-            inspData[clavePlaca].dias[dateStr] = insp;
+            // Conservar la primera inspección del día (o la que ya tenga horas GPS guardadas)
+            const existente = inspData[clavePlaca].dias[dateStr];
+            if (!existente || (!existente.datos_chequeo?.inicio_gps && insp.datos_chequeo?.inicio_gps) || new Date(insp.fecha_apertura) < new Date(existente.fecha_apertura)) {
+                inspData[clavePlaca].dias[dateStr] = insp;
+            }
         });
+
+        // 2. Consultar viajes en Traccar (dividido en bloques semanales para no truncar datos)
+        let traccarDays = {};
+        if (traccarDevices.length > 0) {
+            let devicesToQuery = [];
+            if (placaSeleccionada !== 'TODOS') {
+                const placaLimpia = limpiarPlaca(placaSeleccionada);
+                devicesToQuery = traccarDevices.filter(d =>
+                    limpiarPlaca(d.name) === placaLimpia ||
+                    limpiarPlaca(d.uniqueId) === placaLimpia ||
+                    limpiarPlaca(d.name).includes(placaLimpia)
+                );
+            } else {
+                devicesToQuery = traccarDevices.slice(0, 8);
+            }
+
+            if (devicesToQuery.length > 0) {
+                const deviceIdsParam = devicesToQuery.map(d => `deviceId=${d.id}`).join('&');
+
+                // Dividir el mes en 4 rangos semanales para que Traccar no descarte viajes cortos
+                const rangosSemanales = [
+                    { d1: 1, d2: 8 },
+                    { d1: 9, d2: 16 },
+                    { d1: 17, d2: 24 },
+                    { d1: 25, d2: ultimoDiaNum }
+                ];
+
+                await Promise.all(rangosSemanales.map(async (rango) => {
+                    const fInicio = new Date(`${mesActual}-${String(rango.d1).padStart(2, '0')}T00:00:00-05:00`);
+                    const fFin = new Date(`${mesActual}-${String(rango.d2).padStart(2, '0')}T23:59:59-05:00`);
+                    if (fInicio > toDateConsulta) return;
+                    const fFinReal = fFin > toDateConsulta ? toDateConsulta : fFin;
+
+                    const url = `${serverUrl}/api/reports/trips?${deviceIdsParam}&from=${encodeURIComponent(fInicio.toISOString())}&to=${encodeURIComponent(fFinReal.toISOString())}`;
+                    try {
+                        const resTrips = await fetchConTimeout(url, {
+                            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                        }, 8000);
+                        if (resTrips.ok) {
+                            const trips = await resTrips.json();
+                            trips.forEach(trip => {
+                                const dev = traccarDevices.find(d => d.id === trip.deviceId);
+                                const placaNombre = dev ? dev.name.toUpperCase() : placaSeleccionada.toUpperCase();
+                                const clavePlaca = limpiarPlaca(placaNombre);
+
+                                const tStart = new Date(trip.startTime);
+                                const tEnd = new Date(trip.endTime);
+                                const dateStr = obtenerFechaColombiaYYYYMMDD(tStart);
+
+                                if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: placaNombre, dias: {} };
+
+                                if (!traccarDays[clavePlaca].dias[dateStr]) {
+                                    traccarDays[clavePlaca].dias[dateStr] = {
+                                        inicio: tStart,
+                                        fin: tEnd,
+                                        distancia: trip.distance || 0,
+                                        duracion: trip.duration || 0,
+                                        deviceId: dev ? dev.id : ''
+                                    };
+                                } else {
+                                    if (tStart < traccarDays[clavePlaca].dias[dateStr].inicio) traccarDays[clavePlaca].dias[dateStr].inicio = tStart;
+                                    if (tEnd > traccarDays[clavePlaca].dias[dateStr].fin) traccarDays[clavePlaca].dias[dateStr].fin = tEnd;
+                                    traccarDays[clavePlaca].dias[dateStr].distancia += (trip.distance || 0);
+                                    traccarDays[clavePlaca].dias[dateStr].duracion += (trip.duration || 0);
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }));
+
+                // 3. RESCATE DESDE BD CRUDA (/api/positions):
+                // Si se filtró una placa y hay días con inspección donde /trips no trajo nada (ej. 21 al 25 sept en TFX514),
+                // consultamos directamente /api/positions para esos días.
+                if (placaSeleccionada !== 'TODOS' && devicesToQuery[0]) {
+                    const devPrincipal = devicesToQuery[0];
+                    const clavePlaca = limpiarPlaca(placaSeleccionada);
+                    const diasConInspeccion = Object.keys(inspData[clavePlaca]?.dias || {});
+
+                    const diasFaltantes = diasConInspeccion.filter(dateStr => {
+                        const regTr = traccarDays[clavePlaca]?.dias?.[dateStr];
+                        if (!regTr) return true;
+                        // También rescatar si el viaje dio 0 km o inicio === fin
+                        return formatearHora24Colombia(regTr.inicio) === formatearHora24Colombia(regTr.fin);
+                    });
+
+                    await Promise.all(diasFaltantes.map(async (dateStr) => {
+                        const datosRescate = await extraerDiaCompletoTraccar(serverUrl, token, devPrincipal.id, dateStr);
+                        if (datosRescate) {
+                            if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPrincipal.name.toUpperCase(), dias: {} };
+                            traccarDays[clavePlaca].dias[dateStr] = {
+                                ...datosRescate,
+                                deviceId: devPrincipal.id
+                            };
+                        }
+                    }));
+                }
+            }
+        }
 
         // 4. Cruzar datos (Base de Datos + Traccar + Registros Manuales)
         let auditoria = [];
@@ -1235,46 +1400,50 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 const trData = infoTraccar[dateStr];
                 const inData = infoApp[dateStr];
                 const datosJSON = inData?.datos_chequeo || {};
-
-                // Verificar si el registro fue creado manualmente sin planilla App
                 const sinAppManual = datosJSON.sin_app === true;
 
-                // Horas App (Formato 24h HH:mm para inputs editables)
+                // Horas App en formato militar exacto HH:mm
                 let inicioApp24 = '';
                 let finApp24 = '';
                 if (inData && !sinAppManual) {
-                    inicioApp24 = datosJSON.inicio_app_manual || new Date(inData.fecha_apertura).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    inicioApp24 = datosJSON.inicio_app_manual
+                        ? formatearHora24Colombia(datosJSON.inicio_app_manual)
+                        : formatearHora24Colombia(inData.fecha_apertura);
+
                     if (datosJSON.fin_app_manual) {
-                        finApp24 = datosJSON.fin_app_manual;
+                        finApp24 = formatearHora24Colombia(datosJSON.fin_app_manual);
                     } else if (inData.fecha_cierre) {
-                        finApp24 = new Date(inData.fecha_cierre).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        finApp24 = formatearHora24Colombia(inData.fecha_cierre);
                     }
                 }
 
-                // Horas GPS (Prioriza lo guardado/editado en BD; si no hay, toma Traccar en vivo)
-                let inicioGPS24 = datosJSON.inicio_gps || '';
-                let finGPS24 = datosJSON.fin_gps || '';
+                // Horas GPS en formato militar exacto HH:mm
+                let inicioGPS24 = datosJSON.inicio_gps ? formatearHora24Colombia(datosJSON.inicio_gps) : '';
+                let finGPS24 = datosJSON.fin_gps ? formatearHora24Colombia(datosJSON.fin_gps) : '';
+
                 if (!inicioGPS24 && trData) {
-                    inicioGPS24 = trData.inicio.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    inicioGPS24 = formatearHora24Colombia(trData.inicio);
                 }
                 if (!finGPS24 && trData) {
-                    finGPS24 = trData.fin.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    finGPS24 = formatearHora24Colombia(trData.fin);
                 }
 
                 // Distancia y Horas de Motor
-                let distKm = datosJSON.distancia_gps !== undefined
+                let distKm = (datosJSON.distancia_gps !== undefined && datosJSON.distancia_gps !== '')
                     ? parseFloat(datosJSON.distancia_gps).toFixed(2)
                     : (trData ? (trData.distancia / 1000).toFixed(2) : '0.00');
 
                 let horasMotorStr = datosJSON.horas_motor_gps || '0h 0m';
-                if (!datosJSON.horas_motor_gps && trData) {
-                    const mins = Math.floor(trData.duracion / 60000);
-                    horasMotorStr = `${Math.floor(mins / 60)}h ${mins % 60}m`;
-                } else if (inicioGPS24 && finGPS24) {
+                if (inicioGPS24 && finGPS24) {
                     const [h1, m1] = inicioGPS24.split(':').map(Number);
                     const [h2, m2] = finGPS24.split(':').map(Number);
                     const diffM = (h2 * 60 + m2) - (h1 * 60 + m1);
-                    if (diffM > 0) horasMotorStr = `${Math.floor(diffM / 60)}h ${diffM % 60}m`;
+                    if (diffM > 0) {
+                        horasMotorStr = `${Math.floor(diffM / 60)}h ${diffM % 60}m`;
+                    } else if (trData && trData.duracion) {
+                        const mins = Math.floor(trData.duracion / 60000);
+                        horasMotorStr = `${Math.floor(mins / 60)}h ${mins % 60}m`;
+                    }
                 }
 
                 // Clasificación de Estados (Semáforo)
@@ -1360,14 +1529,12 @@ app.post('/admin/auditoria-horas/crear-manual', verificarRol(['admin']), async (
             return res.status(400).json({ success: false, error: 'La placa y la fecha son obligatorias.' });
         }
 
-        // Asegurar que el vehículo exista en la tabla vehiculo
         await prisma.vehiculo.upsert({
             where: { placa: placaFinal },
             update: {},
             create: { placa: placaFinal, tipo: 'Otro', modelo: '2025' }
         });
 
-        // Determinar ID de usuario para la relación en Prisma
         let idConductorFinal = conductor_id ? parseInt(conductor_id) : req.usuario.id;
 
         const horaApertura = inicio_app && inicio_app.trim() !== '' ? inicio_app : (inicio_gps || '06:00');
@@ -1386,10 +1553,10 @@ app.post('/admin/auditoria-horas/crear-manual', verificarRol(['admin']), async (
                     registro_manual: true,
                     sin_app: (!inicio_app || inicio_app.trim() === ''),
                     conductor_manual: conductor_manual || null,
-                    inicio_app_manual: inicio_app || '',
-                    fin_app_manual: fin_app || '',
-                    inicio_gps: inicio_gps || '',
-                    fin_gps: fin_gps || '',
+                    inicio_app_manual: formatearHora24Colombia(inicio_app),
+                    fin_app_manual: formatearHora24Colombia(fin_app),
+                    inicio_gps: formatearHora24Colombia(inicio_gps),
+                    fin_gps: formatearHora24Colombia(fin_gps),
                     distancia_gps: distancia_gps ? parseFloat(distancia_gps) : 0
                 }
             }
@@ -1412,13 +1579,13 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
             if (!insp) return res.status(404).json({ success: false, error: 'Registro no encontrado' });
 
             let datos = insp.datos_chequeo || {};
-            datos.inicio_gps = inicio_gps || '';
-            datos.fin_gps = fin_gps || '';
+            datos.inicio_gps = formatearHora24Colombia(inicio_gps);
+            datos.fin_gps = formatearHora24Colombia(fin_gps);
             if (inicio_app !== undefined) {
-                datos.inicio_app_manual = inicio_app;
+                datos.inicio_app_manual = formatearHora24Colombia(inicio_app);
                 datos.sin_app = (inicio_app.trim() === '');
             }
-            if (fin_app !== undefined) datos.fin_app_manual = fin_app;
+            if (fin_app !== undefined) datos.fin_app_manual = formatearHora24Colombia(fin_app);
             if (distancia_gps !== undefined) datos.distancia_gps = parseFloat(distancia_gps) || 0;
 
             await prisma.inspeccion.update({
@@ -1426,7 +1593,6 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
                 data: { datos_chequeo: datos }
             });
         } else {
-            // Si la fila venía solo de Traccar y aún no existía en la BD local, la creamos
             const placaFinal = placa.toUpperCase().trim();
             await prisma.vehiculo.upsert({
                 where: { placa: placaFinal },
@@ -1448,10 +1614,10 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
                     datos_chequeo: {
                         registro_manual: true,
                         sin_app: (!inicio_app || inicio_app.trim() === ''),
-                        inicio_app_manual: inicio_app || '',
-                        fin_app_manual: fin_app || '',
-                        inicio_gps: inicio_gps || '',
-                        fin_gps: fin_gps || '',
+                        inicio_app_manual: formatearHora24Colombia(inicio_app),
+                        fin_app_manual: formatearHora24Colombia(fin_app),
+                        inicio_gps: formatearHora24Colombia(inicio_gps),
+                        fin_gps: formatearHora24Colombia(fin_gps),
                         distancia_gps: parseFloat(distancia_gps) || 0
                     }
                 }
@@ -1465,30 +1631,22 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
     }
 });
 
-// 9.4 EXTRAER DATOS DE TRACCAR PARA UNA FILA ESPECÍFICA (IDÉNTICO AL LABORATORIO)
+// 9.4 EXTRAER DATOS DE TRACCAR PARA UNA FILA ESPECÍFICA (MOTOR HÍBRIDO TRIPS + POSITIONS)
 app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), async (req, res) => {
     try {
         const { id, placa, deviceId, fecha } = req.body;
         const { serverUrl, token } = await obtenerDispositivosTraccar();
 
-        const fromStr = encodeURIComponent(new Date(`${fecha}T00:00:00-05:00`).toISOString());
-        const toStr = encodeURIComponent(new Date(`${fecha}T23:59:59-05:00`).toISOString());
+        const datosDia = await extraerDiaCompletoTraccar(serverUrl, token, parseInt(deviceId), fecha);
 
-        const tripsRes = await fetchConTimeout(`${serverUrl}/api/reports/trips?deviceId=${parseInt(deviceId)}&from=${fromStr}&to=${toStr}`, {
-            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-        }, 8000);
-
-        if (!tripsRes.ok) throw new Error(`Traccar respondió HTTP ${tripsRes.status}`);
-        const trips = await tripsRes.json();
-
-        if (trips.length === 0) {
-            return res.json({ success: false, error: `El vehículo no registra viajes en Traccar el día ${fecha}.` });
+        if (!datosDia) {
+            return res.json({ success: false, error: `El vehículo no registra viajes ni posiciones en la BD de Traccar el día ${fecha}.` });
         }
 
-        const inicio_gps = new Date(trips[0].startTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const fin_gps = new Date(trips[trips.length - 1].endTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
-        const distTotalKm = (trips.reduce((acc, t) => acc + (t.distance || 0), 0) / 1000).toFixed(2);
-        const durMins = Math.floor(trips.reduce((acc, t) => acc + (t.duration || 0), 0) / 60000);
+        const inicio_gps = formatearHora24Colombia(datosDia.inicio);
+        const fin_gps = formatearHora24Colombia(datosDia.fin);
+        const distTotalKm = (datosDia.distancia / 1000).toFixed(2);
+        const durMins = Math.floor(datosDia.duracion / 60000);
         const horasMotor = `${Math.floor(durMins / 60)}h ${durMins % 60}m`;
 
         if (id && id !== 'nuevo') {
@@ -1513,7 +1671,7 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
     }
 });
 
-// 9.5 RUTA LABORATORIO TRACCAR
+// 9.5 RUTA LABORATORIO TRACCAR (TAMBIÉN CON MOTOR HÍBRIDO TRIPS + POSITIONS)
 app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
     const placaSeleccionada = req.query.placa || '';
     const fechaFiltro = req.query.fecha || new Date().toISOString().split('T')[0];
@@ -1527,31 +1685,20 @@ app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
         if (devices.length === 0) throw new Error('No se encontraron dispositivos o el servidor no respondió.');
 
         if (placaSeleccionada && fechaFiltro) {
-            const dev = devices.find(d => d.name === placaSeleccionada);
+            const dev = devices.find(d => limpiarPlaca(d.name) === limpiarPlaca(placaSeleccionada));
             if (dev) {
-                const fromStr = encodeURIComponent(new Date(`${fechaFiltro}T00:00:00-05:00`).toISOString());
-                const toStr = encodeURIComponent(new Date(`${fechaFiltro}T23:59:59-05:00`).toISOString());
-                const tripsRes = await fetchConTimeout(`${conn.serverUrl}/api/reports/trips?deviceId=${dev.id}&from=${fromStr}&to=${toStr}`, {
-                    headers: { 'Authorization': `Bearer ${conn.token}`, 'Accept': 'application/json' }
-                }, 8000);
-
-                if (tripsRes.ok) {
-                    const trips = await tripsRes.json();
-                    if (trips.length > 0) {
-                        const inicio = new Date(trips[0].startTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
-                        const fin = new Date(trips[trips.length - 1].endTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
-                        const distTotal = trips.reduce((acc, t) => acc + (t.distance || 0), 0);
-                        resultado = {
-                            encontrado: true,
-                            placa: placaSeleccionada,
-                            inicio,
-                            fin,
-                            distancia: (distTotal / 1000).toFixed(2),
-                            totalViajes: trips.length
-                        };
-                    } else {
-                        resultado = { encontrado: false, mensaje: `El vehículo ${placaSeleccionada} no registra viajes en la fecha ${fechaFiltro}.` };
-                    }
+                const datosDia = await extraerDiaCompletoTraccar(conn.serverUrl, conn.token, dev.id, fechaFiltro);
+                if (datosDia) {
+                    resultado = {
+                        encontrado: true,
+                        placa: placaSeleccionada,
+                        inicio: formatearHora12Colombia(datosDia.inicio),
+                        fin: formatearHora12Colombia(datosDia.fin),
+                        distancia: (datosDia.distancia / 1000).toFixed(2),
+                        totalViajes: datosDia.totalViajes
+                    };
+                } else {
+                    resultado = { encontrado: false, mensaje: `El vehículo ${placaSeleccionada} no registra viajes ni posiciones en la fecha ${fechaFiltro}.` };
                 }
             }
         }
@@ -1623,8 +1770,8 @@ app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
                         kilometraje: (distTotal > 1000 ? (distTotal / 1000) : distTotal).toFixed(2),
                         velMaxima: velMax,
                         velPromedio: velProm,
-                        primerMovimiento: pInicio ? new Date(pInicio).toLocaleTimeString('es-CO') : '--:--',
-                        ultimoMovimiento: pFin ? new Date(pFin).toLocaleTimeString('es-CO') : '--:--'
+                        primerMovimiento: pInicio ? formatearHora12Colombia(pInicio) : '--:--',
+                        ultimoMovimiento: pFin ? formatearHora12Colombia(pFin) : '--:--'
                     };
                 } else {
                     resumenActividad = {
