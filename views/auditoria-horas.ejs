@@ -8,9 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* =========================================================
-           DISEÑO EMPRESARIAL Y ESTILO POWER BI
-           ========================================================= */
         :root {
             --surface-bg: #f8fafc;
             --border-color: #e2e8f0;
@@ -22,7 +19,6 @@
 
         body { background-color: var(--surface-bg); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 40px; }
 
-        /* NAVBAR CORPORATIVO Y BOTONES DESPLEGABLES */
         .navbar-custom { background-color: var(--omega-dark); border-bottom: 3px solid var(--omega-red); padding: 0.8rem 1.5rem; }
         .navbar-brand img { border-radius: 4px; background-color: white; padding: 3px; object-fit: contain; }
         .nav-btn { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; padding: 0.5rem 1rem; border-radius: 6px; color: #f8fafc; background: rgba(255, 255, 255, 0.08); border: 1px solid transparent; transition: all 0.2s ease; }
@@ -33,10 +29,7 @@
         .dropdown-item { padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: all 0.2s; }
         .dropdown-item:hover { background-color: #f1f5f9; color: var(--omega-dark); }
         .dropdown-item i { width: 20px; text-align: center; }
-        .navbar-toggler { border: 1px solid rgba(255,255,255,0.2) !important; padding: 0.5rem 0.75rem; }
-        .navbar-toggler i { color: #ffffff; font-size: 1.5rem; }
 
-        /* TARJETAS DE INDICADORES (KPIs) Y GRÁFICOS ESTILO POWER BI */
         .kpi-card, .chart-card { background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s ease; }
         .kpi-card:hover, .chart-card:hover { box-shadow: 0 8px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .kpi-title { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -52,17 +45,14 @@
         .kpi-dark { border-left: 4px solid #0f172a; }
         .icon-dark { background: #e2e8f0; color: #0f172a; }
 
-        /* TÍTULOS DE GRÁFICOS */
         .chart-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); color: var(--omega-dark); font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px; text-transform: uppercase; }
         .chart-body { padding: 1rem; position: relative; height: 260px; width: 100%; }
 
-        /* TABLAS Y DATA CARDS */
         .data-card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .table > :not(caption) > * > * { vertical-align: middle; }
         .table thead th { background-color: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.05em; }
         
-        /* ESTADOS INDICADORES DE FILA */
-        .estado-box { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; display: inline-block; min-width: 120px; text-align: center; }
+        .estado-box { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.78rem; display: inline-block; min-width: 120px; text-align: center; }
         .row-estado-1 { border-left: 5px solid #10b981; } 
         .badge-optimo { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .row-estado-2 { border-left: 5px solid #f59e0b; background-color: #fffbeb; } 
@@ -73,9 +63,6 @@
         .badge-fuga { background-color: #0f172a; color: #ffffff; border: 1px solid #000; }
         .row-estado-5 { border-left: 5px solid #3b82f6; } 
         .badge-falsa { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-
-        .time-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; display: block; margin-bottom: 4px; }
-        .time-badge:last-child { margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -89,7 +76,7 @@
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
-                <i class="fas fa-bars"></i>
+                <i class="fas fa-bars text-white"></i>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarAdmin">
@@ -101,7 +88,8 @@
                         <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
                             <li><a class="dropdown-item fw-bold text-success py-2" href="/admin/auditoria-horas"><i class="fas fa-chart-pie me-2"></i> Dashboard Auditoría GPS</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-muted py-2" href="/test-traccar"><i class="fas fa-flask me-2"></i> Laboratorio Traccar</a></li>
+                            <li><a class="dropdown-item text-muted py-2" href="/test-traccar"><i class="fas fa-flask me-2 text-primary"></i> Laboratorio Traccar</a></li>
+                            <li><a class="dropdown-item text-muted py-2" href="/test-plaspy"><i class="fas fa-vial me-2 text-success"></i> Laboratorio Plaspy</a></li>
                         </ul>
                     </li>
 
@@ -115,24 +103,9 @@
                         </ul>
                     </li>
 
-                    <li class="nav-item dropdown w-100">
-                        <button class="btn nav-btn dropdown-toggle w-100 text-start text-lg-center" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: rgba(255,255,255,0.08); color: white;">
-                            <i class="fas fa-users me-1"></i> Conductores
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-lg-end mt-2">
-                            <li><a class="dropdown-item py-2" href="/admin/conductores"><i class="fas fa-list me-2 text-secondary"></i> Ver Lista</a></li>
-                            <li><a class="dropdown-item py-2" href="/admin/conductores/nuevo"><i class="fas fa-user-plus me-2 text-success"></i> Nuevo Conductor</a></li>
-                        </ul>
-                    </li>
-
                     <li class="nav-item w-100">
-                        <a href="/inspeccion" class="btn nav-btn w-100 text-start text-lg-center" style="background-color: var(--omega-red); color: white;">
-                            <i class="fas fa-plus me-1"></i> Inspección App
-                        </a>
-                    </li>
-                    <li class="nav-item w-100">
-                        <a href="/logout" class="btn nav-btn nav-btn-danger w-100 text-start text-lg-center">
-                            <i class="fas fa-power-off"></i>
+                        <a href="/admin" class="btn nav-btn w-100 text-start text-lg-center">
+                            <i class="fas fa-arrow-left me-1"></i> Panel Principal
                         </a>
                     </li>
                 </ul>
@@ -152,23 +125,28 @@
 
     <div class="container-fluid px-lg-4 mb-4">
         
-        <!-- PANEL DE CONTROL Y FILTRO (ESTILO POWER BI) -->
-        <div class="d-flex justify-content-between align-items-end mb-3">
-            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-satellite me-2" style="color: #10b981;"></i> Dashboard Auditoría Satelital</h5>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h5 class="fw-bold mb-0 text-dark">
+                <i class="fas fa-satellite me-2" style="color: #10b981;"></i> Dashboard Auditoría Satelital (Traccar + Registro Manual)
+            </h5>
+            <button type="button" class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistroManual">
+                <i class="fas fa-plus-circle me-1"></i> Ingresar Registro Manual (Sin GPS / Sin App)
+            </button>
         </div>
 
-        <div class="data-card p-4 mb-4 bg-white border-0 shadow-sm" style="border-top: 4px solid #10b981 !important;">
+        <!-- PANEL DE FILTRO SUPERIOR -->
+        <div class="data-card p-3 mb-4 bg-white border-0 shadow-sm" style="border-top: 4px solid #10b981 !important;">
             <form action="/admin/auditoria-horas" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label mb-1 fw-bold text-muted small">Vehículo a Analizar (Placa):</label>
+                <div class="col-md-5">
+                    <label class="form-label mb-1 fw-bold text-muted small">Vehículo a Analizar (Unificado BD + Traccar):</label>
                     <select name="placa" class="form-select fw-bold border-secondary">
-                        <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Todas las placas (Flota Completa) --</option>
+                        <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Todas las placas --</option>
                         <% vehiculos.forEach(v => { %>
                             <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
                         <% }) %>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label mb-1 fw-bold text-muted small">Mes de Análisis:</label>
                     <input type="month" name="mes" class="form-control fw-bold border-secondary" value="<%= mesActual %>">
                 </div>
@@ -178,7 +156,7 @@
             </form>
         </div>
 
-        <!-- 1. FILA DE KPIS (ESTILO POWER BI) -->
+        <!-- 1. FILA DE KPIS -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="card kpi-card kpi-green h-100">
@@ -228,8 +206,9 @@
 
         <% if (registros.length === 0) { %>
             <div class="alert alert-primary shadow-sm fw-bold border-0 text-center py-5 rounded-3">
-                <i class="fas fa-search fs-1 mb-3 d-block opacity-75"></i>
-                Selecciona una placa o toda la flota en el panel superior para procesar los datos de Traccar y mostrar los gráficos de inteligencia operativa.
+                <i class="fas fa-satellite-dish fs-1 mb-3 d-block opacity-75"></i>
+                No hay registros para este filtro o aún no has seleccionado un vehículo.<br>
+                <small class="fw-normal">Elige una placa arriba y presiona "Generar Analítica GPS", o usa el botón verde superior para ingresar un registro manual.</small>
             </div>
         <% } else { %>
 
@@ -253,21 +232,22 @@
                 </div>
             </div>
 
-            <!-- 3. TABLA ESTADÍSTICA DE REPORTE DIARIO -->
+            <!-- 3. TABLA CON EXTRACCIÓN TRACCAR POR FILA Y EDICIÓN MANUAL A 1 CLIC -->
             <div class="data-card mb-5">
-                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-muted me-2"></i> Base de Datos Consolidada (<%= registros.length %> registros)</h6>
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-muted me-2"></i> Consolidado Mensual Editable (<%= registros.length %> registros)</h6>
+                    <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Puedes editar cualquier hora manualmente o extraerla directo de Traccar con el botón azul <i class="fas fa-satellite-dish text-primary"></i></small>
                 </div>
                 
-                <div class="table-responsive" style="min-height: 400px;">
+                <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th class="ps-3">Día / Fecha</th>
                                 <th>Conductor y Placa</th>
-                                <th class="text-center bg-light text-primary">Tiempos Satelitales (Traccar)</th>
-                                <th class="text-center">Tiempos App (Inspección)</th>
-                                <th class="text-center">Recorrido</th>
+                                <th class="text-center bg-light text-primary" style="min-width: 270px;">Tiempos Satelitales (Traccar / Manual)</th>
+                                <th class="text-center" style="min-width: 220px;">Tiempos App / Planilla (Editable)</th>
+                                <th class="text-center" style="min-width: 130px;">Recorrido (Km)</th>
                                 <th class="text-center pe-3">Auditoría</th>
                             </tr>
                         </thead>
@@ -281,7 +261,7 @@
                                 if(reg.estadoNumero === 4) badgeClase = 'badge-fuga';
                                 if(reg.estadoNumero === 5) badgeClase = 'badge-falsa';
                             %>
-                            <tr class="<%= claseFila %>">
+                            <tr class="<%= claseFila %>" data-id="<%= reg.id %>" data-placa="<%= reg.placa %>" data-fecha="<%= reg.fecha %>">
                                 <td class="fw-bold ps-3"><%= reg.fecha %></td>
                                 
                                 <td>
@@ -289,35 +269,62 @@
                                     <small class="fw-bold text-secondary"><i class="fas fa-user-tie me-1"></i> <%= reg.conductor %></small>
                                 </td>
                                 
-                                <!-- TIEMPOS TRACCAR -->
-                                <td class="text-center border-start" style="background-color: rgba(248, 250, 252, 0.5); min-width: 140px;">
-                                    <% if(reg.inicioGPS !== '--:--') { %>
-                                        <span class="time-badge border-primary text-primary fw-bold" title="Motor ON"><i class="fas fa-play"></i> <%= reg.inicioGPS %></span>
-                                        <span class="time-badge border-primary text-primary fw-bold" title="Motor OFF"><i class="fas fa-stop"></i> <%= reg.finGPS %></span>
-                                    <% } else { %>
-                                        <span class="text-muted small"><i class="fas fa-parking"></i> Vehículo Apagado</span>
-                                    <% } %>
-                                </td>
+                                <!-- COLUMNA TRACCAR + EDICIÓN MANUAL GPS -->
+                                <td class="text-center border-start p-2" style="background-color: rgba(248, 250, 252, 0.7);">
+                                    <!-- Selector de unidad Traccar para extraer el día exacto -->
+                                    <div class="input-group input-group-sm mb-2">
+                                        <select class="form-select border-primary text-dark fw-bold select-traccar" style="font-size: 0.75rem;">
+                                            <option value="">-- Unidad Traccar --</option>
+                                            <% (traccarDevices || []).forEach(dev => { 
+                                                const limpiaDev = (dev.name || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                                const limpiaReg = (reg.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                                const esSeleccionado = (reg.traccarDeviceId == dev.id) || (limpiaDev === limpiaReg);
+                                            %>
+                                                <option value="<%= dev.id %>" <%= esSeleccionado ? 'selected' : '' %>><%= dev.name %></option>
+                                            <% }) %>
+                                        </select>
+                                        <button type="button" class="btn btn-primary fw-bold" onclick="extraerDiaTraccar(this)" title="Extraer hora real de Traccar para este día">
+                                            <i class="fas fa-satellite-dish"></i>
+                                        </button>
+                                    </div>
 
-                                <!-- TIEMPOS APP (INICIO Y FIN) -->
-                                <td class="text-center border-start" style="min-width: 140px;">
-                                    <% if(reg.inicioApp !== '--:--') { %>
-                                        <div class="d-flex flex-column align-items-center w-100">
-                                            <span class="time-badge bg-white border-primary text-primary w-100 text-center" title="Hora Inicio Inspección"><i class="fas fa-play me-1"></i> <%= reg.inicioApp %></span>
-                                            <span class="time-badge bg-white border-danger text-danger w-100 text-center" title="Hora Fin (Salida)"><i class="fas fa-stop me-1"></i> <%= reg.finApp %></span>
+                                    <!-- Inputs editables de Inicio y Fin GPS -->
+                                    <div class="d-flex gap-1">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white text-success border-success px-1"><i class="fas fa-play"></i></span>
+                                            <input type="time" class="form-control border-success text-success fw-bold input-inicio-gps" value="<%= reg.inicioGPS %>" onchange="guardarFila(this)">
                                         </div>
-                                    <% } else { %>
-                                        <span class="text-danger fw-bold small"><i class="fas fa-times"></i> Sin registro</span>
-                                    <% } %>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white text-danger border-danger px-1"><i class="fas fa-stop"></i></span>
+                                            <input type="time" class="form-control border-danger text-danger fw-bold input-fin-gps" value="<%= reg.finGPS %>" onchange="guardarFila(this)">
+                                        </div>
+                                    </div>
                                 </td>
 
-                                <!-- INFO ADICIONAL (DISTANCIA / HORAS) -->
-                                <td class="text-center border-start text-muted small fw-bold">
-                                    <div class="mb-1"><i class="fas fa-route text-primary"></i> <%= reg.distancia %> km</div>
-                                    <div><i class="fas fa-stopwatch text-success"></i> <%= reg.horasMotor %></div>
+                                <!-- COLUMNA TIEMPOS APP / PLANILLA (EDITABLE) -->
+                                <td class="text-center border-start p-2">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light text-primary px-2" title="Inicio App / Planilla"><i class="fas fa-play me-1"></i> Inic</span>
+                                            <input type="time" class="form-control fw-bold input-inicio-app" value="<%= reg.inicioApp %>" onchange="guardarFila(this)">
+                                        </div>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light text-danger px-2" title="Fin App / Planilla"><i class="fas fa-stop me-1"></i> Fin</span>
+                                            <input type="time" class="form-control fw-bold input-fin-app" value="<%= reg.finApp %>" onchange="guardarFila(this)">
+                                        </div>
+                                    </div>
                                 </td>
 
-                                <!-- ESTADO INDICADOR -->
+                                <!-- DISTANCIA Y HORAS MOTOR -->
+                                <td class="text-center border-start p-2">
+                                    <div class="input-group input-group-sm mb-1">
+                                        <input type="number" step="0.1" class="form-control text-center fw-bold input-distancia" value="<%= reg.distancia %>" onchange="guardarFila(this)">
+                                        <span class="input-group-text px-1 small">km</span>
+                                    </div>
+                                    <small class="text-muted fw-bold d-block"><i class="fas fa-stopwatch text-success"></i> <%= reg.horasMotor %></small>
+                                </td>
+
+                                <!-- ESTADO AUDITORÍA -->
                                 <td class="text-center pe-3 border-start">
                                     <div class="estado-box <%= badgeClase %> shadow-sm mb-1 d-block w-100">
                                         <%= reg.estadoTexto %>
@@ -326,6 +333,8 @@
                                         <span class="fw-bold <%= reg.estadoNumero === 3 ? 'text-danger' : 'text-dark' %>" style="font-size: 0.8rem;">
                                             <%= reg.diffMinutos %> min dif.
                                         </span>
+                                    <% } else { %>
+                                        <span class="text-muted small fw-bold"><%= reg.diffMinutos %></span>
                                     <% } %>
                                 </td>
                             </tr>
@@ -337,15 +346,205 @@
         <% } %>
     </div>
 
+    <!-- MODAL PARA INGRESAR REGISTRO MANUAL (VEHÍCULOS SIN GPS O SIN INSPECCIÓN) -->
+    <div class="modal fade" id="modalRegistroManual" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold"><i class="fas fa-edit me-2 text-success"></i> Ingresar Registro Manual (App / GPS)</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Seleccionar Placa Existente:</label>
+                            <select id="manual_placa_select" class="form-select fw-bold">
+                                <option value="">-- Elegir de la lista --</option>
+                                <% vehiculos.forEach(v => { %>
+                                    <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">O Escribir Placa Nueva:</label>
+                            <input type="text" id="manual_placa_nueva" class="form-control fw-bold text-uppercase" placeholder="Ej: BNT03H">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Conductor (De la lista):</label>
+                            <select id="manual_conductor_id" class="form-select">
+                                <option value="">-- Seleccionar --</option>
+                                <% (conductores || []).forEach(c => { %>
+                                    <option value="<%= c.id %>"><%= c.nombre %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">O Nombre Conductor Manual:</label>
+                            <input type="text" id="manual_conductor_texto" class="form-control" placeholder="Ej: Operador Externo">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Fecha de Operación:</label>
+                            <input type="date" id="manual_fecha" class="form-control fw-bold" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Distancia Recorrida (Km):</label>
+                            <input type="number" step="0.1" id="manual_distancia" class="form-control" value="0">
+                        </div>
+
+                        <div class="col-12"><hr class="my-1"></div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-primary"><i class="fas fa-mobile-alt me-1"></i> Hora Inicio Planilla/App:</label>
+                            <input type="time" id="manual_inicio_app" class="form-control border-primary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-primary"><i class="fas fa-mobile-alt me-1"></i> Hora Fin Planilla/App:</label>
+                            <input type="time" id="manual_fin_app" class="form-control border-primary">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-success"><i class="fas fa-satellite me-1"></i> Hora Inicio GPS:</label>
+                            <input type="time" id="manual_inicio_gps" class="form-control border-success">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-danger"><i class="fas fa-satellite me-1"></i> Hora Fin GPS:</label>
+                            <input type="time" id="manual_fin_gps" class="form-control border-danger">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success fw-bold px-4" onclick="crearRegistroManual(this)">
+                        <i class="fas fa-save me-1"></i> Guardar Registro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        // 1. FUNCIÓN PARA GUARDAR CAMBIOS MANUALES EN CUALQUIER FILA
+        async function guardarFila(inputElem) {
+            const fila = inputElem.closest('tr');
+            const payload = {
+                id: fila.getAttribute('data-id'),
+                placa: fila.getAttribute('data-placa'),
+                fecha: fila.getAttribute('data-fecha'),
+                inicio_gps: fila.querySelector('.input-inicio-gps').value,
+                fin_gps: fila.querySelector('.input-fin-gps').value,
+                inicio_app: fila.querySelector('.input-inicio-app').value,
+                fin_app: fila.querySelector('.input-fin-app').value,
+                distancia_gps: fila.querySelector('.input-distancia').value
+            };
+
+            try {
+                const res = await fetch('/admin/auditoria-horas/actualizar-fila', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error guardando cambios: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error de conexión al guardar.');
+            }
+        }
+
+        // 2. FUNCIÓN PARA EXTRAER EL DÍA REAL DESDE TRACCAR (IGUAL QUE EL LABORATORIO)
+        async function extraerDiaTraccar(btn) {
+            const fila = btn.closest('tr');
+            const deviceId = fila.querySelector('.select-traccar').value;
+            const fecha = fila.getAttribute('data-fecha');
+            const id = fila.getAttribute('data-id');
+            const placa = fila.getAttribute('data-placa');
+
+            if (!deviceId) {
+                return alert('Selecciona primero la unidad en la lista desplegable azul de esa fila.');
+            }
+
+            const iconoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/admin/auditoria-horas/sincronizar-fila', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, placa, deviceId, fecha })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'No se encontraron viajes en Traccar para esa fecha.');
+                    btn.innerHTML = iconoOriginal;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert('Error conectando con Traccar.');
+                btn.innerHTML = iconoOriginal;
+                btn.disabled = false;
+            }
+        }
+
+        // 3. FUNCIÓN PARA CREAR UN REGISTRO MANUAL DESDE EL MODAL
+        async function crearRegistroManual(btn) {
+            const payload = {
+                placa_select: document.getElementById('manual_placa_select').value,
+                placa_nueva: document.getElementById('manual_placa_nueva').value,
+                conductor_id: document.getElementById('manual_conductor_id').value,
+                conductor_manual: document.getElementById('manual_conductor_texto').value,
+                fecha: document.getElementById('manual_fecha').value,
+                distancia_gps: document.getElementById('manual_distancia').value,
+                inicio_app: document.getElementById('manual_inicio_app').value,
+                fin_app: document.getElementById('manual_fin_app').value,
+                inicio_gps: document.getElementById('manual_inicio_gps').value,
+                fin_gps: document.getElementById('manual_fin_gps').value
+            };
+
+            if (!payload.placa_select && !payload.placa_nueva) {
+                return alert('Debes elegir una placa de la lista o escribir una placa nueva.');
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+
+            try {
+                const res = await fetch('/admin/auditoria-horas/crear-manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const placaFiltro = (payload.placa_nueva || payload.placa_select).toUpperCase().trim();
+                    const mesFiltro = payload.fecha.slice(0, 7);
+                    window.location.href = `/admin/auditoria-horas?placa=${encodeURIComponent(placaFiltro)}&mes=${mesFiltro}`;
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Registro';
+                }
+            } catch (e) {
+                alert('Error de red al guardar el registro.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Registro';
+            }
+        }
+
+        // 4. GRÁFICOS DE INTELIGENCIA OPERATIVA (CHART.JS)
         const rawData = <%- JSON.stringify(registros || []) %>;
         
         if (rawData && rawData.length > 0) {
-            
-            // 1. PROCESAMIENTO MATEMÁTICO
             const conductoresOptimos = {};
             const placasStats = {};
 
@@ -363,15 +562,12 @@
                 if (r.estadoNumero === 4) placasStats[r.placa].fugas++;
             });
 
-            const topConductores = Object.entries(conductoresOptimos)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-            
+            const topConductores = Object.entries(conductoresOptimos).sort((a, b) => b[1] - a[1]).slice(0, 5);
             let labelsConductores = topConductores.map(c => c[0]);
             let dataConductores = topConductores.map(c => c[1]);
 
             if (labelsConductores.length === 0) {
-                labelsConductores = ['Sin días óptimos este mes'];
+                labelsConductores = ['Sin días óptimos registrados'];
                 dataConductores = [0];
             }
 
@@ -381,10 +577,7 @@
             const dataCriticos = labelsPlacas.map(p => placasStats[p].criticos);
             const dataFugas = labelsPlacas.map(p => placasStats[p].fugas);
 
-
-            // 2. GRÁFICO: TOP CONDUCTORES
-            const ctxCond = document.getElementById('conductoresChart').getContext('2d');
-            new Chart(ctxCond, {
+            new Chart(document.getElementById('conductoresChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labelsConductores,
@@ -403,14 +596,12 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
-                        y: { grid: { display: false }, ticks: { font: { size: 11, family: "'Segoe UI', sans-serif" } } }
+                        y: { grid: { display: false } }
                     }
                 }
             });
 
-            // 3. GRÁFICO: COMPARATIVA POR PLACA
-            const ctxPlacas = document.getElementById('placasChart').getContext('2d');
-            new Chart(ctxPlacas, {
+            new Chart(document.getElementById('placasChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labelsPlacas,
@@ -424,12 +615,10 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11, family: "'Segoe UI', sans-serif" } } }
-                    },
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } },
                     scales: {
                         y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
-                        x: { stacked: true, grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                        x: { stacked: true, grid: { display: false } }
                     }
                 }
             });
