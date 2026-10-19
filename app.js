@@ -1068,11 +1068,10 @@ app.post('/admin/patio/enviar-correo/:id', verificarRol(['admin']), async (req, 
 
 /**
  * ============================================================================
- * 9. MÓDULO SATELITAL GPS: MOTOR HÍBRIDO (TRACCAR + PLASPY POR PLACA) Y MANUAL
+ * 9. MÓDULO SATELITAL GPS: MOTOR HÍBRIDO (TRIPS + POSITIONS BD) Y MANUAL
  * ============================================================================
  */
 
-// 9.A SERVIDORES TRACCAR
 const TRACCAR_SERVERS = [
     {
         url: 'https://api.globalmonitorgps.com',
@@ -1084,23 +1083,6 @@ const TRACCAR_SERVERS = [
     }
 ];
 
-// 9.B CUENTAS Y APIS DE PLASPY (GENERAL + API ENLAZADA A UNA SOLA PLACA)
-// Aquí puedes agregar todas las APIs independientes por placa que necesites:
-const APIS_PLASPY = [
-    {
-        // 1. Cuenta General de Plaspy
-        user: 'oscarf07@hotmail.com',
-        apiKey: '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=',
-        placaExclusiva: null // null = carga todos los vehículos de esta cuenta
-    },
-    {
-        // 2. API exclusiva enlazada a una sola placa
-        user: 'oscarf07@hotmail.com', // <-- Si este vehículo usa otro usuario/correo en Plaspy, cámbialo aquí
-        apiKey: '9GOpyysGrwWq8/qatFJ02bQoMRC6UyVv4/di0mzKZKs=',
-        placaExclusiva: 'PON_AQUI_LA_PLACA' // <-- Escribe aquí la placa exacta (ej: 'BNT03H') para enlazarla directo
-    }
-];
-
 function limpiarPlaca(str) {
     return (str || '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
@@ -1108,6 +1090,7 @@ function limpiarPlaca(str) {
 // Garantiza formato exacto HH:mm (24h) en hora de Colombia (UTC-5) para <input type="time">
 function formatearHora24Colombia(fechaInput) {
     if (!fechaInput) return '';
+    // Si ya viene como HH:mm o H:mm manual, normalizar a 2 dígitos
     if (typeof fechaInput === 'string' && /^\d{1,2}:\d{2}/.test(fechaInput.trim())) {
         const partes = fechaInput.trim().split(':');
         return `${partes[0].padStart(2, '0')}:${partes[1].slice(0, 2)}`;
@@ -1154,139 +1137,6 @@ async function obtenerDispositivosTraccar() {
     return { devices: [], serverUrl: TRACCAR_SERVERS[0].url, token: TRACCAR_SERVERS[0].token };
 }
 
-// Conecta todas las APIs configuradas en APIS_PLASPY y enlaza la placa exclusiva automáticamente
-async function obtenerDispositivosPlaspy() {
-    let dispositivos = [];
-    let errores = [];
-
-    await Promise.all(APIS_PLASPY.map(async (cuenta) => {
-        if (!cuenta.user || !cuenta.apiKey) return;
-        try {
-            const authRes = await fetchConTimeout('https://api.plaspy.com/api/Auth/Token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ userName: cuenta.user.trim(), apiKey: cuenta.apiKey.trim() })
-            }, 6000);
-
-            const authData = await authRes.json();
-            const token = authData.token || authData.Token || authData.access_token;
-
-            if (!token) {
-                errores.push(`Plaspy (${cuenta.user}): ${authData.error || authData.message || 'Sin token'}`);
-                return;
-            }
-
-            const devRes = await fetchConTimeout('https://api.plaspy.com/api/devices', {
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-            }, 6000);
-
-            if (devRes.ok) {
-                const devData = await devRes.json();
-                const lista = Array.isArray(devData) ? devData : (devData.data || devData.devices || devData.Devices || []);
-                const placaForzada = (cuenta.placaExclusiva && cuenta.placaExclusiva !== 'PON_AQUI_LA_PLACA')
-                    ? cuenta.placaExclusiva.toUpperCase().trim()
-                    : null;
-
-                lista.forEach(d => {
-                    const realId = d.id || d.Id;
-                    const realName = (d.name || d.Name || '').toUpperCase().trim();
-
-                    // Si esta API es para una sola placa, filtramos o forzamos el enlace con esa placa
-                    if (placaForzada) {
-                        if (lista.length === 1 || limpiarPlaca(realName).includes(limpiarPlaca(placaForzada))) {
-                            dispositivos.push({
-                                id: `PLASPY:${realId}`,
-                                rawId: realId,
-                                name: placaForzada,
-                                token: token,
-                                plataforma: 'PLASPY'
-                            });
-                        }
-                    } else {
-                        dispositivos.push({
-                            id: `PLASPY:${realId}`,
-                            rawId: realId,
-                            name: realName,
-                            token: token,
-                            plataforma: 'PLASPY'
-                        });
-                    }
-                });
-            }
-        } catch (err) {
-            errores.push(`Plaspy (${cuenta.user}): ${err.message}`);
-        }
-    }));
-
-    return { devices: dispositivos, errores };
-}
-
-// Extrae un día desde Plaspy y devuelve la misma estructura que Traccar
-async function extraerDiaCompletoPlaspy(token, rawDeviceId, fechaYYYYMMDD) {
-    try {
-        const locRes = await fetchConTimeout(`https://api.plaspy.com/api/devices/${encodeURIComponent(rawDeviceId)}/locations`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                from: `${fechaYYYYMMDD}T00:00:00`,
-                to: `${fechaYYYYMMDD}T23:59:59`
-            })
-        }, 8000);
-
-        if (!locRes.ok) return null;
-        const locData = await locRes.json();
-        const puntos = Array.isArray(locData) ? locData : (locData.data || locData.locations || []);
-        if (puntos.length === 0) return null;
-
-        const enMovimiento = puntos.filter(p => (p.speed || p.Speed || 0) > 0);
-        if (enMovimiento.length === 0) return null;
-
-        const extraerDateColombia = (dtRaw) => {
-            if (!dtRaw) return null;
-            const match = dtRaw.toString().match(/(\d{2}:\d{2})/);
-            if (match) return new Date(`${fechaYYYYMMDD}T${match[1]}:00-05:00`);
-            return new Date(dtRaw);
-        };
-
-        const pInicio = extraerDateColombia(enMovimiento[0].dateTime || enMovimiento[0].DateTime || enMovimiento[0].date);
-        const pFin = extraerDateColombia(enMovimiento[enMovimiento.length - 1].dateTime || enMovimiento[enMovimiento.length - 1].DateTime || enMovimiento[enMovimiento.length - 1].date);
-
-        if (!pInicio) return null;
-
-        // Distancia por odómetro (milleage) o por suma de distance
-        const odoIni = puntos[0].milleage || puntos[0].mileage || 0;
-        const odoFin = puntos[puntos.length - 1].milleage || puntos[puntos.length - 1].mileage || 0;
-        let distanciaMetros = 0;
-        if (odoFin > odoIni) {
-            distanciaMetros = (odoFin - odoIni) * 1000;
-        } else {
-            const sumaDist = puntos.reduce((acc, p) => acc + (p.distance || p.Distance || 0), 0);
-            distanciaMetros = sumaDist > 1000 ? sumaDist : sumaDist * 1000;
-        }
-
-        const velocidades = enMovimiento.map(p => p.speed || p.Speed || 0);
-        const velMaxima = Math.max(...velocidades);
-        const velPromedio = velocidades.reduce((a, b) => a + b, 0) / velocidades.length;
-        const duracionMs = pFin > pInicio ? (pFin.getTime() - pInicio.getTime()) : 0;
-
-        return {
-            inicio: pInicio,
-            fin: pFin || pInicio,
-            distancia: distanciaMetros,
-            duracion: duracionMs,
-            totalViajes: enMovimiento.length,
-            velMaxima,
-            velPromedio
-        };
-    } catch (e) {
-        return null;
-    }
-}
-
 // Función Híbrida: Extrae un día de Traccar combinando /api/reports/trips y /api/positions (BD cruda)
 async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMMDD) {
     const fromStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T00:00:00-05:00`).toISOString());
@@ -1330,6 +1180,7 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
             if (posRes.ok) {
                 const positions = await posRes.json();
                 if (Array.isArray(positions) && positions.length > 0) {
+                    // Filtrar posiciones donde el vehículo estuvo encendido o en movimiento
                     const activos = positions.filter(p =>
                         (p.speed && p.speed > 0) ||
                         p.attributes?.ignition === true ||
@@ -1343,6 +1194,7 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
                     if (!inicioDate || pInicio < inicioDate) inicioDate = pInicio;
                     if (!finDate || pFin > finDate) finDate = pFin;
 
+                    // Calcular distancia desde el odómetro (totalDistance) de las posiciones si trips dio 0
                     const distOdo = (positions[positions.length - 1].attributes?.totalDistance || 0) - (positions[0].attributes?.totalDistance || 0);
                     if (distOdo > distanciaMetros) distanciaMetros = distOdo;
 
@@ -1375,27 +1227,12 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const vehiculosDB = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
         const conductoresDB = await prisma.usuario.findMany({ where: { rol: 'conductor' }, orderBy: { nombre: 'asc' } });
 
-        // Obtener dispositivos tanto de Traccar como de las APIs de Plaspy en paralelo
-        const [traccarConn, plaspyConn] = await Promise.all([
-            obtenerDispositivosTraccar(),
-            obtenerDispositivosPlaspy()
-        ]);
+        const { devices: traccarDevices, serverUrl, token } = await obtenerDispositivosTraccar();
 
-        const traccarDevices = traccarConn.devices;
-        const serverUrl = traccarConn.serverUrl;
-        const token = traccarConn.token;
-        const plaspyDevices = plaspyConn.devices;
-
-        // Lista combinada para que el selector de las filas reconozca tanto Traccar como Plaspy sin cambiar el .ejs
-        const dispositivosCombinados = [
-            ...traccarDevices,
-            ...plaspyDevices
-        ];
-
-        // Unificar placas de BD + Traccar + Plaspy
+        // Unificar placas de BD + Traccar
         const mapaPlacas = new Map();
         vehiculosDB.forEach(v => mapaPlacas.set(limpiarPlaca(v.placa), v.placa.toUpperCase()));
-        dispositivosCombinados.forEach(d => {
+        traccarDevices.forEach(d => {
             const limpia = limpiarPlaca(d.name);
             if (limpia && !mapaPlacas.has(limpia)) {
                 mapaPlacas.set(limpia, d.name.toUpperCase());
@@ -1412,7 +1249,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 placaSeleccionada,
                 vehiculos: listaPlacasUnificada,
                 conductores: conductoresDB,
-                traccarDevices: dispositivosCombinados,
+                traccarDevices,
                 usuario: req.usuario
             });
         }
@@ -1442,6 +1279,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
 
             const dateStr = obtenerFechaColombiaYYYYMMDD(insp.fecha_apertura);
             if (!inspData[clavePlaca]) inspData[clavePlaca] = { nombreOriginal: insp.vehiculo_placa.toUpperCase(), dias: {} };
+            // Conservar la primera inspección del día (o la que ya tenga horas GPS guardadas)
             const existente = inspData[clavePlaca].dias[dateStr];
             if (!existente || (!existente.datos_chequeo?.inicio_gps && insp.datos_chequeo?.inicio_gps) || new Date(insp.fecha_apertura) < new Date(existente.fecha_apertura)) {
                 inspData[clavePlaca].dias[dateStr] = insp;
@@ -1466,6 +1304,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             if (devicesToQuery.length > 0) {
                 const deviceIdsParam = devicesToQuery.map(d => `deviceId=${d.id}`).join('&');
 
+                // Dividir el mes en 4 rangos semanales para que Traccar no descarte viajes cortos
                 const rangosSemanales = [
                     { d1: 1, d2: 8 },
                     { d1: 9, d2: 16 },
@@ -1516,7 +1355,9 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     } catch (e) {}
                 }));
 
-                // 3. RESCATE DESDE BD CRUDA (/api/positions) DE TRACCAR
+                // 3. RESCATE DESDE BD CRUDA (/api/positions):
+                // Si se filtró una placa y hay días con inspección donde /trips no trajo nada (ej. 21 al 25 sept en TFX514),
+                // consultamos directamente /api/positions para esos días.
                 if (placaSeleccionada !== 'TODOS' && devicesToQuery[0]) {
                     const devPrincipal = devicesToQuery[0];
                     const clavePlaca = limpiarPlaca(placaSeleccionada);
@@ -1525,6 +1366,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     const diasFaltantes = diasConInspeccion.filter(dateStr => {
                         const regTr = traccarDays[clavePlaca]?.dias?.[dateStr];
                         if (!regTr) return true;
+                        // También rescatar si el viaje dio 0 km o inicio === fin
                         return formatearHora24Colombia(regTr.inicio) === formatearHora24Colombia(regTr.fin);
                     });
 
@@ -1542,31 +1384,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             }
         }
 
-        // 3.B CONSULTA AUTOMÁTICA PARA PLACAS ENLAZADAS A PLASPY (INCLUYENDO LA NUEVA API POR PLACA)
-        if (placaSeleccionada !== 'TODOS' && plaspyDevices.length > 0) {
-            const clavePlaca = limpiarPlaca(placaSeleccionada);
-            const devPlaspy = plaspyDevices.find(d =>
-                limpiarPlaca(d.name) === clavePlaca ||
-                limpiarPlaca(d.name).includes(clavePlaca)
-            );
-
-            if (devPlaspy) {
-                const diasConInspeccion = Object.keys(inspData[clavePlaca]?.dias || {});
-                await Promise.all(diasConInspeccion.map(async (dateStr) => {
-                    if (traccarDays[clavePlaca]?.dias?.[dateStr]) return;
-                    const datosPlaspy = await extraerDiaCompletoPlaspy(devPlaspy.token, devPlaspy.rawId, dateStr);
-                    if (datosPlaspy) {
-                        if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPlaspy.name.toUpperCase(), dias: {} };
-                        traccarDays[clavePlaca].dias[dateStr] = {
-                            ...datosPlaspy,
-                            deviceId: devPlaspy.id
-                        };
-                    }
-                }));
-            }
-        }
-
-        // 4. Cruzar datos (Base de Datos + Traccar + Plaspy + Registros Manuales)
+        // 4. Cruzar datos (Base de Datos + Traccar + Registros Manuales)
         let auditoria = [];
         const clavesPlacas = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
 
@@ -1691,7 +1509,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             placaSeleccionada,
             vehiculos: listaPlacasUnificada,
             conductores: conductoresDB,
-            traccarDevices: dispositivosCombinados,
+            traccarDevices,
             usuario: req.usuario
         });
 
@@ -1813,27 +1631,16 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
     }
 });
 
-// 9.4 EXTRAER DATOS PARA UNA FILA ESPECÍFICA (SOPORTA TRACCAR Y PLASPY POR PLACA)
+// 9.4 EXTRAER DATOS DE TRACCAR PARA UNA FILA ESPECÍFICA (MOTOR HÍBRIDO TRIPS + POSITIONS)
 app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), async (req, res) => {
     try {
         const { id, placa, deviceId, fecha } = req.body;
-        let datosDia = null;
+        const { serverUrl, token } = await obtenerDispositivosTraccar();
 
-        if (deviceId && deviceId.toString().startsWith('PLASPY:')) {
-            const rawId = deviceId.toString().replace('PLASPY:', '');
-            const { devices } = await obtenerDispositivosPlaspy();
-            const devPlaspy = devices.find(d => d.rawId == rawId || d.id === deviceId);
-            if (!devPlaspy) {
-                return res.json({ success: false, error: 'No se encontró la unidad en las cuentas configuradas de Plaspy.' });
-            }
-            datosDia = await extraerDiaCompletoPlaspy(devPlaspy.token, devPlaspy.rawId, fecha);
-        } else {
-            const { serverUrl, token } = await obtenerDispositivosTraccar();
-            datosDia = await extraerDiaCompletoTraccar(serverUrl, token, parseInt(deviceId), fecha);
-        }
+        const datosDia = await extraerDiaCompletoTraccar(serverUrl, token, parseInt(deviceId), fecha);
 
         if (!datosDia) {
-            return res.json({ success: false, error: `El vehículo no registra viajes ni posiciones en el GPS el día ${fecha}.` });
+            return res.json({ success: false, error: `El vehículo no registra viajes ni posiciones en la BD de Traccar el día ${fecha}.` });
         }
 
         const inicio_gps = formatearHora24Colombia(datosDia.inicio);
@@ -1859,7 +1666,7 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
 
         res.json({ success: true, inicio_gps, fin_gps, distancia: distTotalKm });
     } catch (error) {
-        console.error("Error sincronizando fila con GPS:", error);
+        console.error("Error sincronizando fila con Traccar:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1902,8 +1709,11 @@ app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
     res.render('test-traccar', { errorConexion, devices, placaSeleccionada, fechaFiltro, resultado });
 });
 
-// 9.6 RUTA LABORATORIO PLASPY (UNIFICA TODAS LAS APIS DE PLASPY SIN CAMBIAR LA VISTA)
+// 9.6 RUTA LABORATORIO PLASPY
 app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
+    const PLASPY_USER = 'oscarf07@hotmail.com';
+    const PLASPY_API_KEY = '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=';
+
     const fecha_viaje = req.query.fecha_viaje || new Date().toISOString().split('T')[0];
     const dispositivo_id = req.query.dispositivo_id || '';
     let devices = [];
@@ -1911,34 +1721,61 @@ app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
     let resumenActividad = null;
 
     try {
-        const { devices: listaPlaspy, errores } = await obtenerDispositivosPlaspy();
-        devices = listaPlaspy.map(d => ({
-            id: d.rawId,
-            name: d.name,
-            token: d.token
-        }));
+        const authRes = await fetchConTimeout('https://api.plaspy.com/api/Auth/Token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ userName: PLASPY_USER, apiKey: PLASPY_API_KEY })
+        }, 6000);
+        const authData = await authRes.json();
+        const token = authData.token || authData.Token;
 
-        if (errores.length > 0 && devices.length === 0) {
-            errorConexion = errores.join(' | ');
-        }
+        if (!token) throw new Error(authData.error || authData.message || 'No se pudo obtener el token de Plaspy');
 
-        if (dispositivo_id && fecha_viaje && devices.length > 0) {
-            const devInfo = devices.find(d => d.id == dispositivo_id);
-            if (devInfo) {
-                const datosDia = await extraerDiaCompletoPlaspy(devInfo.token, devInfo.id, fecha_viaje);
-                if (datosDia) {
+        const devRes = await fetchConTimeout('https://api.plaspy.com/api/devices', {
+            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+        }, 6000);
+        const devData = await devRes.json();
+        devices = Array.isArray(devData) ? devData : (devData.data || devData.devices || []);
+
+        if (dispositivo_id && fecha_viaje) {
+            const devInfo = devices.find(d => (d.id || d.Id) == dispositivo_id);
+            const nombrePlaca = devInfo ? (devInfo.name || devInfo.Name) : dispositivo_id;
+
+            const locRes = await fetchConTimeout(`https://api.plaspy.com/api/devices/${encodeURIComponent(dispositivo_id)}/locations`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    from: `${fecha_viaje}T00:00:00`,
+                    to: `${fecha_viaje}T23:59:59`
+                })
+            }, 8000);
+
+            if (locRes.ok) {
+                const locData = await locRes.json();
+                const puntos = Array.isArray(locData) ? locData : (locData.data || locData.locations || []);
+                const enMovimiento = puntos.filter(p => (p.speed || p.Speed || 0) > 0);
+
+                if (enMovimiento.length > 0) {
+                    const velocidades = enMovimiento.map(p => p.speed || p.Speed || 0);
+                    const velMax = Math.max(...velocidades).toFixed(1);
+                    const velProm = (velocidades.reduce((a, b) => a + b, 0) / velocidades.length).toFixed(1);
+                    const distTotal = puntos.reduce((acc, p) => acc + (p.distance || p.Distance || 0), 0);
+
+                    const pInicio = enMovimiento[0].dateTime || enMovimiento[0].DateTime || enMovimiento[0].date;
+                    const pFin = enMovimiento[enMovimiento.length - 1].dateTime || enMovimiento[enMovimiento.length - 1].DateTime || enMovimiento[enMovimiento.length - 1].date;
+
                     resumenActividad = {
-                        placa: devInfo.name,
+                        placa: nombrePlaca,
                         fecha: fecha_viaje,
-                        kilometraje: (datosDia.distancia / 1000).toFixed(2),
-                        velMaxima: datosDia.velMaxima.toFixed(1),
-                        velPromedio: datosDia.velPromedio.toFixed(1),
-                        primerMovimiento: formatearHora12Colombia(datosDia.inicio),
-                        ultimoMovimiento: formatearHora12Colombia(datosDia.fin)
+                        kilometraje: (distTotal > 1000 ? (distTotal / 1000) : distTotal).toFixed(2),
+                        velMaxima: velMax,
+                        velPromedio: velProm,
+                        primerMovimiento: pInicio ? formatearHora12Colombia(pInicio) : '--:--',
+                        ultimoMovimiento: pFin ? formatearHora12Colombia(pFin) : '--:--'
                     };
                 } else {
                     resumenActividad = {
-                        placa: devInfo.name,
+                        placa: nombrePlaca,
                         fecha: fecha_viaje,
                         kilometraje: '0.00',
                         velMaxima: '0',
