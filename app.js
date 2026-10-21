@@ -1709,37 +1709,90 @@ app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
     res.render('test-traccar', { errorConexion, devices, placaSeleccionada, fechaFiltro, resultado });
 });
 
-// 9.6 RUTA LABORATORIO PLASPY
 // ============================================================================
-// MÓDULO DE PRUEBAS: LABORATORIO PLASPY (UNIFICADO AMBAS CUENTAS + MOTOR ON/OFF)
+// 9.6 MÓDULO DE PRUEBAS: LABORATORIO PLASPY (MULTICUENTA INTELIGENTE)
 // ============================================================================
-const CACHE_PLASPY_TOKENS = {};
 
-async function obtenerTokenPlaspySeguro(user, apiKey) {
-    const clave = `${user}:${apiKey}`;
+const CUENTAS_PLASPY = [
+    { alias: 'oscarf07', user: 'oscarf07@hotmail.com', apiKey: '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=' },
+    { alias: 'jhonser28', user: 'jhonser28@hotmail.com', apiKey: '9GOpyysGrwWq8/qatFJ02bQoMRC6UyVv4/di0mzKZKs=' }
+];
+
+// Caché para tokens y lista de vehículos (30 minutos)
+let cacheTokensPlaspy = {}; 
+let cacheDispositivosPlaspy = { lista: [], expira: 0 };
+
+async function obtenerTokenPlaspyUnico(cuenta) {
     const ahora = Date.now();
-    if (CACHE_PLASPY_TOKENS[clave] && (ahora - CACHE_PLASPY_TOKENS[clave].time < 25 * 60 * 1000)) {
-        return CACHE_PLASPY_TOKENS[clave].token;
+    if (cacheTokensPlaspy[cuenta.alias] && cacheTokensPlaspy[cuenta.alias].expira > ahora) {
+        return cacheTokensPlaspy[cuenta.alias].token;
     }
 
     const authRes = await fetchConTimeout('https://api.plaspy.com/api/Auth/Token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ UserName: user, ApiKey: apiKey, userName: user, apiKey: apiKey })
-    }, 10000);
+        body: JSON.stringify({ UserName: cuenta.user, ApiKey: cuenta.apiKey })
+    }, 8000);
 
-    if (!authRes.ok) throw new Error(`Credenciales rechazadas para ${user} (HTTP ${authRes.status})`);
-    const authData = await authRes.json();
+    const authText = await authRes.text();
+    if (!authRes.ok || authText.includes('<!DOCTYPE html>')) {
+        throw new Error(`Fallo de autenticación en Plaspy para ${cuenta.alias} (HTTP ${authRes.status})`);
+    }
+
+    const authData = JSON.parse(authText);
     const token = authData.token || authData.Token || authData.access_token || authData.ApiKey;
-    if (!token) throw new Error(`Plaspy no generó token para ${user}`);
+    if (!token) throw new Error(`Plaspy no entregó un token válido para ${cuenta.alias}.`);
 
-    CACHE_PLASPY_TOKENS[clave] = { token, time: ahora };
+    cacheTokensPlaspy[cuenta.alias] = { token, expira: ahora + (30 * 60 * 1000) };
     return token;
 }
 
-function extraerHoraLegiblePlaspy(dtStr) {
-    if (!dtStr) return '--:--';
-    const match = dtStr.toString().match(/T(\d{1,2}):(\d{2})/);
+async function cargarDispositivosMulticuenta() {
+    const ahora = Date.now();
+    if (cacheDispositivosPlaspy.lista.length > 0 && cacheDispositivosPlaspy.expira > ahora) {
+        return cacheDispositivosPlaspy.lista;
+    }
+
+    let listaUnificada = [];
+    for (const cuenta of CUENTAS_PLASPY) {
+        try {
+            const token = await obtenerTokenPlaspyUnico(cuenta);
+            const devRes = await fetchConTimeout('https://api.plaspy.com/api/devices', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            }, 8000);
+
+            const devText = await devRes.text();
+            if (devRes.ok && !devText.includes('<!DOCTYPE html>')) {
+                const devData = JSON.parse(devText);
+                const rawDevices = Array.isArray(devData) ? devData : (devData.devices || devData.Devices || devData.data || []);
+                rawDevices.forEach(d => {
+                    const rawId = String(d.id || d.Id || '').trim();
+                    if (rawId) {
+                        listaUnificada.push({
+                            id: rawId,
+                            name: String(d.name || d.Name || rawId).trim(),
+                            cuentaAlias: cuenta.alias
+                        });
+                    }
+                });
+            }
+        } catch (err) {
+            console.error(`Error cargando cuenta ${cuenta.alias}:`, err.message);
+        }
+    }
+
+    if (listaUnificada.length > 0) {
+        // Ordenar alfabéticamente para que sea fácil buscarlos en el selector
+        listaUnificada.sort((a, b) => a.name.localeCompare(b.name));
+        cacheDispositivosPlaspy = { lista: listaUnificada, expira: ahora + (30 * 60 * 1000) };
+    }
+    return listaUnificada;
+}
+
+function formatearHoraPlaspyLab(dateTimeStr) {
+    if (!dateTimeStr) return '--:--';
+    const match = String(dateTimeStr).match(/T(\d{2}):(\d{2})/);
     if (match) {
         let hh = parseInt(match[1], 10);
         const mm = match[2];
@@ -1747,168 +1800,104 @@ function extraerHoraLegiblePlaspy(dtStr) {
         hh = hh % 12 || 12;
         return `${String(hh).padStart(2, '0')}:${mm} ${ampm}`;
     }
-    try {
-        return new Date(dtStr).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
-    } catch (e) {
-        return dtStr;
-    }
+    return '--:--';
 }
 
 app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
-    // Configuramos tus 2 cuentas de Plaspy para que carguen juntas automáticamente
-    const CUENTAS_PLASPY = [
-        {
-            idCuenta: '1',
-            user: 'oscarf07@hotmail.com',
-            apiKey: '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ='
-        },
-        {
-            idCuenta: '2',
-            user: 'jhonser28@hotmail.com',
-            apiKey: '9GOpyysGrwWq8/qatFJ02bQoMRC6UyVv4/di0mzKZKs='
-        }
-    ];
+    let fecha_viaje = req.query.fecha_viaje || new Date().toISOString().split('T')[0];
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(fecha_viaje)) {
+        const [dd, mm, yyyy] = fecha_viaje.split('/');
+        fecha_viaje = `${yyyy}-${mm}-${dd}`;
+    }
 
-    const fecha_viaje = req.query.fecha_viaje || new Date().toISOString().split('T')[0];
-    const dispositivo_id = req.query.dispositivo_id || '';
+    const dispositivo_id = String(req.query.dispositivo_id || '').trim();
+    
     let devices = [];
     let errorConexion = null;
     let resumenActividad = null;
-    let resultado = null;
 
     try {
-        // A. CONECTAR AMBAS CUENTAS Y DESCARGAR TODOS LOS VEHÍCULOS
-        const erroresCuentas = [];
-        await Promise.all(CUENTAS_PLASPY.map(async (cuenta) => {
-            try {
-                const token = await obtenerTokenPlaspySeguro(cuenta.user, cuenta.apiKey);
-                const devRes = await fetchConTimeout('https://api.plaspy.com/api/devices', {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                }, 10000);
+        devices = await cargarDispositivosMulticuenta();
+        if (devices.length === 0) throw new Error('No se pudieron cargar unidades de ninguna cuenta.');
 
-                if (devRes.ok) {
-                    const devData = await devRes.json();
-                    const lista = Array.isArray(devData) ? devData : (devData.data || devData.devices || devData.Devices || []);
-                    lista.forEach(d => {
-                        devices.push({
-                            id: d.id || d.Id,
-                            name: `${d.name || d.Name} (${cuenta.user.split('@')[0]})`,
-                            placaLimpia: d.name || d.Name,
-                            tokenCuenta: token
-                        });
-                    });
-                }
-            } catch (e) {
-                erroresCuentas.push(e.message);
-            }
-        }));
-
-        if (devices.length === 0 && erroresCuentas.length > 0) {
-            throw new Error(erroresCuentas.join(' | '));
-        }
-
-        // B. DESCARGAR UBICACIONES DEL VEHÍCULO SELECCIONADO
         if (dispositivo_id && fecha_viaje) {
-            const devInfo = devices.find(d => String(d.id) === String(dispositivo_id));
-            if (!devInfo) throw new Error('Selecciona nuevamente el vehículo de la lista.');
+            // 1. Identificar a qué cuenta pertenece el vehículo
+            const devInfo = devices.find(d => d.id === dispositivo_id);
+            if (!devInfo) throw new Error('El dispositivo seleccionado no existe en las cuentas conectadas.');
+            
+            const cuentaPropietaria = CUENTAS_PLASPY.find(c => c.alias === devInfo.cuentaAlias);
+            
+            // 2. Usar únicamente el token de esa cuenta específica
+            const token = await obtenerTokenPlaspyUnico(cuentaPropietaria);
 
-            const nombrePlaca = devInfo.placaLimpia;
-            const tokenUsar = devInfo.tokenCuenta;
-
-            const locRes = await fetchConTimeout(`https://api.plaspy.com/api/devices/${encodeURIComponent(dispositivo_id)}/locations`, {
+            const payload = { from: `${fecha_viaje}T00:00:00`, to: `${fecha_viaje}T23:59:59` };
+            const urlLoc = `https://api.plaspy.com/api/devices/${encodeURIComponent(dispositivo_id)}/locations`;
+            
+            const locRes = await fetchConTimeout(urlLoc, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${tokenUsar}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({
-                    from: `${fecha_viaje}T00:00:00`,
-                    to: `${fecha_viaje}T23:59:59`
-                })
-            }, 20000);
+                body: JSON.stringify(payload)
+            }, 15000);
 
-            if (!locRes.ok) {
-                throw new Error(`Error al consultar ubicaciones en Plaspy: HTTP ${locRes.status}`);
+            const locText = await locRes.text();
+
+            if (!locRes.ok || locText.includes('<!DOCTYPE html>')) {
+                let msgServer = `HTTP ${locRes.status}`;
+                try {
+                    const errJson = JSON.parse(locText);
+                    msgServer += `: ${errJson.error || errJson.message || 'Petición rechazada'}`;
+                } catch (_) { }
+                throw new Error(`Error al consultar ubicaciones en Plaspy (${msgServer})`);
             }
 
-            const locData = await locRes.json();
+            const locData = JSON.parse(locText);
+            if (locData.success === false) throw new Error(locData.error || locData.message);
+
             const puntos = Array.isArray(locData) ? locData : (locData.locations || locData.data || []);
 
             if (puntos.length > 0) {
-                // Ordenar puntos cronológicamente por fecha/hora
-                puntos.sort((a, b) => String(a.dateTime || a.DateTime || '').localeCompare(String(b.dateTime || b.DateTime || '')));
+                puntos.sort((a, b) => new Date(a.dateTime || a.DateTime) - new Date(b.dateTime || b.DateTime));
 
-                // 1. Filtrar activación de Sensor1 (inputs[0] === true) o movimiento (speed > 2)
-                const puntosActivos = puntos.filter(p =>
-                    (Array.isArray(p.inputs) && p.inputs[0] === true) ||
-                    Number(p.speed || p.Speed || 0) > 2
-                );
+                const puntosActivos = puntos.filter(p => (p.speed || p.Speed || 0) > 0 || (Array.isArray(p.inputs) && p.inputs[0] === true));
+                const listaRef = puntosActivos.length > 0 ? puntosActivos : puntos;
 
-                // Si no estuvo en movimiento, usar todos los puntos reportados en el día como respaldo
-                const listaUsar = puntosActivos.length > 0 ? puntosActivos : puntos;
+                const pInicio = listaRef[0].dateTime || listaRef[0].DateTime;
+                const pFin = listaRef[listaRef.length - 1].dateTime || listaRef[listaRef.length - 1].DateTime;
 
-                const primerElemento = listaUsar[0];
-                const ultimoElemento = listaUsar[listaUsar.length - 1];
+                const velocidades = puntosActivos.map(p => Number(p.speed || p.Speed || 0));
+                const velMax = velocidades.length > 0 ? Math.max(...velocidades).toFixed(1) : '0.0';
+                const velProm = velocidades.length > 0 ? (velocidades.reduce((a, b) => a + b, 0) / velocidades.length).toFixed(1) : '0.0';
 
-                const pInicio = primerElemento.dateTime || primerElemento.DateTime || primerElemento.date;
-                const pFin = ultimoElemento.dateTime || ultimoElemento.DateTime || ultimoElemento.date;
+                const odometros = puntos.map(p => Number(p.milleage ?? p.mileage ?? 0)).filter(m => m > 0);
+                let kmRecorridos = 0;
+                if (odometros.length >= 2) {
+                    kmRecorridos = Math.max(...odometros) - Math.min(...odometros);
+                }
 
-                // 2. Calcular Kilometraje (Odómetro final menos Odómetro inicial)
-                const primerPuntoDia = puntos[0];
-                const ultimoPuntoDia = puntos[puntos.length - 1];
-                const odoIni = Number(primerPuntoDia.milleage || primerPuntoDia.mileage || 0);
-                const odoFin = Number(ultimoPuntoDia.milleage || ultimoPuntoDia.mileage || 0);
-                const distTotal = odoFin > odoIni ? (odoFin - odoIni) : 0;
-
-                // 3. Calcular Velocidades y Viajes
-                const enMov = puntos.filter(p => Number(p.speed || p.Speed || 0) > 2);
-                const velocidades = (enMov.length > 0 ? enMov : puntos).map(p => Number(p.speed || p.Speed || 0));
-                const velMax = Math.max(...velocidades);
-                const velProm = velocidades.reduce((a, b) => a + b, 0) / velocidades.length;
-
-                let conteoViajes = 0;
-                let moviendose = false;
-                puntos.forEach(p => {
-                    if (Number(p.speed || p.Speed || 0) > 2) {
-                        if (!moviendose) {
-                            conteoViajes++;
-                            moviendose = true;
-                        }
-                    } else if (Number(p.inactiveSeconds || 0) > 120) {
-                        moviendose = false;
-                    }
-                });
-                if (conteoViajes === 0 && puntosActivos.length > 0) conteoViajes = 1;
-
-                const horaInicioStr = extraerHoraLegiblePlaspy(pInicio);
-                const horaFinStr = extraerHoraLegiblePlaspy(pFin);
-
-                // Datos para la Tarjeta Visual (Motor ON / Motor OFF)
-                resultado = {
-                    encontrado: true,
-                    placa: nombrePlaca,
-                    inicio: horaInicioStr,
-                    fin: horaFinStr,
-                    distancia: distTotal.toFixed(2),
-                    totalViajes: conteoViajes
-                };
-
-                // Datos para la Tabla inferior de Plaspy
                 resumenActividad = {
-                    placa: nombrePlaca,
+                    placa: `${devInfo.name} (${devInfo.cuentaAlias})`,
                     fecha: fecha_viaje,
-                    kilometraje: distTotal.toFixed(3),
-                    velMaxima: velMax.toFixed(2),
-                    velPromedio: velProm.toFixed(3),
-                    primerMovimiento: horaInicioStr,
-                    ultimoMovimiento: horaFinStr
+                    kilometraje: Math.max(0, kmRecorridos).toFixed(2),
+                    velMaxima: velMax,
+                    velPromedio: velProm,
+                    primerMovimiento: formatearHoraPlaspyLab(pInicio),
+                    ultimoMovimiento: formatearHoraPlaspyLab(pFin),
+                    totalRegistros: puntos.length
                 };
             } else {
-                resultado = {
-                    encontrado: false,
-                    mensaje: `El vehículo ${nombrePlaca} no reportó datos GPS en la fecha ${fecha_viaje}.`
+                resumenActividad = {
+                    placa: `${devInfo.name} (${devInfo.cuentaAlias})`,
+                    fecha: fecha_viaje,
+                    kilometraje: '0.00',
+                    velMaxima: '0.0',
+                    velPromedio: '0.0',
+                    primerMovimiento: 'Sin actividad ese día',
+                    ultimoMovimiento: 'Sin actividad ese día',
+                    totalRegistros: 0
                 };
             }
         }
@@ -1916,8 +1905,15 @@ app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
         errorConexion = `Aviso de conexión Plaspy: ${err.message}`;
     }
 
-    res.render('test-plaspy', { errorConexion, devices, dispositivo_id, fecha_viaje, resumenActividad, resultado });
+    res.render('test-plaspy', {
+        errorConexion,
+        devices,
+        dispositivo_id,
+        fecha_viaje,
+        resumenActividad
+    });
 });
+
 /**
  * ============================================================================
  * 10. INICIO DEL SERVIDOR

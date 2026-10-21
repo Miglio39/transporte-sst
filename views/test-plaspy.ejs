@@ -38,93 +38,69 @@
             <div class="alert alert-warning border-warning shadow-sm fw-bold"><i class="fas fa-exclamation-circle me-2"></i> <%= errorConexion %></div>
         <% } %>
 
-        <div class="filter-container shadow-sm">
-            <form action="/test-plaspy" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label text-muted small fw-bold mb-1">Consulta</label>
-                    <select class="form-select text-dark" disabled>
-                        <option>Resumen de Actividad (<%= devices.length %> unidades)</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label text-muted small fw-bold mb-1">Fecha</label>
-                    <input type="date" name="fecha_viaje" class="form-control fw-bold" value="<%= fecha_viaje %>" required>
-                </div>
+       
+<div class="filter-container shadow-sm">
+    <form action="/test-plaspy" method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3">
+    <label class="form-label text-muted small fw-bold mb-1">Consulta</label>
+    <select class="form-select text-dark" disabled>
+        <option>Resumen (<%= devices.length %> unidades)</option>
+    </select>
+</div>
 
-                <div class="col-md-4">
-                    <label class="form-label text-muted small fw-bold mb-1">Dispositivos (oscarf07 + jhonser28)</label>
-                    <select name="dispositivo_id" class="form-select fw-bold" required>
-                        <option value="">Seleccionar Unidad...</option>
-                        <% devices.forEach(d => { %>
-                            <option value="<%= d.id %>" <%= String(dispositivo_id) === String(d.id) ? 'selected' : '' %>>
-                                <%= d.name %>
-                            </option>
-                        <% }) %>
-                    </select>
-                </div>
+<div class="col-md-3">
+    <label class="form-label text-muted small fw-bold mb-1">Fecha</label>
+    <input type="date" name="fecha_viaje" class="form-control" value="<%= fecha_viaje %>" required>
+</div>
 
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100 fw-bold" style="background-color: #16a34a;"><i class="fas fa-sync-alt me-1"></i> Extraer</button>
-                </div>
-            </form>
-        </div>
+<div class="col-md-4">
+    <label class="form-label text-muted small fw-bold mb-1">Dispositivos Plaspy</label>
+    <select name="dispositivo_id" class="form-select fw-bold border-success" required>
+        <option value="">Seleccionar Unidad...</option>
+        <% devices.forEach(d => { %>
+            <option value="<%= d.id %>" <%= String(dispositivo_id) === String(d.id) ? 'selected' : '' %>>
+                <%= d.name %> (<%= d.cuentaAlias %>)
+            </option>
+        <% }) %>
+    </select>
+</div>
 
-        <!-- TARJETA PRINCIPAL: HORA INICIO Y HORA FIN -->
-        <% if (typeof resultado !== 'undefined' && resultado) { %>
-            <% if (resultado.encontrado) { %>
-                <div class="card-motor text-center">
-                    <h5 class="fw-bold text-success mb-4">Datos extraídos para <%= resultado.placa %></h5>
-                    <div class="row">
-                        <div class="col-6 border-end">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">HORA INICIO (MOTOR ON)</div>
-                            <div class="fs-2 fw-bold text-dark"><%= resultado.inicio %></div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-muted small fw-bold text-uppercase mb-1">HORA FIN (MOTOR OFF)</div>
-                            <div class="fs-2 fw-bold text-danger"><%= resultado.fin %></div>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-top d-flex justify-content-center gap-4 text-muted small fw-bold">
-                        <span><i class="fas fa-route text-primary me-1"></i> Distancia: <%= resultado.distancia %> km</span>
-                        <span><i class="fas fa-map-marker-alt text-warning me-1"></i> Viajes registrados: <%= resultado.totalViajes %></span>
-                    </div>
-                </div>
-            <% } else { %>
-                <div class="alert alert-warning text-center fw-bold"><%= resultado.mensaje %></div>
-            <% } %>
-        <% } %>
+<div class="col-md-2">
+    <button type="submit" class="btn btn-success w-100 fw-bold" style="background-color: #16a34a;">
+        <i class="fas fa-sync-alt me-1"></i> Extraer
+    </button>
+</div>
+    </form>
+</div>
 
-        <!-- TABLA DETALLADA PLASPY -->
-        <% if (resumenActividad) { %>
-            <div class="table-responsive shadow-sm rounded">
-                <table class="table-plaspy">
-                    <thead>
-                        <tr>
-                            <th>Nombre del dispositivo</th>
-                            <th>Fecha</th>
-                            <th class="text-end">Kilometraje (Km)</th>
-                            <th class="text-end">Velocidad Máxima (Km/h)</th>
-                            <th class="text-end">Velocidad Promedio (Km/h)</th>
-                            <th>Primer movimiento (Motor ON)</th>
-                            <th>Último movimiento (Motor OFF)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="fw-bold text-dark"><%= resumenActividad.placa %></td>
-                            <td><%= resumenActividad.fecha %></td>
-                            <td class="text-end fw-bold"><%= resumenActividad.kilometraje %></td>
-                            <td class="text-end"><%= resumenActividad.velMaxima %></td>
-                            <td class="text-end"><%= resumenActividad.velPromedio %></td>
-                            <td class="fw-bold text-success"><%= resumenActividad.primerMovimiento %></td>
-                            <td class="fw-bold text-danger"><%= resumenActividad.ultimoMovimiento %></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        <% } %>
-
+<% if (resumenActividad) { %>
+    <div class="table-responsive shadow-sm rounded mt-4">
+        <table class="table-plaspy table table-bordered table-hover bg-white mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nombre del dispositivo</th>
+                    <th>Fecha</th>
+                    <th class="text-end">Kilometraje (Km)</th>
+                    <th class="text-end">Velocidad Máxima (Km/h)</th>
+                    <th class="text-end">Velocidad Promedio (Km/h)</th>
+                    <th>Primer movimiento</th>
+                    <th>Último movimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold text-dark"><%= resumenActividad.placa %></td>
+                    <td><%= resumenActividad.fecha %></td>
+                    <td class="text-end fw-bold"><%= resumenActividad.kilometraje %></td>
+                    <td class="text-end"><%= resumenActividad.velMaxima %></td>
+                    <td class="text-end"><%= resumenActividad.velPromedio %></td>
+                    <td class="fw-bold text-success"><%= resumenActividad.primerMovimiento %></td>
+                    <td class="fw-bold text-danger"><%= resumenActividad.ultimoMovimiento %></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+<% } %>
     </div>
 
 </body>
