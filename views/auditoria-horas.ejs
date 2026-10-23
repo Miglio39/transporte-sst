@@ -247,8 +247,8 @@
                                 <th>Conductor y Placa</th>
                                 <th class="text-center bg-light text-primary" style="min-width: 270px;">Tiempos Satelitales (Traccar / Manual)</th>
                                 <th class="text-center" style="min-width: 220px;">Tiempos App / Planilla (Editable)</th>
-                                <th class="text-center" style="min-width: 130px;">Recorrido (Km)</th>
-                                <th class="text-center pe-3">Auditoría</th>
+                                <th class="text-center" style="min-width: 170px;">Recorrido (Km)</th>
+                                <th class="text-center pe-3" style="min-width: 165px;">Auditoría</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -271,7 +271,6 @@
                                 
                                 <!-- COLUMNA TRACCAR + EDICIÓN MANUAL GPS -->
                                 <td class="text-center border-start p-2" style="background-color: rgba(248, 250, 252, 0.7);">
-                                    <!-- Selector de unidad Traccar para extraer el día exacto -->
                                     <div class="input-group input-group-sm mb-2">
                                         <select class="form-select border-primary text-dark fw-bold select-traccar" style="font-size: 0.75rem;">
                                             <option value="">-- Unidad Traccar --</option>
@@ -283,12 +282,11 @@
                                                 <option value="<%= dev.id %>" <%= esSeleccionado ? 'selected' : '' %>><%= dev.name %></option>
                                             <% }) %>
                                         </select>
-                                        <button type="button" class="btn btn-primary fw-bold" onclick="extraerDiaTraccar(this)" title="Extraer hora real de Traccar para este día">
+                                        <button type="button" class="btn btn-primary fw-bold" onclick="extraerDiaTraccar(this)" title="Extraer hora real y km post-planilla desde Traccar">
                                             <i class="fas fa-satellite-dish"></i>
                                         </button>
                                     </div>
 
-                                    <!-- Inputs editables de Inicio y Fin GPS -->
                                     <div class="d-flex gap-1">
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-white text-success border-success px-1"><i class="fas fa-play"></i></span>
@@ -315,26 +313,45 @@
                                     </div>
                                 </td>
 
-                                <!-- DISTANCIA Y HORAS MOTOR -->
+                                <!-- DISTANCIA TOTAL, HORAS MOTOR Y KILOMETRAJE POST-CIERRE -->
                                 <td class="text-center border-start p-2">
                                     <div class="input-group input-group-sm mb-1">
                                         <input type="number" step="0.1" class="form-control text-center fw-bold input-distancia" value="<%= reg.distancia %>" onchange="guardarFila(this)">
                                         <span class="input-group-text px-1 small">km</span>
                                     </div>
                                     <small class="text-muted fw-bold d-block"><i class="fas fa-stopwatch text-success"></i> <%= reg.horasMotor %></small>
+
+                                    <% if (reg.diffFinMin > 0) { %>
+                                        <div class="mt-2 p-1 rounded border border-danger bg-danger bg-opacity-10 text-danger shadow-sm" style="font-size: 0.74rem; line-height: 1.25;">
+                                            <div class="fw-bold">
+                                                <i class="fas fa-route me-1"></i> +<%= reg.kmExtra %> km fuera de planilla
+                                            </div>
+                                            <div class="text-dark fw-semibold mt-1" style="font-size: 0.68rem;">
+                                                <i class="far fa-clock me-1"></i><%= reg.rangoExtra12h %>
+                                            </div>
+                                        </div>
+                                    <% } %>
                                 </td>
 
-                                <!-- ESTADO AUDITORÍA -->
+                                <!-- ESTADO AUDITORÍA (INICIO + CIERRE) -->
                                 <td class="text-center pe-3 border-start">
                                     <div class="estado-box <%= badgeClase %> shadow-sm mb-1 d-block w-100">
                                         <%= reg.estadoTexto %>
                                     </div>
                                     <% if(reg.estadoNumero >= 1 && reg.estadoNumero <= 3) { %>
-                                        <span class="fw-bold <%= reg.estadoNumero === 3 ? 'text-danger' : 'text-dark' %>" style="font-size: 0.8rem;">
-                                            <%= reg.diffMinutos %> min dif.
+                                        <span class="fw-bold d-block <%= (typeof reg.diffMinutos === 'number' && reg.diffMinutos > 30) ? 'text-danger' : 'text-dark' %>" style="font-size: 0.78rem;">
+                                            Inicio: <%= reg.diffMinutos %> min dif.
                                         </span>
                                     <% } else { %>
-                                        <span class="text-muted small fw-bold"><%= reg.diffMinutos %></span>
+                                        <span class="text-muted small fw-bold d-block"><%= reg.diffMinutos %></span>
+                                    <% } %>
+
+                                    <% if (reg.diffFinMin > 0) { %>
+                                        <div class="mt-1">
+                                            <span class="badge bg-danger text-white px-2 py-1 shadow-sm" style="font-size: 0.72rem;" title="Tiempo operado en GPS después de cerrada la planilla (<%= reg.rangoExtra12h %>)">
+                                                <i class="fas fa-exclamation-circle me-1"></i> Cierre: +<%= reg.tiempoExtraStr %>
+                                            </span>
+                                        </div>
                                     <% } %>
                                 </td>
                             </tr>
@@ -428,13 +445,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // 1. FUNCIÓN PARA GUARDAR CAMBIOS MANUALES EN CUALQUIER FILA
+        // 1. FUNCIÓN PARA GUARDAR CAMBIOS MANUALES EN CUALQUIER FILA Y RECALCULAR TRAMO EXTRA
         async function guardarFila(inputElem) {
             const fila = inputElem.closest('tr');
+            const selectTraccar = fila.querySelector('.select-traccar');
             const payload = {
                 id: fila.getAttribute('data-id'),
                 placa: fila.getAttribute('data-placa'),
                 fecha: fila.getAttribute('data-fecha'),
+                deviceId: selectTraccar ? selectTraccar.value : '',
                 inicio_gps: fila.querySelector('.input-inicio-gps').value,
                 fin_gps: fila.querySelector('.input-fin-gps').value,
                 inicio_app: fila.querySelector('.input-inicio-app').value,
@@ -459,13 +478,14 @@
             }
         }
 
-        // 2. FUNCIÓN PARA EXTRAER EL DÍA REAL DESDE TRACCAR (IGUAL QUE EL LABORATORIO)
+        // 2. FUNCIÓN PARA EXTRAER EL DÍA REAL Y KM EXTRA DESDE TRACCAR
         async function extraerDiaTraccar(btn) {
             const fila = btn.closest('tr');
             const deviceId = fila.querySelector('.select-traccar').value;
             const fecha = fila.getAttribute('data-fecha');
             const id = fila.getAttribute('data-id');
             const placa = fila.getAttribute('data-placa');
+            const fin_app = fila.querySelector('.input-fin-app') ? fila.querySelector('.input-fin-app').value : '';
 
             if (!deviceId) {
                 return alert('Selecciona primero la unidad en la lista desplegable azul de esa fila.');
@@ -479,7 +499,7 @@
                 const res = await fetch('/admin/auditoria-horas/sincronizar-fila', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, placa, deviceId, fecha })
+                    body: JSON.stringify({ id, placa, deviceId, fecha, fin_app })
                 });
                 const data = await res.json();
                 if (data.success) {

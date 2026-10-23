@@ -1090,7 +1090,6 @@ function limpiarPlaca(str) {
 // Garantiza formato exacto HH:mm (24h) en hora de Colombia (UTC-5) para <input type="time">
 function formatearHora24Colombia(fechaInput) {
     if (!fechaInput) return '';
-    // Si ya viene como HH:mm o H:mm manual, normalizar a 2 dígitos
     if (typeof fechaInput === 'string' && /^\d{1,2}:\d{2}/.test(fechaInput.trim())) {
         const partes = fechaInput.trim().split(':');
         return `${partes[0].padStart(2, '0')}:${partes[1].slice(0, 2)}`;
@@ -1116,6 +1115,131 @@ function obtenerFechaColombiaYYYYMMDD(fechaInput) {
     const d = new Date(fechaInput);
     const colTime = new Date(d.getTime() - (5 * 3600000));
     return colTime.toISOString().split('T')[0];
+}
+
+// Fórmula Haversine de respaldo para medir distancia en metros entre coordenadas GPS
+function distanciaHaversineMetros(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Calcula la diferencia de tiempo al cierre (Fin Planilla vs Fin GPS)
+ * y estima el kilometraje desde los viajes cargados en memoria.
+ */
+function calcularResumenPostPlanilla(fechaStr, finApp24, finGPS24, listaViajes = [], kmExtraManual = null) {
+    let diffFinMin = 0;
+    let tiempoExtraStr = '';
+    let rangoExtra12h = '';
+    let kmExtra = (kmExtraManual !== null && kmExtraManual !== undefined && kmExtraManual !== '') 
+        ? parseFloat(kmExtraManual) 
+        : 0;
+
+    if (finApp24 && finGPS24) {
+        const [hApp, mApp] = finApp24.split(':').map(Number);
+        const [hGps, mGps] = finGPS24.split(':').map(Number);
+        const minApp = hApp * 60 + mApp;
+        const minGps = hGps * 60 + mGps;
+
+        // Si el GPS reportó apagado/fin DESPUÉS del cierre de la planilla
+        if (minGps > minApp) {
+            diffFinMin = minGps - minApp;
+            const hExtra = Math.floor(diffFinMin / 60);
+            const mExtra = diffFinMin % 60;
+            tiempoExtraStr = hExtra > 0 ? `${hExtra}h ${mExtra}m` : `${mExtra}m`;
+            rangoExtra12h = `${formatearHora12Colombia(finApp24)} - ${formatearHora12Colombia(finGPS24)}`;
+
+            if ((kmExtraManual === null || kmExtraManual === undefined || kmExtraManual === '') && Array.isArray(listaViajes) && listaViajes.length > 0) {
+                const tsFinApp = new Date(`${fechaStr}T${finApp24}:00-05:00`).getTime();
+                const tsFinGps = new Date(`${fechaStr}T${finGPS24}:59-05:00`).getTime();
+                let metrosExtra = 0;
+
+                listaViajes.forEach(viaje => {
+                    const vStart = new Date(viaje.startTime).getTime();
+                    const vEnd = new Date(viaje.endTime).getTime();
+                    const dist = Number(viaje.distance || 0);
+
+                    if (vEnd > tsFinApp && vStart <= tsFinGps && dist > 0) {
+                        if (vStart >= tsFinApp) {
+                            metrosExtra += dist;
+                        } else if (vEnd > vStart) {
+                            const fraccion = (Math.min(vEnd, tsFinGps) - tsFinApp) / (vEnd - vStart);
+                            metrosExtra += dist * Math.max(0, Math.min(1, fraccion));
+                        }
+                    }
+                });
+                kmExtra = metrosExtra / 1000;
+            }
+        }
+    }
+
+    return {
+        diffFinMin,
+        tiempoExtraStr,
+        rangoExtra12h,
+        rangoClave: (finApp24 && finGPS24) ? `${finApp24}-${finGPS24}` : '',
+        kmExtra: Math.max(0, kmExtra).toFixed(2)
+    };
+}
+
+/**
+ * Consulta directamente en Traccar (/api/positions) los kilómetros exactos recorridos
+ * en el intervalo de tiempo entre Fin Planilla (ej. 17:17) y Fin GPS (ej. 20:46).
+ */
+async function extraerKmIntervaloTraccar(serverUrl, token, deviceId, fechaYYYYMMDD, horaInicio24, horaFin24, viajesFallback = []) {
+    const base = calcularResumenPostPlanilla(fechaYYYYMMDD, horaInicio24, horaFin24, viajesFallback, null);
+    if (base.diffFinMin <= 0 || !deviceId) return '0.00';
+
+    let kmDesdePositions = 0;
+    try {
+        const fromStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T${horaInicio24}:00-05:00`).toISOString());
+        const toStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T${horaFin24}:59-05:00`).toISOString());
+        const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
+
+        const posRes = await fetchConTimeout(
+            `${serverUrl}/api/positions?deviceId=${deviceId}&from=${fromStr}&to=${toStr}`,
+            { headers },
+            6500
+        );
+
+        if (posRes.ok) {
+            const positions = await posRes.json();
+            if (Array.isArray(positions) && positions.length >= 2) {
+                // 1. Medir por odómetro acumulado de Traccar (totalDistance)
+                const conTotalDist = positions.filter(p => p.attributes && typeof p.attributes.totalDistance === 'number' && p.attributes.totalDistance > 0);
+                let metrosOdo = 0;
+                if (conTotalDist.length >= 2) {
+                    metrosOdo = conTotalDist[conTotalDist.length - 1].attributes.totalDistance - conTotalDist[0].attributes.totalDistance;
+                }
+
+                // 2. Respaldo por suma de coordenadas GPS (Haversine) en caso de que el GPS no reporte odómetro
+                let metrosHaversine = 0;
+                for (let i = 1; i < positions.length; i++) {
+                    const p1 = positions[i - 1];
+                    const p2 = positions[i];
+                    const d = distanciaHaversineMetros(p1.latitude, p1.longitude, p2.latitude, p2.longitude);
+                    // Ignorar saltos irreales o ruido estático menor a 5 metros
+                    if (d >= 5 && d < 50000) {
+                        metrosHaversine += d;
+                    }
+                }
+
+                const metrosFinales = metrosOdo > 0 ? metrosOdo : metrosHaversine;
+                kmDesdePositions = metrosFinales / 1000;
+            }
+        }
+    } catch (e) {
+        console.log(`Aviso cálculo tramo extra (${fechaYYYYMMDD} ${horaInicio24}-${horaFin24}):`, e.message);
+    }
+
+    const kmFinal = Math.max(kmDesdePositions, parseFloat(base.kmExtra));
+    return kmFinal.toFixed(2);
 }
 
 async function obtenerDispositivosTraccar() {
@@ -1148,6 +1272,7 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
     let distanciaMetros = 0;
     let duracionMs = 0;
     let totalEventos = 0;
+    let listaTrips = [];
 
     // 1. Intentar primero con /api/reports/trips
     try {
@@ -1159,6 +1284,7 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
         if (tripsRes.ok) {
             const trips = await tripsRes.json();
             if (Array.isArray(trips) && trips.length > 0) {
+                listaTrips = trips;
                 inicioDate = new Date(trips[0].startTime);
                 finDate = new Date(trips[trips.length - 1].endTime);
                 distanciaMetros = trips.reduce((acc, t) => acc + (t.distance || 0), 0);
@@ -1180,7 +1306,6 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
             if (posRes.ok) {
                 const positions = await posRes.json();
                 if (Array.isArray(positions) && positions.length > 0) {
-                    // Filtrar posiciones donde el vehículo estuvo encendido o en movimiento
                     const activos = positions.filter(p =>
                         (p.speed && p.speed > 0) ||
                         p.attributes?.ignition === true ||
@@ -1194,7 +1319,6 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
                     if (!inicioDate || pInicio < inicioDate) inicioDate = pInicio;
                     if (!finDate || pFin > finDate) finDate = pFin;
 
-                    // Calcular distancia desde el odómetro (totalDistance) de las posiciones si trips dio 0
                     const distOdo = (positions[positions.length - 1].attributes?.totalDistance || 0) - (positions[0].attributes?.totalDistance || 0);
                     if (distOdo > distanciaMetros) distanciaMetros = distOdo;
 
@@ -1214,7 +1338,8 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
         fin: finDate || inicioDate,
         distancia: distanciaMetros,
         duracion: duracionMs,
-        totalViajes: totalEventos
+        totalViajes: totalEventos,
+        viajes: listaTrips
     };
 }
 
@@ -1240,7 +1365,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         });
         const listaPlacasUnificada = Array.from(mapaPlacas.values()).sort().map(p => ({ placa: p }));
 
-        // Si entra por primera vez desde el menú sin parámetros, carga la interfaz rápido
         if (!req.query.placa && !req.query.mes) {
             return res.render('auditoria-horas', {
                 title: 'Dashboard Auditoría GPS',
@@ -1254,7 +1378,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             });
         }
 
-        // Fechas exactas en Zona Horaria Colombia (-05:00)
         const [yearStr, monthStr] = mesActual.split('-');
         const year = parseInt(yearStr);
         const month = parseInt(monthStr) - 1;
@@ -1279,14 +1402,13 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
 
             const dateStr = obtenerFechaColombiaYYYYMMDD(insp.fecha_apertura);
             if (!inspData[clavePlaca]) inspData[clavePlaca] = { nombreOriginal: insp.vehiculo_placa.toUpperCase(), dias: {} };
-            // Conservar la primera inspección del día (o la que ya tenga horas GPS guardadas)
             const existente = inspData[clavePlaca].dias[dateStr];
             if (!existente || (!existente.datos_chequeo?.inicio_gps && insp.datos_chequeo?.inicio_gps) || new Date(insp.fecha_apertura) < new Date(existente.fecha_apertura)) {
                 inspData[clavePlaca].dias[dateStr] = insp;
             }
         });
 
-        // 2. Consultar viajes en Traccar (dividido en bloques semanales para no truncar datos)
+        // 2. Consultar viajes en Traccar (dividido en bloques semanales)
         let traccarDays = {};
         if (traccarDevices.length > 0) {
             let devicesToQuery = [];
@@ -1304,7 +1426,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             if (devicesToQuery.length > 0) {
                 const deviceIdsParam = devicesToQuery.map(d => `deviceId=${d.id}`).join('&');
 
-                // Dividir el mes en 4 rangos semanales para que Traccar no descarte viajes cortos
                 const rangosSemanales = [
                     { d1: 1, d2: 8 },
                     { d1: 9, d2: 16 },
@@ -1342,22 +1463,22 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                                         fin: tEnd,
                                         distancia: trip.distance || 0,
                                         duracion: trip.duration || 0,
-                                        deviceId: dev ? dev.id : ''
+                                        deviceId: dev ? dev.id : '',
+                                        viajes: [trip]
                                     };
                                 } else {
                                     if (tStart < traccarDays[clavePlaca].dias[dateStr].inicio) traccarDays[clavePlaca].dias[dateStr].inicio = tStart;
                                     if (tEnd > traccarDays[clavePlaca].dias[dateStr].fin) traccarDays[clavePlaca].dias[dateStr].fin = tEnd;
                                     traccarDays[clavePlaca].dias[dateStr].distancia += (trip.distance || 0);
                                     traccarDays[clavePlaca].dias[dateStr].duracion += (trip.duration || 0);
+                                    traccarDays[clavePlaca].dias[dateStr].viajes.push(trip);
                                 }
                             });
                         }
                     } catch (e) {}
                 }));
 
-                // 3. RESCATE DESDE BD CRUDA (/api/positions):
-                // Si se filtró una placa y hay días con inspección donde /trips no trajo nada (ej. 21 al 25 sept en TFX514),
-                // consultamos directamente /api/positions para esos días.
+                // 3. RESCATE DESDE BD CRUDA (/api/positions)
                 if (placaSeleccionada !== 'TODOS' && devicesToQuery[0]) {
                     const devPrincipal = devicesToQuery[0];
                     const clavePlaca = limpiarPlaca(placaSeleccionada);
@@ -1366,7 +1487,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     const diasFaltantes = diasConInspeccion.filter(dateStr => {
                         const regTr = traccarDays[clavePlaca]?.dias?.[dateStr];
                         if (!regTr) return true;
-                        // También rescatar si el viaje dio 0 km o inicio === fin
                         return formatearHora24Colombia(regTr.inicio) === formatearHora24Colombia(regTr.fin);
                     });
 
@@ -1392,6 +1512,8 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             const infoTraccar = traccarDays[clavePlaca]?.dias || {};
             const infoApp = inspData[clavePlaca]?.dias || {};
             const placaMostrar = inspData[clavePlaca]?.nombreOriginal || traccarDays[clavePlaca]?.nombreOriginal || clavePlaca;
+
+            const devAsociado = traccarDevices.find(d => limpiarPlaca(d.name) === clavePlaca || limpiarPlaca(d.name).includes(clavePlaca));
 
             const todosLosDias = new Set([...Object.keys(infoTraccar), ...Object.keys(infoApp)]);
             const diasOrdenados = Array.from(todosLosDias).sort((a, b) => b.localeCompare(a));
@@ -1428,7 +1550,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     finGPS24 = formatearHora24Colombia(trData.fin);
                 }
 
-                // Distancia y Horas de Motor
+                // Distancia total y Horas de Motor
                 let distKm = (datosJSON.distancia_gps !== undefined && datosJSON.distancia_gps !== '')
                     ? parseFloat(datosJSON.distancia_gps).toFixed(2)
                     : (trData ? (trData.distancia / 1000).toFixed(2) : '0.00');
@@ -1446,7 +1568,21 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     }
                 }
 
-                // Clasificación de Estados (Semáforo)
+                // Cálculo de Tiempo y Kilometraje Post-Planilla (ej. 5:17 p.m. - 8:46 p.m.)
+                const rangoActual = (finApp24 && finGPS24) ? `${finApp24}-${finGPS24}` : '';
+                const kmGuardadoValido = (datosJSON.km_extra_rango === rangoActual && datosJSON.km_extra_gps !== undefined)
+                    ? datosJSON.km_extra_gps
+                    : null;
+
+                const infoPostPlanilla = calcularResumenPostPlanilla(
+                    dateStr,
+                    finApp24,
+                    finGPS24,
+                    trData?.viajes || [],
+                    kmGuardadoValido
+                );
+
+                // Clasificación de Estados (Semáforo evaluando Inicio y Cierre)
                 let diffMinutos = '-';
                 let estadoNumero = 5;
                 let estadoTexto = 'INSPECCIÓN SIN GPS';
@@ -1454,13 +1590,16 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 if (inicioGPS24 && inicioApp24) {
                     const [hApp, mApp] = inicioApp24.split(':').map(Number);
                     const [hGps, mGps] = inicioGPS24.split(':').map(Number);
-                    let diff = Math.abs((hGps * 60 + mGps) - (hApp * 60 + mApp));
-                    diffMinutos = Math.round(diff);
+                    let diffInicio = Math.round(Math.abs((hGps * 60 + mGps) - (hApp * 60 + mApp)));
+                    diffMinutos = diffInicio;
 
-                    if (diff > 30) {
+                    // El semáforo evalúa tanto el desfase al inicio como el exceso al cierre
+                    const maxDesfase = Math.max(diffInicio, infoPostPlanilla.diffFinMin);
+
+                    if (maxDesfase > 30) {
                         estadoNumero = 3;
-                        estadoTexto = 'CRÍTICO';
-                    } else if (diff >= 20) {
+                        estadoTexto = infoPostPlanilla.diffFinMin > 30 ? 'EXCESO CIERRE' : 'CRÍTICO';
+                    } else if (maxDesfase >= 20) {
                         estadoNumero = 2;
                         estadoTexto = 'REVISAR';
                     } else {
@@ -1481,6 +1620,8 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     diffMinutos = 'Pendiente Horas';
                 }
 
+                const traccarDevIdFinal = datosJSON.traccar_device_id || (trData ? trData.deviceId : (devAsociado ? devAsociado.id : ''));
+
                 auditoria.push({
                     id: inData ? inData.id : 'nuevo',
                     fecha: dateStr,
@@ -1493,12 +1634,54 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     distancia: distKm,
                     horasMotor: horasMotorStr,
                     diffMinutos,
+                    // Datos de exceso al cierre (Fin Planilla vs Fin GPS)
+                    diffFinMin: infoPostPlanilla.diffFinMin,
+                    tiempoExtraStr: infoPostPlanilla.tiempoExtraStr,
+                    rangoExtra12h: infoPostPlanilla.rangoExtra12h,
+                    kmExtra: infoPostPlanilla.kmExtra,
+                    necesitaCalculoExactoPos: (infoPostPlanilla.diffFinMin > 0 && kmGuardadoValido === null && !!traccarDevIdFinal),
                     estadoNumero,
                     estadoTexto,
-                    traccarDeviceId: datosJSON.traccar_device_id || (trData ? trData.deviceId : '')
+                    traccarDeviceId: traccarDevIdFinal
                 });
             });
         });
+
+        // 5. Refinar con /api/positions el kilometraje exacto entre Fin Planilla y Fin GPS
+        // para las filas con desfase de cierre que aún no tengan el cálculo guardado en BD
+        const filasPorRefinar = auditoria.filter(r => r.necesitaCalculoExactoPos).slice(0, 15);
+        if (filasPorRefinar.length > 0) {
+            await Promise.all(filasPorRefinar.map(async (reg) => {
+                const clavePlaca = limpiarPlaca(reg.placa);
+                const viajesDia = traccarDays[clavePlaca]?.dias?.[reg.fecha]?.viajes || [];
+                const kmExacto = await extraerKmIntervaloTraccar(
+                    serverUrl,
+                    token,
+                    reg.traccarDeviceId,
+                    reg.fecha,
+                    reg.finApp,
+                    reg.finGPS,
+                    viajesDia
+                );
+                reg.kmExtra = kmExacto;
+
+                // Guardar en caché dentro de la inspección para que la próxima carga sea instantánea
+                if (reg.id && reg.id !== 'nuevo') {
+                    try {
+                        const insp = await prisma.inspeccion.findUnique({ where: { id: parseInt(reg.id) } });
+                        if (insp) {
+                            let d = insp.datos_chequeo || {};
+                            d.km_extra_gps = parseFloat(kmExacto);
+                            d.km_extra_rango = `${reg.finApp}-${reg.finGPS}`;
+                            await prisma.inspeccion.update({
+                                where: { id: insp.id },
+                                data: { datos_chequeo: d }
+                            });
+                        }
+                    } catch (e) {}
+                }
+            }));
+        }
 
         auditoria.sort((a, b) => b.fecha.localeCompare(a.fecha));
 
@@ -1569,10 +1752,27 @@ app.post('/admin/auditoria-horas/crear-manual', verificarRol(['admin']), async (
     }
 });
 
-// 9.3 GUARDAR EDICIÓN RÁPIDA DE HORAS (GPS Y APP) EN LA TABLA
+// 9.3 GUARDAR EDICIÓN RÁPIDA DE HORAS (GPS Y APP) EN LA TABLA Y RECALCULAR KM EXTRA
 app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), async (req, res) => {
     try {
-        const { id, placa, fecha, inicio_app, fin_app, inicio_gps, fin_gps, distancia_gps } = req.body;
+        const { id, placa, fecha, deviceId, inicio_app, fin_app, inicio_gps, fin_gps, distancia_gps } = req.body;
+
+        const finApp24 = formatearHora24Colombia(fin_app);
+        const finGps24 = formatearHora24Colombia(fin_gps);
+
+        // Si hay diferencia al cierre y tenemos unidad Traccar, recalculamos los KM entre fin_app y fin_gps
+        let kmExtraCalculado = 0;
+        let rangoExtra = `${finApp24}-${finGps24}`;
+
+        if (finApp24 && finGps24 && deviceId) {
+            const [hA, mA] = finApp24.split(':').map(Number);
+            const [hG, mG] = finGps24.split(':').map(Number);
+            if ((hG * 60 + mG) > (hA * 60 + mA)) {
+                const { serverUrl, token } = await obtenerDispositivosTraccar();
+                const kmStr = await extraerKmIntervaloTraccar(serverUrl, token, parseInt(deviceId), fecha, finApp24, finGps24, []);
+                kmExtraCalculado = parseFloat(kmStr) || 0;
+            }
+        }
 
         if (id && id !== 'nuevo') {
             const insp = await prisma.inspeccion.findUnique({ where: { id: parseInt(id) } });
@@ -1580,13 +1780,17 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
 
             let datos = insp.datos_chequeo || {};
             datos.inicio_gps = formatearHora24Colombia(inicio_gps);
-            datos.fin_gps = formatearHora24Colombia(fin_gps);
+            datos.fin_gps = finGps24;
             if (inicio_app !== undefined) {
                 datos.inicio_app_manual = formatearHora24Colombia(inicio_app);
                 datos.sin_app = (inicio_app.trim() === '');
             }
-            if (fin_app !== undefined) datos.fin_app_manual = formatearHora24Colombia(fin_app);
+            if (fin_app !== undefined) datos.fin_app_manual = finApp24;
             if (distancia_gps !== undefined) datos.distancia_gps = parseFloat(distancia_gps) || 0;
+            if (deviceId) datos.traccar_device_id = deviceId;
+
+            datos.km_extra_gps = kmExtraCalculado;
+            datos.km_extra_rango = rangoExtra;
 
             await prisma.inspeccion.update({
                 where: { id: parseInt(id) },
@@ -1615,10 +1819,13 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
                         registro_manual: true,
                         sin_app: (!inicio_app || inicio_app.trim() === ''),
                         inicio_app_manual: formatearHora24Colombia(inicio_app),
-                        fin_app_manual: formatearHora24Colombia(fin_app),
+                        fin_app_manual: finApp24,
                         inicio_gps: formatearHora24Colombia(inicio_gps),
-                        fin_gps: formatearHora24Colombia(fin_gps),
-                        distancia_gps: parseFloat(distancia_gps) || 0
+                        fin_gps: finGps24,
+                        distancia_gps: parseFloat(distancia_gps) || 0,
+                        traccar_device_id: deviceId || '',
+                        km_extra_gps: kmExtraCalculado,
+                        km_extra_rango: rangoExtra
                     }
                 }
             });
@@ -1631,10 +1838,10 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
     }
 });
 
-// 9.4 EXTRAER DATOS DE TRACCAR PARA UNA FILA ESPECÍFICA (MOTOR HÍBRIDO TRIPS + POSITIONS)
+// 9.4 EXTRAER DATOS DE TRACCAR PARA UNA FILA ESPECÍFICA (INCLUYE KM ENTRE FIN PLANILLA Y FIN GPS)
 app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), async (req, res) => {
     try {
-        const { id, placa, deviceId, fecha } = req.body;
+        const { id, placa, deviceId, fecha, fin_app } = req.body;
         const { serverUrl, token } = await obtenerDispositivosTraccar();
 
         const datosDia = await extraerDiaCompletoTraccar(serverUrl, token, parseInt(deviceId), fecha);
@@ -1649,22 +1856,53 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
         const durMins = Math.floor(datosDia.duracion / 60000);
         const horasMotor = `${Math.floor(durMins / 60)}h ${durMins % 60}m`;
 
+        let insp = null;
+        let finApp24 = formatearHora24Colombia(fin_app);
+
         if (id && id !== 'nuevo') {
-            const insp = await prisma.inspeccion.findUnique({ where: { id: parseInt(id) } });
-            let datos = insp ? (insp.datos_chequeo || {}) : {};
+            insp = await prisma.inspeccion.findUnique({ where: { id: parseInt(id) } });
+            if (insp && !finApp24) {
+                const dJson = insp.datos_chequeo || {};
+                finApp24 = dJson.fin_app_manual
+                    ? formatearHora24Colombia(dJson.fin_app_manual)
+                    : (insp.fecha_cierre ? formatearHora24Colombia(insp.fecha_cierre) : '');
+            }
+        }
+
+        // Calcular kilometraje exacto recorrido entre Fin Planilla (ej. 17:17) y Fin GPS (ej. 20:46)
+        const kmExtraStr = await extraerKmIntervaloTraccar(
+            serverUrl,
+            token,
+            parseInt(deviceId),
+            fecha,
+            finApp24,
+            fin_gps,
+            datosDia.viajes || []
+        );
+
+        if (insp) {
+            let datos = insp.datos_chequeo || {};
             datos.inicio_gps = inicio_gps;
             datos.fin_gps = fin_gps;
             datos.distancia_gps = parseFloat(distTotalKm);
             datos.horas_motor_gps = horasMotor;
             datos.traccar_device_id = deviceId;
+            datos.km_extra_gps = parseFloat(kmExtraStr) || 0;
+            datos.km_extra_rango = `${finApp24}-${fin_gps}`;
 
             await prisma.inspeccion.update({
-                where: { id: parseInt(id) },
+                where: { id: insp.id },
                 data: { datos_chequeo: datos }
             });
         }
 
-        res.json({ success: true, inicio_gps, fin_gps, distancia: distTotalKm });
+        res.json({
+            success: true,
+            inicio_gps,
+            fin_gps,
+            distancia: distTotalKm,
+            km_extra: kmExtraStr
+        });
     } catch (error) {
         console.error("Error sincronizando fila con Traccar:", error);
         res.status(500).json({ success: false, error: error.message });
