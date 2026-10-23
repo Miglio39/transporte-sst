@@ -1909,6 +1909,152 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
     }
 });
 
+
+// 9.4.1 EXTRAER TRAZABILIDAD GPS Y PARADAS (P) PARA EL MAPA DE RECORRIDO EXTRA (POST-PLANILLA)
+app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req, res) => {
+    try {
+        const { deviceId, placa, fecha, desde, hasta } = req.query;
+        if (!fecha || !desde || !hasta) {
+            return res.status(400).json({ success: false, error: 'Faltan parámetros de fecha u horario.' });
+        }
+
+        const { devices, serverUrl, token } = await obtenerDispositivosTraccar();
+        let idDispositivo = deviceId ? parseInt(deviceId) : null;
+
+        // Si la fila no tenía deviceId seleccionado, buscarlo automáticamente por placa
+        if (!idDispositivo && placa) {
+            const devEncontrado = devices.find(d => limpiarPlaca(d.name) === limpiarPlaca(placa) || limpiarPlaca(d.name).includes(limpiarPlaca(placa)));
+            if (devEncontrado) idDispositivo = devEncontrado.id;
+        }
+
+        if (!idDispositivo) {
+            return res.json({ success: false, error: 'No se encontró la unidad en Traccar para generar el mapa.' });
+        }
+
+        const fromISO = new Date(`${fecha}T${desde}:00-05:00`).toISOString();
+        const toISO = new Date(`${fecha}T${hasta}:59-05:00`).toISOString();
+        const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
+
+        // 1. Descargar todas las coordenadas GPS del intervalo (Fin Planilla -> Fin GPS)
+        const posUrl = `${serverUrl}/api/positions?deviceId=${idDispositivo}&from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`;
+        const posRes = await fetchConTimeout(posUrl, { headers }, 10000);
+
+        if (!posRes.ok) {
+            throw new Error(`Traccar respondió HTTP ${posRes.status}`);
+        }
+
+        const positions = await posRes.json();
+        if (!Array.isArray(positions) || positions.length === 0) {
+            return res.json({
+                success: false,
+                error: `No hay coordenadas registradas entre ${formatearHora12Colombia(desde)} y ${formatearHora12Colombia(hasta)}.`
+            });
+        }
+
+        // Ordenar cronológicamente y filtrar coordenadas válidas
+        positions.sort((a, b) => new Date(a.fixTime || a.deviceTime) - new Date(b.fixTime || b.deviceTime));
+        const puntosValidos = positions.filter(p => p.latitude && p.longitude && (p.latitude !== 0 || p.longitude !== 0));
+
+        if (puntosValidos.length === 0) {
+            return res.json({ success: false, error: 'Las posiciones reportadas en ese horario no contienen coordenadas válidas.' });
+        }
+
+        // 2. Calcular distancia del tramo y preparar puntos para la línea azul del mapa
+        let metrosOdo = 0;
+        const conOdo = puntosValidos.filter(p => p.attributes && typeof p.attributes.totalDistance === 'number' && p.attributes.totalDistance > 0);
+        if (conOdo.length >= 2) {
+            metrosOdo = conOdo[conOdo.length - 1].attributes.totalDistance - conOdo[0].attributes.totalDistance;
+        }
+
+        let metrosHaversine = 0;
+        const coordenadas = [];
+
+        for (let i = 0; i < puntosValidos.length; i++) {
+            const p = puntosValidos[i];
+            if (i > 0) {
+                const prev = puntosValidos[i - 1];
+                const d = distanciaHaversineMetros(prev.latitude, prev.longitude, p.latitude, p.longitude);
+                if (d >= 5 && d < 50000) metrosHaversine += d;
+            }
+            // En Traccar la velocidad viene en nudos (knots): 1 nudo = 1.852 km/h
+            const velKmh = ((p.speed || 0) * 1.852).toFixed(1);
+            coordenadas.push({
+                lat: p.latitude,
+                lng: p.longitude,
+                hora: formatearHora12Colombia(p.fixTime || p.deviceTime),
+                vel: velKmh,
+                ign: p.attributes?.ignition
+            });
+        }
+
+        const kmTramo = ((metrosOdo > 0 ? metrosOdo : metrosHaversine) / 1000).toFixed(2);
+
+        // 3. Detectar Paradas ("P") en ese intervalo (cuando velocidad = 0 por más de 2 minutos)
+        const paradas = [];
+        let inicioParada = null;
+        let ultimoPuntoParada = null;
+
+        for (let i = 0; i < puntosValidos.length; i++) {
+            const p = puntosValidos[i];
+            const vel = p.speed || 0;
+            const tActual = new Date(p.fixTime || p.deviceTime);
+
+            if (vel < 0.5) {
+                if (!inicioParada) {
+                    inicioParada = p;
+                }
+                ultimoPuntoParada = p;
+            } else {
+                if (inicioParada && ultimoPuntoParada) {
+                    const durMs = new Date(ultimoPuntoParada.fixTime || ultimoPuntoParada.deviceTime) - new Date(inicioParada.fixTime || inicioParada.deviceTime);
+                    const durMin = Math.round(durMs / 60000);
+                    if (durMin >= 2) {
+                        paradas.push({
+                            lat: inicioParada.latitude,
+                            lng: inicioParada.longitude,
+                            desde: formatearHora12Colombia(inicioParada.fixTime || inicioParada.deviceTime),
+                            hasta: formatearHora12Colombia(ultimoPuntoParada.fixTime || ultimoPuntoParada.deviceTime),
+                            duracionMin: durMin
+                        });
+                    }
+                }
+                inicioParada = null;
+                ultimoPuntoParada = null;
+            }
+        }
+
+        // Si terminó detenido al final del tramo
+        if (inicioParada && ultimoPuntoParada) {
+            const durMs = new Date(ultimoPuntoParada.fixTime || ultimoPuntoParada.deviceTime) - new Date(inicioParada.fixTime || inicioParada.deviceTime);
+            const durMin = Math.round(durMs / 60000);
+            if (durMin >= 2) {
+                paradas.push({
+                    lat: inicioParada.latitude,
+                    lng: inicioParada.longitude,
+                    desde: formatearHora12Colombia(inicioParada.fixTime || inicioParada.deviceTime),
+                    hasta: formatearHora12Colombia(ultimoPuntoParada.fixTime || ultimoPuntoParada.deviceTime),
+                    duracionMin: durMin
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            placa,
+            fecha,
+            rango12h: `${formatearHora12Colombia(desde)} - ${formatearHora12Colombia(hasta)}`,
+            kmTramo,
+            totalPuntos: coordenadas.length,
+            coordenadas,
+            paradas
+        });
+
+    } catch (error) {
+        console.error('Error generando mapa de tramo extra:', error);
+        res.status(500).json({ success: false, error: 'Error consultando coordenadas en Traccar: ' + error.message });
+    }
+});
+
 // 9.5 RUTA LABORATORIO TRACCAR (TAMBIÉN CON MOTOR HÍBRIDO TRIPS + POSITIONS)
 app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
     const placaSeleccionada = req.query.placa || '';
