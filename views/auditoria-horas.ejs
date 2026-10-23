@@ -64,7 +64,7 @@
         .row-estado-5 { border-left: 5px solid #3b82f6; } 
         .badge-falsa { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
-        /* ESTILOS DE MARCADORES DEL MAPA (IDÉNTICOS AL EJEMPLO TRACCAR) */
+        /* ESTILOS DE MARCADORES DEL MAPA */
         #mapaRecorridoLeaflet {
             width: 100%;
             height: 520px;
@@ -105,6 +105,22 @@
     </style>
 </head>
 <body>
+
+    <!-- PANTALLA DE CARGA (SPINNER GLOBAL PARA CONSULTAS GPS) -->
+    <div id="overlayCargaAnalitica" class="position-fixed top-0 start-0 w-100 h-100 d-none justify-content-center align-items-center" 
+         style="background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px); z-index: 9999;">
+        <div class="bg-white p-4 rounded-4 shadow-lg text-center border-top border-4 border-success" style="max-width: 420px; width: 90%;">
+            <div class="position-relative d-inline-block mb-3">
+                <div class="spinner-border text-success" style="width: 4rem; height: 4rem; border-width: 0.35rem;" role="status"></div>
+                <i class="fas fa-satellite-dish text-dark position-absolute top-50 start-50 translate-middle fs-4"></i>
+            </div>
+            <h6 class="fw-bold text-dark mb-1" id="tituloOverlayCarga">Conectando con el Servidor Satelital Traccar...</h6>
+            <p class="text-muted small mb-3" id="detalleOverlayCarga">Extrayendo viajes, posiciones y cruzando horarios con planillas.</p>
+            <div class="progress" style="height: 6px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success w-100"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- NAVEGACIÓN EMPRESARIAL -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
@@ -173,12 +189,12 @@
             </button>
         </div>
 
-        <!-- PANEL DE FILTRO SUPERIOR -->
+        <!-- PANEL DE FILTRO SUPERIOR CON ACTIVACIÓN DE SPINNER -->
         <div class="data-card p-3 mb-4 bg-white border-0 shadow-sm" style="border-top: 4px solid #10b981 !important;">
-            <form action="/admin/auditoria-horas" method="GET" class="row g-3 align-items-end">
+            <form id="formAnaliticaGPS" action="/admin/auditoria-horas" method="GET" class="row g-3 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label mb-1 fw-bold text-muted small">Vehículo a Analizar (Unificado BD + Traccar):</label>
-                    <select name="placa" class="form-select fw-bold border-secondary">
+                    <select name="placa" id="selectPlacaFiltro" class="form-select fw-bold border-secondary">
                         <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Todas las placas --</option>
                         <% vehiculos.forEach(v => { %>
                             <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
@@ -187,10 +203,12 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label mb-1 fw-bold text-muted small">Mes de Análisis:</label>
-                    <input type="month" name="mes" class="form-control fw-bold border-secondary" value="<%= mesActual %>">
+                    <input type="month" name="mes" id="inputMesFiltro" class="form-control fw-bold border-secondary" value="<%= mesActual %>">
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-dark w-100 fw-bold"><i class="fas fa-sync-alt me-2"></i> Generar Analítica GPS</button>
+                    <button type="submit" id="btnGenerarAnalitica" class="btn btn-dark w-100 fw-bold">
+                        <i class="fas fa-sync-alt me-2"></i> Generar Analítica GPS
+                    </button>
                 </div>
             </form>
         </div>
@@ -424,7 +442,6 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 
-                <!-- Barra de resumen del tramo -->
                 <div class="bg-light border-bottom px-3 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center flex-wrap gap-3 small fw-bold">
                         <span><i class="fas fa-clock text-danger me-1"></i> Franja: <span id="mapaResumenRango" class="text-dark">--</span></span>
@@ -533,11 +550,55 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        // 0. SPINNER DE CARGA GLOBAL PARA EL FORMULARIO DE ANALÍTICA Y RECARGAS
+        function mostrarSpinnerGlobal(titulo, detalle) {
+            const overlay = document.getElementById('overlayCargaAnalitica');
+            if (!overlay) return;
+            if (titulo) document.getElementById('tituloOverlayCarga').textContent = titulo;
+            if (detalle) document.getElementById('detalleOverlayCarga').textContent = detalle;
+            overlay.classList.remove('d-none');
+            overlay.classList.add('d-flex');
+        }
+
+        function ocultarSpinnerGlobal() {
+            const overlay = document.getElementById('overlayCargaAnalitica');
+            if (overlay) {
+                overlay.classList.add('d-none');
+                overlay.classList.remove('d-flex');
+            }
+            const btn = document.getElementById('btnGenerarAnalitica');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Generar Analítica GPS';
+            }
+        }
+
+        const formAnalitica = document.getElementById('formAnaliticaGPS');
+        if (formAnalitica) {
+            formAnalitica.addEventListener('submit', function () {
+                const placa = document.getElementById('selectPlacaFiltro')?.value || 'TODOS';
+                const mes = document.getElementById('inputMesFiltro')?.value || '';
+                const btn = document.getElementById('btnGenerarAnalitica');
+
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Consultando GPS...';
+                }
+
+                mostrarSpinnerGlobal(
+                    `Analizando Vehículo: ${placa}`,
+                    `Conectando con Traccar para el mes ${mes} y calculando recorridos fuera de planilla...`
+                );
+            });
+        }
+
+        window.addEventListener('pageshow', ocultarSpinnerGlobal);
+
+        // MAPA INTERACTIVO DEL RECORRIDO
         let mapaInstancia = null;
         let capaRuta = null;
         const modalMapaBootstrap = new bootstrap.Modal(document.getElementById('modalMapaRecorrido'));
 
-        // FUNCIÓN PARA ABRIR EL MAPA DEL RECORRIDO FUERA DE PLANILLA (5:17 PM - 8:46 PM) O DÍA COMPLETO
         async function abrirMapaTramo(btn, modo = 'EXTRA') {
             const fila = btn.closest('tr');
             const placa = fila.getAttribute('data-placa');
@@ -617,7 +678,6 @@
 
             const latlngs = data.coordenadas.map(c => [c.lat, c.lng]);
 
-            // 1. Línea azul del recorrido (idéntica al ejemplo de Traccar)
             const polyline = L.polyline(latlngs, {
                 color: '#2563eb',
                 weight: 5,
@@ -625,7 +685,6 @@
                 lineJoin: 'round'
             }).addTo(capaRuta);
 
-            // 2. Marcador Verde de Inicio (Ej. 05:17 p. m. cierre de planilla)
             const pInicio = data.coordenadas[0];
             const iconoInicio = L.divIcon({
                 className: '',
@@ -637,7 +696,6 @@
                 .bindPopup(`<b>🟢 Inicio del Tramo</b><br>Hora: ${pInicio.hora}<br>Velocidad: ${pInicio.vel} km/h`)
                 .addTo(capaRuta);
 
-            // 3. Marcador Rojo de Fin (Ej. 08:46 p. m. fin GPS)
             const pFin = data.coordenadas[data.coordenadas.length - 1];
             const iconoFin = L.divIcon({
                 className: '',
@@ -649,7 +707,6 @@
                 .bindPopup(`<b>🔴 Fin Movimiento GPS</b><br>Hora: ${pFin.hora}<br>Distancia Tramo: +${data.kmTramo} km`)
                 .addTo(capaRuta);
 
-            // 4. Marcadores Azules "P" de Paradas / Parqueos durante el horario extra
             const iconoParada = L.divIcon({
                 className: '',
                 html: '<div class="pin-parada-p">P</div>',
@@ -670,7 +727,6 @@
                     .addTo(capaRuta);
             });
 
-            // Ajustar zoom automático a todo el recorrido
             mapaInstancia.fitBounds(polyline.getBounds(), { padding: [35, 35] });
         }
 
@@ -678,10 +734,13 @@
         async function guardarFila(inputElem) {
             const fila = inputElem.closest('tr');
             const selectTraccar = fila.querySelector('.select-traccar');
+            const placa = fila.getAttribute('data-placa');
+            const fecha = fila.getAttribute('data-fecha');
+
             const payload = {
                 id: fila.getAttribute('data-id'),
-                placa: fila.getAttribute('data-placa'),
-                fecha: fila.getAttribute('data-fecha'),
+                placa: placa,
+                fecha: fecha,
                 deviceId: selectTraccar ? selectTraccar.value : '',
                 inicio_gps: fila.querySelector('.input-inicio-gps').value,
                 fin_gps: fila.querySelector('.input-fin-gps').value,
@@ -689,6 +748,8 @@
                 fin_app: fila.querySelector('.input-fin-app').value,
                 distancia_gps: fila.querySelector('.input-distancia').value
             };
+
+            mostrarSpinnerGlobal(`Actualizando registro (${placa})`, `Recalculando diferencias y kilometraje del día ${fecha}...`);
 
             try {
                 const res = await fetch('/admin/auditoria-horas/actualizar-fila', {
@@ -700,9 +761,11 @@
                 if (data.success) {
                     window.location.reload();
                 } else {
+                    ocultarSpinnerGlobal();
                     alert('Error guardando cambios: ' + data.error);
                 }
             } catch (err) {
+                ocultarSpinnerGlobal();
                 alert('Error de conexión al guardar.');
             }
         }
@@ -724,6 +787,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
+            mostrarSpinnerGlobal(`Sincronizando ${placa} con Traccar`, `Extrayendo viajes y recorrido post-planilla del día ${fecha}...`);
+
             try {
                 const res = await fetch('/admin/auditoria-horas/sincronizar-fila', {
                     method: 'POST',
@@ -734,11 +799,13 @@
                 if (data.success) {
                     window.location.reload();
                 } else {
+                    ocultarSpinnerGlobal();
                     alert(data.error || 'No se encontraron viajes en Traccar para esa fecha.');
                     btn.innerHTML = iconoOriginal;
                     btn.disabled = false;
                 }
             } catch (err) {
+                ocultarSpinnerGlobal();
                 alert('Error conectando con Traccar.');
                 btn.innerHTML = iconoOriginal;
                 btn.disabled = false;
@@ -777,6 +844,7 @@
                 if (data.success) {
                     const placaFiltro = (payload.placa_nueva || payload.placa_select).toUpperCase().trim();
                     const mesFiltro = payload.fecha.slice(0, 7);
+                    mostrarSpinnerGlobal(`Guardando Registro Manual (${placaFiltro})`, `Actualizando tablero del mes ${mesFiltro}...`);
                     window.location.href = `/admin/auditoria-horas?placa=${encodeURIComponent(placaFiltro)}&mes=${mesFiltro}`;
                 } else {
                     alert('Error: ' + data.error);
