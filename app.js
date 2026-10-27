@@ -9,8 +9,8 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');               
-const puppeteer = require('puppeteer'); 
+const fs = require('fs');
+const puppeteer = require('puppeteer');
 const nodemailer = require('nodemailer');
 const ejs = require('ejs');
 
@@ -1087,6 +1087,41 @@ function limpiarPlaca(str) {
     return (str || '').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
+// ============================================================================
+// 9.0 GESTIÓN DE GRUPOS DE FLOTA (GRUPO ACACÍAS)
+// ============================================================================
+const RUTA_GRUPOS_JSON = path.join(__dirname, 'grupos_flota.json');
+
+function obtenerGruposFlota() {
+    try {
+        if (fs.existsSync(RUTA_GRUPOS_JSON)) {
+            const raw = fs.readFileSync(RUTA_GRUPOS_JSON, 'utf8');
+            const data = JSON.parse(raw);
+            if (!data.Acacias) data.Acacias = [];
+            return data;
+        }
+    } catch (e) {
+        console.error('Aviso leyendo grupos_flota.json:', e.message);
+    }
+    return { Acacias: [] };
+}
+
+app.post('/admin/auditoria-horas/guardar-grupo', verificarRol(['admin']), (req, res) => {
+    try {
+        const { grupo, placas } = req.body;
+        if (!grupo || !Array.isArray(placas)) {
+            return res.status(400).json({ success: false, error: 'Datos de grupo inválidos' });
+        }
+        const gruposActuales = obtenerGruposFlota();
+        gruposActuales[grupo] = placas.map(p => limpiarPlaca(p)).filter(Boolean);
+        fs.writeFileSync(RUTA_GRUPOS_JSON, JSON.stringify(gruposActuales, null, 2), 'utf8');
+        res.json({ success: true, grupos: gruposActuales });
+    } catch (error) {
+        console.error('Error guardando grupo de flota:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Garantiza formato exacto HH:mm (24h) en hora de Colombia (UTC-5) para <input type="time">
 function formatearHora24Colombia(fechaInput) {
     if (!fechaInput) return '';
@@ -1374,6 +1409,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 vehiculos: listaPlacasUnificada,
                 conductores: conductoresDB,
                 traccarDevices,
+                gruposFlota: obtenerGruposFlota(),
                 usuario: req.usuario
             });
         }
@@ -1693,6 +1729,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             vehiculos: listaPlacasUnificada,
             conductores: conductoresDB,
             traccarDevices,
+            gruposFlota: obtenerGruposFlota(),
             usuario: req.usuario
         });
 
@@ -1997,7 +2034,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
         for (let i = 0; i < puntosValidos.length; i++) {
             const p = puntosValidos[i];
             const vel = p.speed || 0;
-            const tActual = new Date(p.fixTime || p.deviceTime);
 
             if (vel < 0.5) {
                 if (!inicioParada) {

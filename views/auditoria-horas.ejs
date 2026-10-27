@@ -102,6 +102,12 @@
             height: 18px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         }
+
+        /* ESTILO CHECKBOXES GRUPO ACACÍAS */
+        .item-placa-card:hover {
+            background-color: #ecfdf5 !important;
+            border-color: #10b981 !important;
+        }
     </style>
 </head>
 <body>
@@ -176,6 +182,9 @@
             if(r.estadoNumero === 3) totales.criticos++;
             if(r.estadoNumero === 4) totales.fugas++;
         });
+
+        const gruposServer = (typeof gruposFlota !== 'undefined' && gruposFlota) ? gruposFlota : { Acacias: [] };
+        const placasAcaciasInit = Array.isArray(gruposServer.Acacias) ? gruposServer.Acacias : [];
     %>
 
     <div class="container-fluid px-lg-4 mb-4">
@@ -184,24 +193,60 @@
             <h5 class="fw-bold mb-0 text-dark">
                 <i class="fas fa-satellite me-2" style="color: #10b981;"></i> Dashboard Auditoría Satelital (Traccar + Registro Manual)
             </h5>
-            <button type="button" class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistroManual">
-                <i class="fas fa-plus-circle me-1"></i> Ingresar Registro Manual (Sin GPS / Sin App)
-            </button>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-outline-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalGrupoAcacias">
+                    <i class="fas fa-layer-group me-1"></i> Grupo Acacías (<span id="contadorAcaciasTop"><%= placasAcaciasInit.length %></span> placas)
+                </button>
+                <button type="button" class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRegistroManual">
+                    <i class="fas fa-plus-circle me-1"></i> Ingresar Registro Manual (Sin GPS / Sin App)
+                </button>
+            </div>
         </div>
 
-        <!-- PANEL DE FILTRO SUPERIOR CON ACTIVACIÓN DE SPINNER -->
+        <!-- PANEL DE FILTRO SUPERIOR CON FILTRO DE GRUPO ACACÍAS Y SPINNER -->
         <div class="data-card p-3 mb-4 bg-white border-0 shadow-sm" style="border-top: 4px solid #10b981 !important;">
             <form id="formAnaliticaGPS" action="/admin/auditoria-horas" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-5">
-                    <label class="form-label mb-1 fw-bold text-muted small">Vehículo a Analizar (Unificado BD + Traccar):</label>
-                    <select name="placa" id="selectPlacaFiltro" class="form-select fw-bold border-secondary">
-                        <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Todas las placas --</option>
-                        <% vehiculos.forEach(v => { %>
-                            <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
-                        <% }) %>
-                    </select>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0 fw-bold text-muted small">
+                            Vehículo a Analizar (Unificado BD + Traccar):
+                        </label>
+                        <button type="button" class="btn btn-link btn-sm text-success fw-bold p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalGrupoAcacias">
+                            <i class="fas fa-plus-circle me-1"></i> Agregar / Quitar Placas de Acacías (<span id="contadorAcacias"><%= placasAcaciasInit.length %></span>)
+                        </button>
+                    </div>
+
+                    <div class="input-group">
+                        <!-- Selector de Grupo -->
+                        <select id="filtroGrupoSelect" class="form-select fw-bold bg-light border-secondary" style="max-width: 215px;" onchange="aplicarFiltroGrupo()">
+                            <option value="TODOS">📋 Todos los grupos</option>
+                            <option value="ACACIAS">📍 Grupo: Acacías</option>
+                            <option value="OTROS">🚛 Resto de la flota</option>
+                        </select>
+
+                        <!-- Selector de Placa -->
+                        <select name="placa" id="selectPlacaFiltro" class="form-select fw-bold border-secondary">
+                            <option value="TODOS" <%= placaSeleccionada === 'TODOS' ? 'selected' : '' %>>-- Todas las placas --</option>
+                            <optgroup id="optgroupAcacias" label="📍 GRUPO ACACÍAS">
+                                <% vehiculos.forEach(v => { 
+                                    const pLimpia = v.placa.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                    if (placasAcaciasInit.includes(pLimpia)) { %>
+                                        <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
+                                <%  } 
+                                }) %>
+                            </optgroup>
+                            <optgroup id="optgroupOtros" label="🚛 RESTO DE DISPOSITIVOS">
+                                <% vehiculos.forEach(v => { 
+                                    const pLimpia = v.placa.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                    if (!placasAcaciasInit.includes(pLimpia)) { %>
+                                        <option value="<%= v.placa %>" <%= placaSeleccionada === v.placa ? 'selected' : '' %>><%= v.placa %></option>
+                                <%  } 
+                                }) %>
+                            </optgroup>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label mb-1 fw-bold text-muted small">Mes de Análisis:</label>
                     <input type="month" name="mes" id="inputMesFiltro" class="form-control fw-bold border-secondary" value="<%= mesActual %>">
                 </div>
@@ -544,13 +589,204 @@
         </div>
     </div>
 
+    <!-- MODAL PARA GESTIONAR PLACAS DEL GRUPO ACACÍAS -->
+    <div class="modal fade" id="modalGrupoAcacias" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-success text-white">
+                    <h6 class="modal-title fw-bold">
+                        <i class="fas fa-layer-group me-2"></i> Configurar Placas del Grupo: Acacías
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-2">
+                        Busca y marca las placas que pertenecen al grupo <strong>Acacías</strong>. Al guardar, podrás filtrar la lista desplegable para ver únicamente estos vehículos.
+                    </p>
+
+                    <!-- Buscador rápido de placas -->
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="buscadorPlacasModal" class="form-control fw-bold" placeholder="Buscar placa (ej: TFX582, TFX514, TFX296)..." onkeyup="filtrarPlacasModal()">
+                        <button type="button" class="btn btn-outline-success fw-bold" onclick="seleccionarVisiblesAcacias(true)">Marcar visibles</button>
+                    </div>
+
+                    <!-- Lista de placas con checkboxes -->
+                    <div class="row g-2" id="contenedorChecksAcacias" style="max-height: 340px; overflow-y: auto;">
+                        <% vehiculos.forEach(v => { 
+                            const pLimpia = v.placa.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                            const estaEnAcacias = placasAcaciasInit.includes(pLimpia);
+                        %>
+                            <div class="col-6 item-check-placa" data-placa="<%= pLimpia %>">
+                                <label class="d-flex align-items-center p-2 border rounded bg-light item-placa-card" style="cursor: pointer;">
+                                    <input type="checkbox" class="form-check-input me-2 chk-placa-acacias" value="<%= pLimpia %>" data-nombre="<%= v.placa %>" <%= estaEnAcacias ? 'checked' : '' %>>
+                                    <span class="fw-bold text-dark small"><%= v.placa %></span>
+                                </label>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light d-flex justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold" onclick="seleccionarVisiblesAcacias(false)">
+                        <i class="fas fa-eraser me-1"></i> Desmarcar todas
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-sm btn-success fw-bold px-3" id="btnGuardarGrupoAcacias" onclick="guardarGrupoAcacias()">
+                            <i class="fas fa-save me-1"></i> Guardar Grupo Acacías
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- LEAFLET JS PARA DIBUJAR EL RECORRIDO GPS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 0. SPINNER DE CARGA GLOBAL PARA EL FORMULARIO DE ANALÍTICA Y RECARGAS
+        // =========================================================================
+        // 0. GESTIÓN Y FILTRADO DEL GRUPO ACACÍAS
+        // =========================================================================
+        const TODAS_LAS_PLACAS = <%- JSON.stringify(vehiculos.map(v => ({
+            placa: v.placa,
+            limpia: v.placa.toUpperCase().replace(/[^A-Z0-9]/g, '')
+        }))) %>;
+
+        let placasAcacias = <%- JSON.stringify(placasAcaciasInit) %>;
+
+        // Respaldo en localStorage por si había selección previa en el navegador
+        try {
+            const guardadasLocal = JSON.parse(localStorage.getItem('omega_grupo_acacias') || 'null');
+            if (Array.isArray(guardadasLocal) && placasAcacias.length === 0 && guardadasLocal.length > 0) {
+                placasAcacias = guardadasLocal;
+            }
+        } catch (e) {}
+
+        function reconstruirSelectorPlacas() {
+            const filtroGrupo = document.getElementById('filtroGrupoSelect').value;
+            const selectPlaca = document.getElementById('selectPlacaFiltro');
+            const valorActual = selectPlaca.value;
+
+            const optAcacias = document.getElementById('optgroupAcacias');
+            const optOtros = document.getElementById('optgroupOtros');
+            optAcacias.innerHTML = '';
+            optOtros.innerHTML = '';
+
+            TODAS_LAS_PLACAS.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.placa;
+                option.textContent = item.placa;
+                if (item.placa === valorActual) option.selected = true;
+
+                if (placasAcacias.includes(item.limpia)) {
+                    optAcacias.appendChild(option);
+                } else {
+                    optOtros.appendChild(option);
+                }
+            });
+
+            if (filtroGrupo === 'ACACIAS') {
+                optAcacias.style.display = '';
+                optAcacias.disabled = false;
+                optOtros.style.display = 'none';
+                optOtros.disabled = true;
+
+                const limpiaActual = (valorActual || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (valorActual !== 'TODOS' && !placasAcacias.includes(limpiaActual)) {
+                    selectPlaca.value = optAcacias.children.length > 0 ? optAcacias.children[0].value : 'TODOS';
+                }
+            } else if (filtroGrupo === 'OTROS') {
+                optAcacias.style.display = 'none';
+                optAcacias.disabled = true;
+                optOtros.style.display = '';
+                optOtros.disabled = false;
+            } else {
+                optAcacias.style.display = '';
+                optAcacias.disabled = false;
+                optOtros.style.display = '';
+                optOtros.disabled = false;
+            }
+
+            const cont1 = document.getElementById('contadorAcacias');
+            const cont2 = document.getElementById('contadorAcaciasTop');
+            if (cont1) cont1.innerText = placasAcacias.length;
+            if (cont2) cont2.innerText = placasAcacias.length;
+        }
+
+        function aplicarFiltroGrupo() {
+            const valorGrupo = document.getElementById('filtroGrupoSelect').value;
+            localStorage.setItem('omega_filtro_grupo_activo', valorGrupo);
+            reconstruirSelectorPlacas();
+        }
+
+        function filtrarPlacasModal() {
+            const texto = document.getElementById('buscadorPlacasModal').value.toUpperCase().trim();
+            document.querySelectorAll('.item-check-placa').forEach(div => {
+                const p = div.getAttribute('data-placa');
+                div.style.display = p.includes(texto) ? '' : 'none';
+            });
+        }
+
+        function seleccionarVisiblesAcacias(estado) {
+            document.querySelectorAll('.item-check-placa').forEach(div => {
+                if (div.style.display !== 'none') {
+                    const chk = div.querySelector('.chk-placa-acacias');
+                    if (chk) chk.checked = estado;
+                }
+            });
+        }
+
+        async function guardarGrupoAcacias() {
+            const btnGuardar = document.getElementById('btnGuardarGrupoAcacias');
+            const seleccionadas = Array.from(document.querySelectorAll('.chk-placa-acacias:checked')).map(c => c.value);
+            placasAcacias = seleccionadas;
+            localStorage.setItem('omega_grupo_acacias', JSON.stringify(placasAcacias));
+
+            if (btnGuardar) {
+                btnGuardar.disabled = true;
+                btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+            }
+
+            try {
+                await fetch('/admin/auditoria-horas/guardar-grupo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ grupo: 'Acacias', placas: placasAcacias })
+                });
+            } catch (e) {
+                console.warn('Guardado localmente:', e.message);
+            }
+
+            if (btnGuardar) {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Grupo Acacías';
+            }
+
+            document.getElementById('filtroGrupoSelect').value = 'ACACIAS';
+            aplicarFiltroGrupo();
+
+            const modalEl = document.getElementById('modalGrupoAcacias');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const filtroGuardado = localStorage.getItem('omega_filtro_grupo_activo');
+            if (filtroGuardado) {
+                document.getElementById('filtroGrupoSelect').value = filtroGuardado;
+            }
+            document.querySelectorAll('.chk-placa-acacias').forEach(chk => {
+                chk.checked = placasAcacias.includes(chk.value);
+            });
+            reconstruirSelectorPlacas();
+        });
+
+        // =========================================================================
+        // 0.1 SPINNER DE CARGA GLOBAL PARA EL FORMULARIO DE ANALÍTICA Y RECARGAS
+        // =========================================================================
         function mostrarSpinnerGlobal(titulo, detalle) {
             const overlay = document.getElementById('overlayCargaAnalitica');
             if (!overlay) return;
@@ -594,7 +830,9 @@
 
         window.addEventListener('pageshow', ocultarSpinnerGlobal);
 
+        // =========================================================================
         // MAPA INTERACTIVO DEL RECORRIDO
+        // =========================================================================
         let mapaInstancia = null;
         let capaRuta = null;
         const modalMapaBootstrap = new bootstrap.Modal(document.getElementById('modalMapaRecorrido'));
