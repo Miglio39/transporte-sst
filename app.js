@@ -125,11 +125,18 @@ app.get('/setup-admin', async (req, res) => {
         create: { nombre: 'Maria Fernanda Ladino Vega', documento: '1123087694', password: hash, rol: 'admin' }
     });
 
+    await prisma.usuario.upsert({
+        where: { documento: '1000723660' },
+        update: { password: hash },
+        create: { nombre: 'Laura Camila Quintero', documento: '1000723660', password: hash, rol: 'admin' } // <-- Corregido aquí
+    });
+
     res.send(`
         <div style="text-align: center; padding: 50px; font-family: Arial;">
             <h1 style="color: #27ae60;">✅ Cuentas de Administrador Configuradas</h1>
             <p><strong>Yeison:</strong> Doc: 1122141007</p>
             <p><strong>Maria F:</strong> Doc: 1123087694</p>
+            <p><strong>Laura C:</strong> Doc: 1000723660</p>
             <br><a href="/login" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Ir a Iniciar Sesión</a>
         </div>
     `);
