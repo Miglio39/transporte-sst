@@ -94,6 +94,16 @@
             <!-- DATOS INICIALES (Compartidos) -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body row g-3">
+                    <!-- Nuevos campos de Fecha y Hora -->
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-muted small">FECHA DE REGISTRO</label>
+                        <input type="date" name="fecha_registro" id="fecha_registro" class="form-control fw-bold border-secondary" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold text-muted small">HORA DE REGISTRO</label>
+                        <input type="time" name="hora_registro" id="hora_registro" class="form-control fw-bold border-secondary" required>
+                    </div>
+
                     <div class="col-12">
                         <label class="form-label fw-bold text-muted small">TIPO DE EQUIPO</label>
                         <select id="selectorTipoEquipo" class="form-select border-secondary fw-bold" onchange="cambiarVistaPrincipal()">
@@ -405,6 +415,22 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <script>
+        // Establecer fecha y hora actuales por defecto
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            
+            // Ajustar a la zona horaria local (America/Bogota) si es necesario
+            // Por simplicidad, asume que el navegador del usuario está en la zona horaria correcta.
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('fecha_registro').value = `${year}-${month}-${day}`;
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('hora_registro').value = `${hours}:${minutes}`;
+        });
+
         // CONTROLADOR DE VISTAS (CARRO VS MAQUINA)
         function cambiarVistaPrincipal() {
             const tipo = document.getElementById('selectorTipoEquipo').value;
@@ -544,6 +570,12 @@
             }
 
             const tipo = document.getElementById('selectorTipoEquipo').value;
+            
+            // Guardar Fecha y Hora en el JSON
+            evidenciasAlmacenadas['datos_registro'] = {
+                fecha: document.getElementById('fecha_registro').value,
+                hora: document.getElementById('hora_registro').value
+            };
 
             if (tipo === 'CARRO') {
                 const checklistPreop = {};
