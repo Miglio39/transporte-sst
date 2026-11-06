@@ -64,6 +64,20 @@
         .row-estado-5 { border-left: 5px solid #3b82f6; } 
         .badge-falsa { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
+        /* ESTILOS DE DIFERENCIA DE INICIO EN MINUTOS */
+        .diff-inicio-pill {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+        .diff-optimo { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .diff-revisar { background-color: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .diff-critico { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
         /* ESTILOS DE MARCADORES DEL MAPA */
         #mapaRecorridoLeaflet {
             width: 100%;
@@ -175,16 +189,56 @@
     </nav>
 
     <% 
+        // Normalización de cada registro: garantiza que la diferencia en minutos entre
+        // Hora de Inicio Reportada (inicioApp) y Hora de Inicio Satelital (inicioGPS) siempre esté calculada
         let totales = { optimos: 0, revisar: 0, criticos: 0, fugas: 0 };
-        registros.forEach(r => {
-            if(r.estadoNumero === 1) totales.optimos++;
-            if(r.estadoNumero === 2) totales.revisar++;
-            if(r.estadoNumero === 3) totales.criticos++;
-            if(r.estadoNumero === 4) totales.fugas++;
+
+        (registros || []).forEach(r => {
+            let diffCalc = (typeof r.diffMinutos === 'number') ? r.diffMinutos : null;
+            let sentidoCalc = r.detalleDiffInicio || '';
+
+            if (r.inicioApp && r.inicioGPS && /^\d{1,2}:\d{2}/.test(r.inicioApp) && /^\d{1,2}:\d{2}/.test(r.inicioGPS)) {
+                const [hA, mA] = r.inicioApp.split(':').map(Number);
+                const [hG, mG] = r.inicioGPS.split(':').map(Number);
+                const minApp = (hA * 60) + mA;
+                const minGps = (hG * 60) + mG;
+                const delta = minGps - minApp;
+                diffCalc = Math.round(Math.abs(delta));
+
+                if (!sentidoCalc) {
+                    if (delta > 0) sentidoCalc = `GPS inició +${diffCalc} min después`;
+                    else if (delta < 0) sentidoCalc = `GPS inició ${diffCalc} min antes`;
+                    else sentidoCalc = 'Sincronizado (0 min)';
+                }
+            }
+
+            r._diffInicioMin = diffCalc;
+            r._sentidoDiffInicio = sentidoCalc;
+
+            // Clasificación de KPI por diferencia de inicio real (sin que un exceso de cierre oculte un inicio óptimo)
+            if (diffCalc !== null) {
+                if (diffCalc < 20) {
+                    totales.optimos++;
+                    r._estadoInicio = 1;
+                } else if (diffCalc <= 30) {
+                    totales.revisar++;
+                    r._estadoInicio = 2;
+                } else {
+                    totales.criticos++;
+                    r._estadoInicio = 3;
+                }
+            } else {
+                r._estadoInicio = r.estadoNumero;
+                if (r.estadoNumero === 1) totales.optimos++;
+                if (r.estadoNumero === 2) totales.revisar++;
+                if (r.estadoNumero === 3) totales.criticos++;
+                if (r.estadoNumero === 4) totales.fugas++;
+            }
         });
 
         const gruposServer = (typeof gruposFlota !== 'undefined' && gruposFlota) ? gruposFlota : { Acacias: [] };
         const placasAcaciasInit = Array.isArray(gruposServer.Acacias) ? gruposServer.Acacias : [];
+        const topConductoresInit = (typeof topConductoresMes !== 'undefined' && Array.isArray(topConductoresMes)) ? topConductoresMes : [];
     %>
 
     <div class="container-fluid px-lg-4 mb-4">
@@ -258,7 +312,7 @@
             </form>
         </div>
 
-        <!-- 1. FILA DE KPIS -->
+        <!-- 1. FILA DE KPIS (BASADOS EN DIFERENCIA DE INICIO EN MINUTOS) -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="card kpi-card kpi-green h-100">
@@ -318,7 +372,10 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-5">
                     <div class="chart-card h-100">
-                        <div class="chart-header"><i class="fas fa-trophy me-2 text-warning"></i> Top 5: Mejores Conductores (Días Óptimos)</div>
+                        <div class="chart-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-trophy me-2 text-warning"></i> Top 5: Conductores del Mes</span>
+                            <span class="badge bg-light text-secondary border" style="font-size: 0.7rem;"><%= mesActual %></span>
+                        </div>
                         <div class="chart-body d-flex justify-content-center align-items-center">
                             <canvas id="conductoresChart"></canvas>
                         </div>
@@ -348,9 +405,9 @@
                                 <th class="ps-3">Día / Fecha</th>
                                 <th>Conductor y Placa</th>
                                 <th class="text-center bg-light text-primary" style="min-width: 270px;">Tiempos Satelitales (Traccar / Manual)</th>
-                                <th class="text-center" style="min-width: 220px;">Tiempos App / Planilla (Editable)</th>
+                                <th class="text-center" style="min-width: 235px;">Tiempos App / Planilla (Editable)</th>
                                 <th class="text-center" style="min-width: 195px;">Recorrido (Km)</th>
-                                <th class="text-center pe-3" style="min-width: 165px;">Auditoría</th>
+                                <th class="text-center pe-3" style="min-width: 185px;">Auditoría (Dif. Inicio / Cierre)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -362,6 +419,13 @@
                                 if(reg.estadoNumero === 3) badgeClase = 'badge-critico';
                                 if(reg.estadoNumero === 4) badgeClase = 'badge-fuga';
                                 if(reg.estadoNumero === 5) badgeClase = 'badge-falsa';
+
+                                const tieneDiffInicio = (typeof reg._diffInicioMin === 'number');
+                                let clasePillDiff = 'diff-optimo';
+                                if (tieneDiffInicio) {
+                                    if (reg._diffInicioMin > 30) clasePillDiff = 'diff-critico';
+                                    else if (reg._diffInicioMin >= 20) clasePillDiff = 'diff-revisar';
+                                }
                             %>
                             <tr class="<%= claseFila %>" data-id="<%= reg.id %>" data-placa="<%= reg.placa %>" data-conductor="<%= reg.conductor %>" data-fecha="<%= reg.fecha %>">
                                 <td class="fw-bold ps-3"><%= reg.fecha %></td>
@@ -396,28 +460,36 @@
 
                                     <div class="d-flex gap-1">
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-white text-success border-success px-1"><i class="fas fa-play"></i></span>
+                                            <span class="input-group-text bg-white text-success border-success px-1" title="Hora Inicio Satelital (GPS)"><i class="fas fa-play"></i></span>
                                             <input type="time" class="form-control border-success text-success fw-bold input-inicio-gps" value="<%= reg.inicioGPS %>" onchange="guardarFila(this)">
                                         </div>
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-white text-danger border-danger px-1"><i class="fas fa-stop"></i></span>
+                                            <span class="input-group-text bg-white text-danger border-danger px-1" title="Hora Fin Satelital (GPS)"><i class="fas fa-stop"></i></span>
                                             <input type="time" class="form-control border-danger text-danger fw-bold input-fin-gps" value="<%= reg.finGPS %>" onchange="guardarFila(this)">
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- COLUMNA TIEMPOS APP / PLANILLA (EDITABLE) -->
+                                <!-- COLUMNA TIEMPOS APP / PLANILLA (EDITABLE) + DIFERENCIA EN MINUTOS -->
                                 <td class="text-center border-start p-2">
                                     <div class="d-flex flex-column gap-1">
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-light text-primary px-2" title="Inicio App / Planilla"><i class="fas fa-play me-1"></i> Inic</span>
+                                            <span class="input-group-text bg-light text-primary px-2" title="Hora de Inicio Reportada (Planilla/App)"><i class="fas fa-play me-1"></i> Inic</span>
                                             <input type="time" class="form-control fw-bold input-inicio-app" value="<%= reg.inicioApp %>" onchange="guardarFila(this)">
                                         </div>
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-light text-danger px-2" title="Fin App / Planilla"><i class="fas fa-stop me-1"></i> Fin</span>
+                                            <span class="input-group-text bg-light text-danger px-2" title="Hora de Fin Reportada (Planilla/App)"><i class="fas fa-stop me-1"></i> Fin</span>
                                             <input type="time" class="form-control fw-bold input-fin-app" value="<%= reg.finApp %>" onchange="guardarFila(this)">
                                         </div>
                                     </div>
+
+                                    <% if (tieneDiffInicio) { %>
+                                        <div class="mt-1">
+                                            <span class="diff-inicio-pill <%= clasePillDiff %>" title="Diferencia entre Hora de Inicio Reportada (<%= reg.inicioApp %>) y Hora de Inicio Satelital (<%= reg.inicioGPS %>)">
+                                                <i class="fas fa-clock me-1"></i> Dif. Inicio: <%= reg._diffInicioMin %> min
+                                            </span>
+                                        </div>
+                                    <% } %>
                                 </td>
 
                                 <!-- DISTANCIA TOTAL, HORAS MOTOR, KILOMETRAJE EXTRA Y BOTÓN DE MAPA -->
@@ -443,22 +515,28 @@
                                     <% } %>
                                 </td>
 
-                                <!-- ESTADO AUDITORÍA (INICIO + CIERRE) -->
+                                <!-- ESTADO AUDITORÍA (DIFERENCIA DE INICIO EN MINUTOS + EXCESO AL CIERRE) -->
                                 <td class="text-center pe-3 border-start">
                                     <div class="estado-box <%= badgeClase %> shadow-sm mb-1 d-block w-100">
                                         <%= reg.estadoTexto %>
                                     </div>
-                                    <% if(reg.estadoNumero >= 1 && reg.estadoNumero <= 3) { %>
-                                        <span class="fw-bold d-block <%= (typeof reg.diffMinutos === 'number' && reg.diffMinutos > 30) ? 'text-danger' : 'text-dark' %>" style="font-size: 0.78rem;">
-                                            Inicio: <%= reg.diffMinutos %> min dif.
-                                        </span>
+
+                                    <% if (tieneDiffInicio) { %>
+                                        <div class="p-1 rounded border mb-1 <%= clasePillDiff %>" style="font-size: 0.76rem; line-height: 1.2;">
+                                            <div class="fw-bold">
+                                                Inicio: <%= reg._diffInicioMin %> min dif.
+                                            </div>
+                                            <% if (reg._sentidoDiffInicio) { %>
+                                                <small class="d-block opacity-75" style="font-size: 0.67rem;"><%= reg._sentidoDiffInicio %></small>
+                                            <% } %>
+                                        </div>
                                     <% } else { %>
                                         <span class="text-muted small fw-bold d-block"><%= reg.diffMinutos %></span>
                                     <% } %>
 
                                     <% if (reg.diffFinMin > 0) { %>
                                         <div class="mt-1">
-                                            <span class="badge bg-danger text-white px-2 py-1 shadow-sm" style="font-size: 0.72rem;" title="Tiempo operado en GPS después de cerrada la planilla (<%= reg.rangoExtra12h %>)">
+                                            <span class="badge bg-danger text-white px-2 py-1 shadow-sm w-100" style="font-size: 0.72rem;" title="Tiempo operado en GPS después de cerrada la planilla (<%= reg.rangoExtra12h %>)">
                                                 <i class="fas fa-exclamation-circle me-1"></i> Cierre: +<%= reg.tiempoExtraStr %>
                                             </span>
                                         </div>
@@ -657,7 +735,6 @@
 
         let placasAcacias = <%- JSON.stringify(placasAcaciasInit) %>;
 
-        // Respaldo en localStorage por si había selección previa en el navegador
         try {
             const guardadasLocal = JSON.parse(localStorage.getItem('omega_grupo_acacias') || 'null');
             if (Array.isArray(guardadasLocal) && placasAcacias.length === 0 && guardadasLocal.length > 0) {
@@ -823,7 +900,7 @@
 
                 mostrarSpinnerGlobal(
                     `Analizando Vehículo: ${placa}`,
-                    `Conectando con Traccar para el mes ${mes} y calculando recorridos fuera de planilla...`
+                    `Conectando con Traccar para el mes ${mes} y calculando diferencias de inicio y cierre...`
                 );
             });
         }
@@ -987,7 +1064,7 @@
                 distancia_gps: fila.querySelector('.input-distancia').value
             };
 
-            mostrarSpinnerGlobal(`Actualizando registro (${placa})`, `Recalculando diferencias y kilometraje del día ${fecha}...`);
+            mostrarSpinnerGlobal(`Actualizando registro (${placa})`, `Recalculando diferencias en minutos y kilometraje del día ${fecha}...`);
 
             try {
                 const res = await fetch('/admin/auditoria-horas/actualizar-fila', {
@@ -1096,35 +1173,153 @@
             }
         }
 
-        // 4. GRÁFICOS DE INTELIGENCIA OPERATIVA (CHART.JS)
+        // =========================================================================
+        // 4. GRÁFICOS DE INTELIGENCIA OPERATIVA (CHART.JS) - TOP 5 CONDUCTORES MES
+        // =========================================================================
         const rawData = <%- JSON.stringify(registros || []) %>;
-        
+        const topConductoresServer = <%- JSON.stringify(topConductoresInit) %>;
+
+        // Función auxiliar para calcular minutos de diferencia de inicio en el navegador
+        function calcularMinutosDiffInicio(r) {
+            if (typeof r._diffInicioMin === 'number') return r._diffInicioMin;
+            if (typeof r.diffMinutos === 'number') return r.diffMinutos;
+            if (r.inicioApp && r.inicioGPS && /^\d{1,2}:\d{2}/.test(r.inicioApp) && /^\d{1,2}:\d{2}/.test(r.inicioGPS)) {
+                const [hA, mA] = r.inicioApp.split(':').map(Number);
+                const [hG, mG] = r.inicioGPS.split(':').map(Number);
+                return Math.round(Math.abs(((hG * 60) + mG) - ((hA * 60) + mA)));
+            }
+            return null;
+        }
+
         if (rawData && rawData.length > 0) {
-            const conductoresOptimos = {};
+            const conductoresMap = {};
             const placasStats = {};
 
             rawData.forEach(r => {
-                if (r.estadoNumero === 1 && r.conductor !== 'N/A (Sin App)') {
-                    conductoresOptimos[r.conductor] = (conductoresOptimos[r.conductor] || 0) + 1;
+                const diffMin = calcularMinutosDiffInicio(r);
+                let estadoRealInicio = r.estadoNumero;
+                if (diffMin !== null) {
+                    if (diffMin < 20) estadoRealInicio = 1;
+                    else if (diffMin <= 30) estadoRealInicio = 2;
+                    else estadoRealInicio = 3;
                 }
 
+                // Acumular estadísticas por conductor a partir de las filas cargadas
+                const nombreCond = (r.conductor || '').trim();
+                if (nombreCond && nombreCond !== 'N/A (Sin App)' && nombreCond !== 'NO REGISTRADO') {
+                    if (!conductoresMap[nombreCond]) {
+                        conductoresMap[nombreCond] = {
+                            conductor: nombreCond,
+                            optimos: 0,
+                            revisar: 0,
+                            criticos: 0,
+                            totalDias: 0,
+                            sumaMinutos: 0,
+                            conDiff: 0
+                        };
+                    }
+                    conductoresMap[nombreCond].totalDias++;
+                    if (estadoRealInicio === 1) conductoresMap[nombreCond].optimos++;
+                    else if (estadoRealInicio === 2) conductoresMap[nombreCond].revisar++;
+                    else if (estadoRealInicio === 3) conductoresMap[nombreCond].criticos++;
+
+                    if (diffMin !== null) {
+                        conductoresMap[nombreCond].sumaMinutos += diffMin;
+                        conductoresMap[nombreCond].conDiff++;
+                    }
+                }
+
+                // Acumular estadísticas por vehículo
                 if (!placasStats[r.placa]) {
                     placasStats[r.placa] = { optimos: 0, revisar: 0, criticos: 0, fugas: 0 };
                 }
-                if (r.estadoNumero === 1) placasStats[r.placa].optimos++;
-                if (r.estadoNumero === 2) placasStats[r.placa].revisar++;
-                if (r.estadoNumero === 3) placasStats[r.placa].criticos++;
-                if (r.estadoNumero === 4) placasStats[r.placa].fugas++;
+                if (estadoRealInicio === 1) placasStats[r.placa].optimos++;
+                else if (estadoRealInicio === 2) placasStats[r.placa].revisar++;
+                else if (estadoRealInicio === 3) placasStats[r.placa].criticos++;
+                else if (r.estadoNumero === 4) placasStats[r.placa].fugas++;
             });
 
-            const topConductores = Object.entries(conductoresOptimos).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            let labelsConductores = topConductores.map(c => c[0]);
-            let dataConductores = topConductores.map(c => c[1]);
-
-            if (labelsConductores.length === 0) {
-                labelsConductores = ['Sin días óptimos registrados'];
-                dataConductores = [0];
+            // Si el backend envió el ranking global del mes (topConductoresMes), lo fusionamos/priorizamos
+            let listaTop5 = [];
+            if (Array.isArray(topConductoresServer) && topConductoresServer.length > 0) {
+                listaTop5 = topConductoresServer.slice(0, 5).map(c => {
+                    const localInfo = conductoresMap[c.conductor] || {};
+                    return {
+                        conductor: c.conductor,
+                        optimos: c.optimos !== undefined ? c.optimos : (localInfo.optimos || 0),
+                        revisar: c.revisar !== undefined ? c.revisar : (localInfo.revisar || 0),
+                        criticos: c.criticos !== undefined ? c.criticos : (localInfo.criticos || 0),
+                        totalDias: c.totalInspecciones || localInfo.totalDias || c.valor || 0,
+                        promedioDiff: c.promedioDiff !== undefined ? c.promedioDiff : (localInfo.conDiff > 0 ? Math.round(localInfo.sumaMinutos / localInfo.conDiff) : null)
+                    };
+                });
+            } else {
+                listaTop5 = Object.values(conductoresMap).sort((a, b) => {
+                    if (b.optimos !== a.optimos) return b.optimos - a.optimos;
+                    if (b.revisar !== a.revisar) return b.revisar - a.revisar;
+                    const promA = a.conDiff > 0 ? (a.sumaMinutos / a.conDiff) : 9999;
+                    const promB = b.conDiff > 0 ? (b.sumaMinutos / b.conDiff) : 9999;
+                    if (promA !== promB) return promA - promB;
+                    return b.totalDias - a.totalDias;
+                }).slice(0, 5).map(c => ({
+                    conductor: c.conductor,
+                    optimos: c.optimos,
+                    revisar: c.revisar,
+                    criticos: c.criticos,
+                    totalDias: c.totalDias,
+                    promedioDiff: c.conDiff > 0 ? Math.round(c.sumaMinutos / c.conDiff) : null
+                }));
             }
+
+            const labelsConductores = listaTop5.length > 0
+                ? listaTop5.map(c => c.promedioDiff !== null ? `${c.conductor} (~${c.promedioDiff}m dif.)` : c.conductor)
+                : ['Sin conductores registrados'];
+
+            const dataCondOptimos = listaTop5.length > 0 ? listaTop5.map(c => c.optimos) : [0];
+            const dataCondRevisar = listaTop5.length > 0 ? listaTop5.map(c => c.revisar) : [0];
+            const dataCondCriticos = listaTop5.length > 0 ? listaTop5.map(c => c.criticos) : [0];
+
+            new Chart(document.getElementById('conductoresChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsConductores,
+                    datasets: [
+                        {
+                            label: 'Óptimos (<20m)',
+                            data: dataCondOptimos,
+                            backgroundColor: '#10b981',
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Para Revisar (20-30m)',
+                            data: dataCondRevisar,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        },
+                        {
+                            label: 'Críticos (>30m)',
+                            data: dataCondCriticos,
+                            backgroundColor: '#ef4444',
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } }
+                    },
+                    scales: {
+                        x: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        y: { stacked: true, grid: { display: false } }
+                    }
+                }
+            });
 
             const labelsPlacas = Object.keys(placasStats);
             const dataOptimos = labelsPlacas.map(p => placasStats[p].optimos);
@@ -1132,39 +1327,15 @@
             const dataCriticos = labelsPlacas.map(p => placasStats[p].criticos);
             const dataFugas = labelsPlacas.map(p => placasStats[p].fugas);
 
-            new Chart(document.getElementById('conductoresChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labelsConductores,
-                    datasets: [{
-                        label: 'Días Laborados en Estado Óptimo',
-                        data: dataConductores,
-                        backgroundColor: '#10b981', 
-                        borderRadius: 4,
-                        barPercentage: 0.5
-                    }]
-                },
-                options: {
-                    indexAxis: 'y', 
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
-                        y: { grid: { display: false } }
-                    }
-                }
-            });
-
             new Chart(document.getElementById('placasChart').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: labelsPlacas,
                     datasets: [
-                        { label: 'Óptimos', data: dataOptimos, backgroundColor: '#10b981', borderRadius: 2 },
-                        { label: 'Para Revisar', data: dataRevisar, backgroundColor: '#f59e0b', borderRadius: 2 },
-                        { label: 'Críticos', data: dataCriticos, backgroundColor: '#ef4444', borderRadius: 2 },
-                        { label: 'Fugas', data: dataFugas, backgroundColor: '#0f172a', borderRadius: 2 }
+                        { label: 'Óptimos (<20m)', data: dataOptimos, backgroundColor: '#10b981', borderRadius: 2 },
+                        { label: 'Para Revisar (20-30m)', data: dataRevisar, backgroundColor: '#f59e0b', borderRadius: 2 },
+                        { label: 'Críticos (>30m)', data: dataCriticos, backgroundColor: '#ef4444', borderRadius: 2 },
+                        { label: 'Fugas (Sin App)', data: dataFugas, backgroundColor: '#0f172a', borderRadius: 2 }
                     ]
                 },
                 options: {

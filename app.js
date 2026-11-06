@@ -1395,6 +1395,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const conductoresDB = await prisma.usuario.findMany({ where: { rol: 'conductor' }, orderBy: { nombre: 'asc' } });
 
         const { devices: traccarDevices, serverUrl, token } = await obtenerDispositivosTraccar();
+        const gruposFlotaActual = obtenerGruposFlota();
 
         // Unificar placas de BD + Traccar
         const mapaPlacas = new Map();
@@ -1407,20 +1408,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         });
         const listaPlacasUnificada = Array.from(mapaPlacas.values()).sort().map(p => ({ placa: p }));
 
-        if (!req.query.placa && !req.query.mes) {
-            return res.render('auditoria-horas', {
-                title: 'Dashboard Auditoría GPS',
-                registros: [],
-                mesActual,
-                placaSeleccionada,
-                vehiculos: listaPlacasUnificada,
-                conductores: conductoresDB,
-                traccarDevices,
-                gruposFlota: obtenerGruposFlota(),
-                usuario: req.usuario
-            });
-        }
-
         const [yearStr, monthStr] = mesActual.split('-');
         const year = parseInt(yearStr);
         const month = parseInt(monthStr) - 1;
@@ -1431,39 +1418,78 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const ahora = new Date();
         const toDateConsulta = endDateISO > ahora ? ahora : endDateISO;
 
-        // 1. Obtener inspecciones de la Base de Datos
+        // 1. Obtener TODAS las inspecciones del mes en la Base de Datos (sin descartar placas para poder armar el Top 5 Mensual)
         const inspecciones = await prisma.inspeccion.findMany({
             where: { eliminado: false, fecha_apertura: { gte: startDateISO, lte: endDateISO } },
             include: { conductor: true },
             orderBy: { fecha_apertura: 'desc' }
         });
 
+        // Mapa global del mes (todas las placas) y mapa filtrado (placa seleccionada)
+        let inspDataTodas = {};
         let inspData = {};
+        let ultimoConductorPorPlaca = {};
+
         inspecciones.forEach(insp => {
             const clavePlaca = limpiarPlaca(insp.vehiculo_placa);
-            if (placaSeleccionada !== 'TODOS' && clavePlaca !== limpiarPlaca(placaSeleccionada)) return;
-
             const dateStr = obtenerFechaColombiaYYYYMMDD(insp.fecha_apertura);
-            if (!inspData[clavePlaca]) inspData[clavePlaca] = { nombreOriginal: insp.vehiculo_placa.toUpperCase(), dias: {} };
-            const existente = inspData[clavePlaca].dias[dateStr];
-            if (!existente || (!existente.datos_chequeo?.inicio_gps && insp.datos_chequeo?.inicio_gps) || new Date(insp.fecha_apertura) < new Date(existente.fecha_apertura)) {
-                inspData[clavePlaca].dias[dateStr] = insp;
+            const nombreCond = (insp.datos_chequeo?.conductor_manual || insp.conductor?.nombre || '').trim();
+
+            if (nombreCond && !ultimoConductorPorPlaca[clavePlaca]) {
+                ultimoConductorPorPlaca[clavePlaca] = nombreCond;
             }
+
+            // Guardar en el mapa global de todo el mes (para el Top 5 de Conductores)
+            if (!inspDataTodas[clavePlaca]) {
+                inspDataTodas[clavePlaca] = { nombreOriginal: insp.vehiculo_placa.toUpperCase(), dias: {} };
+            }
+            const existenteGlobal = inspDataTodas[clavePlaca].dias[dateStr];
+            if (!existenteGlobal || (!existenteGlobal.datos_chequeo?.inicio_gps && insp.datos_chequeo?.inicio_gps) || new Date(insp.fecha_apertura) < new Date(existenteGlobal.fecha_apertura)) {
+                inspDataTodas[clavePlaca].dias[dateStr] = insp;
+            }
+
+            // Guardar en el mapa de la tabla según el filtro seleccionado
+            if (placaSeleccionada !== 'TODOS' && clavePlaca !== limpiarPlaca(placaSeleccionada)) return;
+            if (!inspData[clavePlaca]) {
+                inspData[clavePlaca] = { nombreOriginal: insp.vehiculo_placa.toUpperCase(), dias: {} };
+            }
+            inspData[clavePlaca].dias[dateStr] = inspDataTodas[clavePlaca].dias[dateStr];
         });
 
-        // 2. Consultar viajes en Traccar (dividido en bloques semanales)
+        // Si entró por primera vez sin parámetros en la URL, mostrar vista limpia
+        if (!req.query.placa && !req.query.mes) {
+            return res.render('auditoria-horas', {
+                title: 'Dashboard Auditoría GPS',
+                registros: [],
+                topConductoresMes: [],
+                mesActual,
+                placaSeleccionada,
+                vehiculos: listaPlacasUnificada,
+                conductores: conductoresDB,
+                traccarDevices,
+                gruposFlota: gruposFlotaActual,
+                usuario: req.usuario
+            });
+        }
+
+        // 2. Consultar viajes en Traccar (incluyendo tanto la placa seleccionada como las placas con inspecciones en el mes)
         let traccarDays = {};
         if (traccarDevices.length > 0) {
-            let devicesToQuery = [];
-            if (placaSeleccionada !== 'TODOS') {
-                const placaLimpia = limpiarPlaca(placaSeleccionada);
-                devicesToQuery = traccarDevices.filter(d =>
-                    limpiarPlaca(d.name) === placaLimpia ||
-                    limpiarPlaca(d.uniqueId) === placaLimpia ||
-                    limpiarPlaca(d.name).includes(placaLimpia)
-                );
+            const placaLimpiaSel = limpiarPlaca(placaSeleccionada);
+            const placasConInspSet = new Set(Object.keys(inspDataTodas));
+
+            // Dispositivo seleccionado + dispositivos que tienen inspecciones este mes para poder calificar a los conductores
+            let devicesToQuery = traccarDevices.filter(d => {
+                const lp = limpiarPlaca(d.name);
+                const lu = limpiarPlaca(d.uniqueId);
+                const esSeleccionada = (placaSeleccionada !== 'TODOS') && (lp === placaLimpiaSel || lu === placaLimpiaSel || lp.includes(placaLimpiaSel));
+                return esSeleccionada || placasConInspSet.has(lp);
+            });
+
+            if (devicesToQuery.length === 0 && placaSeleccionada === 'TODOS') {
+                devicesToQuery = traccarDevices.slice(0, 15);
             } else {
-                devicesToQuery = traccarDevices.slice(0, 8);
+                devicesToQuery = devicesToQuery.slice(0, 20);
             }
 
             if (devicesToQuery.length > 0) {
@@ -1486,7 +1512,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     try {
                         const resTrips = await fetchConTimeout(url, {
                             headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                        }, 8000);
+                        }, 8500);
                         if (resTrips.ok) {
                             const trips = await resTrips.json();
                             trips.forEach(trip => {
@@ -1497,6 +1523,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                                 const tStart = new Date(trip.startTime);
                                 const tEnd = new Date(trip.endTime);
                                 const dateStr = obtenerFechaColombiaYYYYMMDD(tStart);
+                                const distPositiva = Math.max(0, Number(trip.distance || 0));
 
                                 if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: placaNombre, dias: {} };
 
@@ -1504,16 +1531,16 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                                     traccarDays[clavePlaca].dias[dateStr] = {
                                         inicio: tStart,
                                         fin: tEnd,
-                                        distancia: trip.distance || 0,
-                                        duracion: trip.duration || 0,
+                                        distancia: distPositiva,
+                                        duracion: Math.max(0, Number(trip.duration || 0)),
                                         deviceId: dev ? dev.id : '',
                                         viajes: [trip]
                                     };
                                 } else {
                                     if (tStart < traccarDays[clavePlaca].dias[dateStr].inicio) traccarDays[clavePlaca].dias[dateStr].inicio = tStart;
                                     if (tEnd > traccarDays[clavePlaca].dias[dateStr].fin) traccarDays[clavePlaca].dias[dateStr].fin = tEnd;
-                                    traccarDays[clavePlaca].dias[dateStr].distancia += (trip.distance || 0);
-                                    traccarDays[clavePlaca].dias[dateStr].duracion += (trip.duration || 0);
+                                    traccarDays[clavePlaca].dias[dateStr].distancia += distPositiva;
+                                    traccarDays[clavePlaca].dias[dateStr].duracion += Math.max(0, Number(trip.duration || 0));
                                     traccarDays[clavePlaca].dias[dateStr].viajes.push(trip);
                                 }
                             });
@@ -1521,37 +1548,43 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     } catch (e) {}
                 }));
 
-                // 3. RESCATE DESDE BD CRUDA (/api/positions)
-                if (placaSeleccionada !== 'TODOS' && devicesToQuery[0]) {
-                    const devPrincipal = devicesToQuery[0];
-                    const clavePlaca = limpiarPlaca(placaSeleccionada);
-                    const diasConInspeccion = Object.keys(inspData[clavePlaca]?.dias || {});
+                // 3. RESCATE DESDE BD CRUDA (/api/positions) para la placa seleccionada
+                if (placaSeleccionada !== 'TODOS') {
+                    const devPrincipal = devicesToQuery.find(d => limpiarPlaca(d.name).includes(placaLimpiaSel)) || devicesToQuery[0];
+                    if (devPrincipal) {
+                        const clavePlaca = limpiarPlaca(placaSeleccionada);
+                        const diasConInspeccion = Object.keys(inspData[clavePlaca]?.dias || {});
 
-                    const diasFaltantes = diasConInspeccion.filter(dateStr => {
-                        const regTr = traccarDays[clavePlaca]?.dias?.[dateStr];
-                        if (!regTr) return true;
-                        return formatearHora24Colombia(regTr.inicio) === formatearHora24Colombia(regTr.fin);
-                    });
+                        const diasFaltantes = diasConInspeccion.filter(dateStr => {
+                            const regTr = traccarDays[clavePlaca]?.dias?.[dateStr];
+                            if (!regTr) return true;
+                            return formatearHora24Colombia(regTr.inicio) === formatearHora24Colombia(regTr.fin);
+                        });
 
-                    await Promise.all(diasFaltantes.map(async (dateStr) => {
-                        const datosRescate = await extraerDiaCompletoTraccar(serverUrl, token, devPrincipal.id, dateStr);
-                        if (datosRescate) {
-                            if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPrincipal.name.toUpperCase(), dias: {} };
-                            traccarDays[clavePlaca].dias[dateStr] = {
-                                ...datosRescate,
-                                deviceId: devPrincipal.id
-                            };
-                        }
-                    }));
+                        await Promise.all(diasFaltantes.map(async (dateStr) => {
+                            const datosRescate = await extraerDiaCompletoTraccar(serverUrl, token, devPrincipal.id, dateStr);
+                            if (datosRescate) {
+                                if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPrincipal.name.toUpperCase(), dias: {} };
+                                traccarDays[clavePlaca].dias[dateStr] = {
+                                    ...datosRescate,
+                                    distancia: Math.max(0, Number(datosRescate.distancia || 0)),
+                                    deviceId: devPrincipal.id
+                                };
+                            }
+                        }));
+                    }
                 }
             }
         }
 
-        // 4. Cruzar datos (Base de Datos + Traccar + Registros Manuales)
+        // 4. Cruzar datos para la tabla principal (según el filtro de placa)
         let auditoria = [];
-        const clavesPlacas = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
+        let promesasGuardarCacheGps = [];
+        const clavesPlacasTabla = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
 
-        clavesPlacas.forEach(clavePlaca => {
+        clavesPlacasTabla.forEach(clavePlaca => {
+            if (placaSeleccionada !== 'TODOS' && clavePlaca !== limpiarPlaca(placaSeleccionada)) return;
+
             const infoTraccar = traccarDays[clavePlaca]?.dias || {};
             const infoApp = inspData[clavePlaca]?.dias || {};
             const placaMostrar = inspData[clavePlaca]?.nombreOriginal || traccarDays[clavePlaca]?.nombreOriginal || clavePlaca;
@@ -1567,7 +1600,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 const datosJSON = inData?.datos_chequeo || {};
                 const sinAppManual = datosJSON.sin_app === true;
 
-                // Horas App en formato militar exacto HH:mm
                 let inicioApp24 = '';
                 let finApp24 = '';
                 if (inData && !sinAppManual) {
@@ -1582,21 +1614,16 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     }
                 }
 
-                // Horas GPS en formato militar exacto HH:mm
                 let inicioGPS24 = datosJSON.inicio_gps ? formatearHora24Colombia(datosJSON.inicio_gps) : '';
                 let finGPS24 = datosJSON.fin_gps ? formatearHora24Colombia(datosJSON.fin_gps) : '';
 
-                if (!inicioGPS24 && trData) {
-                    inicioGPS24 = formatearHora24Colombia(trData.inicio);
-                }
-                if (!finGPS24 && trData) {
-                    finGPS24 = formatearHora24Colombia(trData.fin);
-                }
+                if (!inicioGPS24 && trData) inicioGPS24 = formatearHora24Colombia(trData.inicio);
+                if (!finGPS24 && trData) finGPS24 = formatearHora24Colombia(trData.fin);
 
-                // Distancia total y Horas de Motor
-                let distKm = (datosJSON.distancia_gps !== undefined && datosJSON.distancia_gps !== '')
-                    ? parseFloat(datosJSON.distancia_gps).toFixed(2)
-                    : (trData ? (trData.distancia / 1000).toFixed(2) : '0.00');
+                let distNum = (datosJSON.distancia_gps !== undefined && datosJSON.distancia_gps !== '' && Number(datosJSON.distancia_gps) >= 0)
+                    ? parseFloat(datosJSON.distancia_gps)
+                    : (trData ? Math.max(0, trData.distancia / 1000) : 0);
+                let distKm = Math.max(0, distNum).toFixed(2);
 
                 let horasMotorStr = datosJSON.horas_motor_gps || '0h 0m';
                 if (inicioGPS24 && finGPS24) {
@@ -1605,13 +1632,33 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     const diffM = (h2 * 60 + m2) - (h1 * 60 + m1);
                     if (diffM > 0) {
                         horasMotorStr = `${Math.floor(diffM / 60)}h ${diffM % 60}m`;
-                    } else if (trData && trData.duracion) {
+                    } else if (trData && trData.duracion > 0) {
                         const mins = Math.floor(trData.duracion / 60000);
                         horasMotorStr = `${Math.floor(mins / 60)}h ${mins % 60}m`;
                     }
                 }
 
-                // Cálculo de Tiempo y Kilometraje Post-Planilla (ej. 5:17 p.m. - 8:46 p.m.)
+                const traccarDevIdFinal = datosJSON.traccar_device_id || (trData ? trData.deviceId : (devAsociado ? devAsociado.id : ''));
+
+                // Guardar en caché dentro de la BD las horas GPS encontradas para esta inspección
+                if (inData && (!datosJSON.inicio_gps || !datosJSON.fin_gps) && inicioGPS24 && finGPS24) {
+                    const nuevosDatos = {
+                        ...datosJSON,
+                        inicio_gps: inicioGPS24,
+                        fin_gps: finGPS24,
+                        distancia_gps: parseFloat(distKm),
+                        horas_motor_gps: horasMotorStr,
+                        traccar_device_id: traccarDevIdFinal
+                    };
+                    inData.datos_chequeo = nuevosDatos;
+                    promesasGuardarCacheGps.push(
+                        prisma.inspeccion.update({
+                            where: { id: inData.id },
+                            data: { datos_chequeo: nuevosDatos }
+                        }).catch(() => {})
+                    );
+                }
+
                 const rangoActual = (finApp24 && finGPS24) ? `${finApp24}-${finGPS24}` : '';
                 const kmGuardadoValido = (datosJSON.km_extra_rango === rangoActual && datosJSON.km_extra_gps !== undefined)
                     ? datosJSON.km_extra_gps
@@ -1625,24 +1672,27 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     kmGuardadoValido
                 );
 
-                // Clasificación de Estados (Semáforo evaluando Inicio y Cierre)
+                // Diferencia en minutos entre Hora de Inicio Reportada (App) y Tiempos Satelitales (GPS)
                 let diffMinutos = '-';
+                let detalleDiffInicio = '';
                 let estadoNumero = 5;
                 let estadoTexto = 'INSPECCIÓN SIN GPS';
 
                 if (inicioGPS24 && inicioApp24) {
                     const [hApp, mApp] = inicioApp24.split(':').map(Number);
                     const [hGps, mGps] = inicioGPS24.split(':').map(Number);
-                    let diffInicio = Math.round(Math.abs((hGps * 60 + mGps) - (hApp * 60 + mApp)));
+                    const deltaMin = (hGps * 60 + mGps) - (hApp * 60 + mApp);
+                    const diffInicio = Math.round(Math.abs(deltaMin));
                     diffMinutos = diffInicio;
 
-                    // El semáforo evalúa tanto el desfase al inicio como el exceso al cierre
-                    const maxDesfase = Math.max(diffInicio, infoPostPlanilla.diffFinMin);
+                    if (deltaMin > 0) detalleDiffInicio = `GPS inició +${diffInicio} min después`;
+                    else if (deltaMin < 0) detalleDiffInicio = `GPS inició ${diffInicio} min antes`;
+                    else detalleDiffInicio = 'Sincronizado (0 min)';
 
-                    if (maxDesfase > 30) {
+                    if (diffInicio > 30) {
                         estadoNumero = 3;
-                        estadoTexto = infoPostPlanilla.diffFinMin > 30 ? 'EXCESO CIERRE' : 'CRÍTICO';
-                    } else if (maxDesfase >= 20) {
+                        estadoTexto = 'CRÍTICO';
+                    } else if (diffInicio >= 20) {
                         estadoNumero = 2;
                         estadoTexto = 'REVISAR';
                     } else {
@@ -1663,13 +1713,11 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     diffMinutos = 'Pendiente Horas';
                 }
 
-                const traccarDevIdFinal = datosJSON.traccar_device_id || (trData ? trData.deviceId : (devAsociado ? devAsociado.id : ''));
-
                 auditoria.push({
                     id: inData ? inData.id : 'nuevo',
                     fecha: dateStr,
                     placa: placaMostrar,
-                    conductor: inData ? (datosJSON.conductor_manual || inData.conductor.nombre) : 'N/A (Sin App)',
+                    conductor: inData ? (datosJSON.conductor_manual || inData.conductor.nombre) : (ultimoConductorPorPlaca[clavePlaca] ? `${ultimoConductorPorPlaca[clavePlaca]} (Sin App)` : 'N/A (Sin App)'),
                     inicioApp: inicioApp24,
                     finApp: finApp24,
                     inicioGPS: inicioGPS24,
@@ -1677,7 +1725,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     distancia: distKm,
                     horasMotor: horasMotorStr,
                     diffMinutos,
-                    // Datos de exceso al cierre (Fin Planilla vs Fin GPS)
+                    detalleDiffInicio,
                     diffFinMin: infoPostPlanilla.diffFinMin,
                     tiempoExtraStr: infoPostPlanilla.tiempoExtraStr,
                     rangoExtra12h: infoPostPlanilla.rangoExtra12h,
@@ -1690,8 +1738,120 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             });
         });
 
-        // 5. Refinar con /api/positions el kilometraje exacto entre Fin Planilla y Fin GPS
-        // para las filas con desfase de cierre que aún no tengan el cálculo guardado en BD
+        // 5. CALCULAR EL TOP 5 DE CONDUCTORES DE TODO EL MES (USANDO TODAS LAS PLACAS DEL MES)
+        const rankingConductoresMap = {};
+
+        Object.keys(inspDataTodas).forEach(clavePlaca => {
+            const diasPlaca = inspDataTodas[clavePlaca].dias;
+            Object.keys(diasPlaca).forEach(dateStr => {
+                const inData = diasPlaca[dateStr];
+                const datosJSON = inData?.datos_chequeo || {};
+                if (datosJSON.sin_app === true) return;
+
+                const nombreCond = (datosJSON.conductor_manual || inData?.conductor?.nombre || '').trim();
+                if (!nombreCond || nombreCond === 'N/A (Sin App)') return;
+
+                if (!rankingConductoresMap[nombreCond]) {
+                    rankingConductoresMap[nombreCond] = {
+                        conductor: nombreCond,
+                        optimos: 0,
+                        revisar: 0,
+                        criticos: 0,
+                        totalInspecciones: 0,
+                        sumaDiffMin: 0,
+                        conGps: 0
+                    };
+                }
+
+                const statsCond = rankingConductoresMap[nombreCond];
+                statsCond.totalInspecciones++;
+
+                const inicioApp24 = datosJSON.inicio_app_manual
+                    ? formatearHora24Colombia(datosJSON.inicio_app_manual)
+                    : formatearHora24Colombia(inData.fecha_apertura);
+
+                const trData = traccarDays[clavePlaca]?.dias?.[dateStr];
+                const inicioGPS24 = datosJSON.inicio_gps
+                    ? formatearHora24Colombia(datosJSON.inicio_gps)
+                    : (trData ? formatearHora24Colombia(trData.inicio) : '');
+
+                // Guardar también en caché de BD si encontramos hora GPS de otra placa del mes
+                if (!datosJSON.inicio_gps && inicioGPS24 && trData) {
+                    const finGPS24 = formatearHora24Colombia(trData.fin);
+                    const nuevosDatosGlobal = {
+                        ...datosJSON,
+                        inicio_gps: inicioGPS24,
+                        fin_gps: finGPS24,
+                        traccar_device_id: trData.deviceId || ''
+                    };
+                    promesasGuardarCacheGps.push(
+                        prisma.inspeccion.update({
+                            where: { id: inData.id },
+                            data: { datos_chequeo: nuevosDatosGlobal }
+                        }).catch(() => {})
+                    );
+                }
+
+                if (inicioApp24 && inicioGPS24) {
+                    const [hApp, mApp] = inicioApp24.split(':').map(Number);
+                    const [hGps, mGps] = inicioGPS24.split(':').map(Number);
+                    const diffInicio = Math.round(Math.abs((hGps * 60 + mGps) - (hApp * 60 + mApp)));
+
+                    statsCond.conGps++;
+                    statsCond.sumaDiffMin += diffInicio;
+
+                    if (diffInicio < 20) statsCond.optimos++;
+                    else if (diffInicio <= 30) statsCond.revisar++;
+                    else statsCond.criticos++;
+                }
+            });
+        });
+
+        if (promesasGuardarCacheGps.length > 0) {
+            await Promise.all(promesasGuardarCacheGps);
+        }
+
+        // Si en el mes seleccionado hay menos de 5 conductores con inspecciones,
+        // completamos con los conductores registrados en la base de datos para mostrar siempre 5 conductores
+        if (Object.keys(rankingConductoresMap).length < 5) {
+            conductoresDB.forEach(c => {
+                const nombre = (c.nombre || '').trim();
+                if (nombre && !rankingConductoresMap[nombre] && Object.keys(rankingConductoresMap).length < 5) {
+                    rankingConductoresMap[nombre] = {
+                        conductor: nombre,
+                        optimos: 0,
+                        revisar: 0,
+                        criticos: 0,
+                        totalInspecciones: 0,
+                        sumaDiffMin: 0,
+                        conGps: 0
+                    };
+                }
+            });
+        }
+
+        let listaConductoresMes = Object.values(rankingConductoresMap);
+
+        listaConductoresMes.sort((a, b) => {
+            if (b.optimos !== a.optimos) return b.optimos - a.optimos;
+            if (b.revisar !== a.revisar) return b.revisar - a.revisar;
+            if (b.conGps !== a.conGps) return b.conGps - a.conGps;
+            const promA = a.conGps > 0 ? (a.sumaDiffMin / a.conGps) : 9999;
+            const promB = b.conGps > 0 ? (b.sumaDiffMin / b.conGps) : 9999;
+            if (promA !== promB) return promA - promB;
+            return b.totalInspecciones - a.totalInspecciones;
+        });
+
+        const topConductoresMes = listaConductoresMes.slice(0, 5).map(c => ({
+            conductor: c.conductor,
+            optimos: c.optimos,
+            revisar: c.revisar,
+            criticos: c.criticos,
+            totalInspecciones: c.totalInspecciones,
+            promedioDiff: c.conGps > 0 ? Math.round(c.sumaDiffMin / c.conGps) : null
+        }));
+
+        // 6. Refinar con /api/positions el kilometraje exacto entre Fin Planilla y Fin GPS
         const filasPorRefinar = auditoria.filter(r => r.necesitaCalculoExactoPos).slice(0, 15);
         if (filasPorRefinar.length > 0) {
             await Promise.all(filasPorRefinar.map(async (reg) => {
@@ -1708,7 +1868,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 );
                 reg.kmExtra = kmExacto;
 
-                // Guardar en caché dentro de la inspección para que la próxima carga sea instantánea
                 if (reg.id && reg.id !== 'nuevo') {
                     try {
                         const insp = await prisma.inspeccion.findUnique({ where: { id: parseInt(reg.id) } });
@@ -1731,12 +1890,13 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         res.render('auditoria-horas', {
             title: 'Dashboard Auditoría GPS',
             registros: auditoria,
+            topConductoresMes,
             mesActual,
             placaSeleccionada,
             vehiculos: listaPlacasUnificada,
             conductores: conductoresDB,
             traccarDevices,
-            gruposFlota: obtenerGruposFlota(),
+            gruposFlota: gruposFlotaActual,
             usuario: req.usuario
         });
 
