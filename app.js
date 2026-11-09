@@ -367,10 +367,9 @@ app.get('/admin/patio/historial', verificarRol(['admin']), async (req, res) => {
 
 /**
  * ============================================================================
- * 9. MÓDULO SATELITAL GPS: MOTOR HÍBRIDO (TRACCAR + PLASPY POR PLACA) Y MANUAL
+ * 9. MÓDULO SATELITAL GPS: MOTOR HÍBRIDO (TRACCAR + PLASPY MULTICUENTA) Y MANUAL
  * ============================================================================
  */
-
 const TRACCAR_SERVERS = [
     {
         url: 'https://api.globalmonitorgps.com',
@@ -382,10 +381,13 @@ const TRACCAR_SERVERS = [
     }
 ];
 
-const APIS_PLASPY = [
-    { user: 'oscarf07@hotmail.com', apiKey: '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=', placaExclusiva: null },
-    { user: 'jhonser28@hotmail.com', apiKey: '9GOpyysGrwWq8/qatFJ02bQoMRC6UyVv4/di0mzKZKs=', placaExclusiva: null }
+const CUENTAS_PLASPY = [
+    { alias: 'oscarf07', user: 'oscarf07@hotmail.com', apiKey: '9aspvD6qw+S5Ba3o12S0BEkI04R8HlZBgcW5qPMDcVQ=' },
+    { alias: 'jhonser28', user: 'jhonser28@hotmail.com', apiKey: '9GOpyysGrwWq8/qatFJ02bQoMRC6UyVv4/di0mzKZKs=' }
 ];
+
+let cacheTokensPlaspy = {}; 
+let cacheDispositivosPlaspy = { lista: [], expira: 0 };
 
 function limpiarPlaca(str) { return (str || '').toString().toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 
@@ -409,17 +411,11 @@ function formatearHora12Colombia(fechaInput) {
     return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} ${ampm}`;
 }
 
-function obtenerFechaColombiaYYYYMMDD(fechaInput) {
-    const d = new Date(fechaInput);
-    const colTime = new Date(d.getTime() - (5 * 3600000));
-    return colTime.toISOString().split('T')[0];
-}
-
 async function obtenerDispositivosTraccar() {
     for (const srv of TRACCAR_SERVERS) {
         try {
-            const res = await fetchConTimeout(`${srv.url}/api/devices?token=${srv.token}`, {
-                headers: { 'Accept': 'application/json' }
+            const res = await fetchConTimeout(`${srv.url}/api/devices`, {
+                headers: { 'Authorization': `Bearer ${srv.token}`, 'Accept': 'application/json' }
             }, 6000);
             if (res.ok) {
                 const devices = await res.json();
@@ -430,37 +426,55 @@ async function obtenerDispositivosTraccar() {
     return { devices: [], serverUrl: TRACCAR_SERVERS[0].url, token: TRACCAR_SERVERS[0].token };
 }
 
-async function obtenerDispositivosPlaspy() {
-    let dispositivos = [];
-    let errores = [];
-    await Promise.all(APIS_PLASPY.map(async (cuenta) => {
-        if (!cuenta.user || !cuenta.apiKey) return;
+async function obtenerTokenPlaspyUnico(cuenta) {
+    const ahora = Date.now();
+    if (cacheTokensPlaspy[cuenta.alias] && cacheTokensPlaspy[cuenta.alias].expira > ahora) return cacheTokensPlaspy[cuenta.alias].token;
+
+    const authRes = await fetchConTimeout('https://api.plaspy.com/api/Auth/Token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ UserName: cuenta.user, ApiKey: cuenta.apiKey })
+    }, 8000);
+    const authText = await authRes.text();
+    if (!authRes.ok || authText.includes('<!DOCTYPE html>')) throw new Error(`Fallo auth Plaspy ${cuenta.alias}`);
+    
+    const authData = JSON.parse(authText);
+    const token = authData.token || authData.Token || authData.access_token || authData.ApiKey;
+    if (!token) throw new Error(`Sin token ${cuenta.alias}`);
+
+    cacheTokensPlaspy[cuenta.alias] = { token, expira: ahora + (30 * 60 * 1000) };
+    return token;
+}
+
+async function cargarDispositivosMulticuenta() {
+    const ahora = Date.now();
+    if (cacheDispositivosPlaspy.lista.length > 0 && cacheDispositivosPlaspy.expira > ahora) return cacheDispositivosPlaspy.lista;
+
+    let listaUnificada = [];
+    for (const cuenta of CUENTAS_PLASPY) {
         try {
-            const authRes = await fetchConTimeout('https://api.plaspy.com/api/Auth/Token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ userName: cuenta.user.trim(), apiKey: cuenta.apiKey.trim() })
-            }, 6000);
-            const authData = await authRes.json();
-            const token = authData.token || authData.Token || authData.access_token;
-            if (!token) return;
-
+            const token = await obtenerTokenPlaspyUnico(cuenta);
             const devRes = await fetchConTimeout('https://api.plaspy.com/api/devices', {
+                method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-            }, 6000);
+            }, 8000);
 
-            if (devRes.ok) {
-                const devData = await devRes.json();
-                const lista = Array.isArray(devData) ? devData : (devData.data || devData.devices || []);
-                lista.forEach(d => {
-                    const realId = d.id || d.Id;
-                    const realName = (d.name || d.Name || '').toUpperCase().trim();
-                    dispositivos.push({ id: `PLASPY:${realId}`, rawId: realId, name: realName, token: token, plataforma: 'PLASPY' });
+            const devText = await devRes.text();
+            if (devRes.ok && !devText.includes('<!DOCTYPE html>')) {
+                const devData = JSON.parse(devText);
+                const rawDevices = Array.isArray(devData) ? devData : (devData.devices || devData.Devices || devData.data || []);
+                rawDevices.forEach(d => {
+                    const rawId = String(d.id || d.Id || '').trim();
+                    if (rawId) listaUnificada.push({ id: rawId, name: String(d.name || d.Name || rawId).trim(), cuentaAlias: cuenta.alias });
                 });
             }
         } catch (err) {}
-    }));
-    return { devices: dispositivos, errores };
+    }
+    if (listaUnificada.length > 0) {
+        listaUnificada.sort((a, b) => a.name.localeCompare(b.name));
+        cacheDispositivosPlaspy = { lista: listaUnificada, expira: ahora + (30 * 60 * 1000) };
+    }
+    return listaUnificada;
 }
 
 function distanciaHaversineMetros(lat1, lon1, lat2, lon2) {
@@ -523,7 +537,7 @@ async function extraerKmIntervaloTraccar(serverUrl, token, deviceId, fechaYYYYMM
     try {
         const fromStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T${horaInicio24}:00-05:00`).toISOString());
         const toStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T${horaFin24}:59-05:00`).toISOString());
-        const posRes = await fetchConTimeout(`${serverUrl}/api/positions?deviceId=${deviceId}&from=${fromStr}&to=${toStr}&token=${token}`, { headers: { 'Accept': 'application/json' } }, 6500);
+        const posRes = await fetchConTimeout(`${serverUrl}/api/positions?deviceId=${deviceId}&from=${fromStr}&to=${toStr}`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }, 6500);
 
         if (posRes.ok) {
             const positions = await posRes.json();
@@ -559,7 +573,7 @@ async function extraerDiaCompletoPlaspy(token, rawDeviceId, fechaYYYYMMDD) {
         const puntos = Array.isArray(locData) ? locData : (locData.data || locData.locations || []);
         if (puntos.length === 0) return null;
 
-        const enMovimiento = puntos.filter(p => (p.speed || p.Speed || 0) > 0);
+        const enMovimiento = puntos.filter(p => (p.speed || p.Speed || 0) > 0 || (Array.isArray(p.inputs) && p.inputs[0] === true));
         if (enMovimiento.length === 0) return null;
 
         const extraerDateColombia = (dtRaw) => {
@@ -583,14 +597,10 @@ async function extraerDiaCompletoPlaspy(token, rawDeviceId, fechaYYYYMMDD) {
             distanciaMetros = sumaDist > 1000 ? sumaDist : sumaDist * 1000;
         }
 
-        const velocidades = enMovimiento.map(p => p.speed || p.Speed || 0);
-        const velMaxima = Math.max(...velocidades);
-        const velPromedio = velocidades.reduce((a, b) => a + b, 0) / velocidades.length;
         const duracionMs = pFin > pInicio ? (pFin.getTime() - pInicio.getTime()) : 0;
-
         return {
             inicio: pInicio, fin: pFin || pInicio, distancia: distanciaMetros, duracion: duracionMs,
-            totalViajes: enMovimiento.length, velMaxima, velPromedio
+            totalViajes: enMovimiento.length
         };
     } catch (e) { return null; }
 }
@@ -598,11 +608,10 @@ async function extraerDiaCompletoPlaspy(token, rawDeviceId, fechaYYYYMMDD) {
 async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMMDD) {
     const fromStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T00:00:00-05:00`).toISOString());
     const toStr = encodeURIComponent(new Date(`${fechaYYYYMMDD}T23:59:59-05:00`).toISOString());
-    
     let inicioDate = null; let finDate = null; let distanciaMetros = 0; let duracionMs = 0; let totalEventos = 0; let listaTrips = [];
 
     try {
-        const tripsRes = await fetchConTimeout(`${serverUrl}/api/reports/trips?deviceId=${deviceId}&from=${fromStr}&to=${toStr}&token=${token}`, { headers: { 'Accept': 'application/json' } }, 7000);
+        const tripsRes = await fetchConTimeout(`${serverUrl}/api/reports/trips?deviceId=${deviceId}&from=${fromStr}&to=${toStr}`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }, 7000);
         if (tripsRes.ok) {
             const trips = await tripsRes.json();
             if (Array.isArray(trips) && trips.length > 0) {
@@ -619,7 +628,7 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
     const mismoMinuto = inicioDate && finDate && formatearHora24Colombia(inicioDate) === formatearHora24Colombia(finDate);
     if (!inicioDate || mismoMinuto || distanciaMetros < 50) {
         try {
-            const posRes = await fetchConTimeout(`${serverUrl}/api/positions?deviceId=${deviceId}&from=${fromStr}&to=${toStr}&token=${token}`, { headers: { 'Accept': 'application/json' } }, 8000);
+            const posRes = await fetchConTimeout(`${serverUrl}/api/positions?deviceId=${deviceId}&from=${fromStr}&to=${toStr}`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }, 8000);
             if (posRes.ok) {
                 const positions = await posRes.json();
                 if (Array.isArray(positions) && positions.length > 0) {
@@ -653,17 +662,21 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const vehiculosDB = await prisma.vehiculo.findMany({ orderBy: { placa: 'asc' } });
         const conductoresDB = await prisma.usuario.findMany({ where: { rol: 'conductor' }, orderBy: { nombre: 'asc' } });
 
-        const [traccarConn, plaspyConn] = await Promise.all([obtenerDispositivosTraccar(), obtenerDispositivosPlaspy()]);
+        const { devices: traccarDevices, serverUrl, token } = await obtenerDispositivosTraccar();
+        const plaspyDevices = await cargarDispositivosMulticuenta();
 
-        const traccarDevices = traccarConn.devices;
-        const serverUrl = traccarConn.serverUrl;
-        const token = traccarConn.token;
-        const plaspyDevices = plaspyConn.devices;
-        const dispositivosCombinados = [...traccarDevices, ...plaspyDevices];
+        plaspyDevices.forEach(d => {
+            traccarDevices.push({
+                id: `PLASPY:${d.cuentaAlias}:${d.id}`,
+                name: d.name,
+                rawId: d.id,
+                alias: d.cuentaAlias
+            });
+        });
 
         const mapaPlacas = new Map();
         vehiculosDB.forEach(v => mapaPlacas.set(limpiarPlaca(v.placa), v.placa.toUpperCase()));
-        dispositivosCombinados.forEach(d => {
+        traccarDevices.forEach(d => {
             const limpia = limpiarPlaca(d.name);
             if (limpia && !mapaPlacas.has(limpia)) mapaPlacas.set(limpia, d.name.toUpperCase());
         });
@@ -703,7 +716,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         });
 
         if (!req.query.placa && !req.query.mes) {
-            return res.render('auditoria-horas', { title: 'Dashboard Auditoría GPS', registros: [], topConductoresMes: [], mesActual, placaSeleccionada, vehiculos: listaPlacasUnificada, conductores: conductoresDB, traccarDevices: dispositivosCombinados, usuario: req.usuario });
+            return res.render('auditoria-horas', { title: 'Dashboard Auditoría GPS', registros: [], topConductoresMes: [], mesActual, placaSeleccionada, vehiculos: listaPlacasUnificada, conductores: conductoresDB, traccarDevices, usuario: req.usuario });
         }
 
         let traccarDays = {};
@@ -719,43 +732,48 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             else devicesToQuery = devicesToQuery.slice(0, 20);
 
             if (devicesToQuery.length > 0) {
-                const deviceIdsParam = devicesToQuery.map(d => `deviceId=${d.id}`).join('&');
-                const rangosSemanales = [ { d1: 1, d2: 8 }, { d1: 9, d2: 16 }, { d1: 17, d2: 24 }, { d1: 25, d2: ultimoDiaNum } ];
+                const traccarOnlyQuery = devicesToQuery.filter(d => !d.id.toString().startsWith('PLASPY:'));
+                
+                if (traccarOnlyQuery.length > 0) {
+                    const deviceIdsParam = traccarOnlyQuery.map(d => `deviceId=${d.id}`).join('&');
+                    const rangosSemanales = [ { d1: 1, d2: 8 }, { d1: 9, d2: 16 }, { d1: 17, d2: 24 }, { d1: 25, d2: ultimoDiaNum } ];
 
-                await Promise.all(rangosSemanales.map(async (rango) => {
-                    const fInicio = new Date(`${mesActual}-${String(rango.d1).padStart(2, '0')}T00:00:00-05:00`);
-                    const fFin = new Date(`${mesActual}-${String(rango.d2).padStart(2, '0')}T23:59:59-05:00`);
-                    if (fInicio > toDateConsulta) return;
-                    const fFinReal = fFin > toDateConsulta ? toDateConsulta : fFin;
-                    const url = `${serverUrl}/api/reports/trips?${deviceIdsParam}&from=${encodeURIComponent(fInicio.toISOString())}&to=${encodeURIComponent(fFinReal.toISOString())}&token=${token}`;
-                    try {
-                        const resTrips = await fetchConTimeout(url, { headers: { 'Accept': 'application/json' } }, 8500);
-                        if (resTrips.ok) {
-                            const trips = await resTrips.json();
-                            trips.forEach(trip => {
-                                const dev = traccarDevices.find(d => d.id === trip.deviceId);
-                                const placaNombre = dev ? dev.name.toUpperCase() : placaSeleccionada.toUpperCase();
-                                const clavePlaca = limpiarPlaca(placaNombre);
-                                const tStart = new Date(trip.startTime); const tEnd = new Date(trip.endTime);
-                                const dateStr = obtenerFechaColombiaYYYYMMDD(tStart);
-                                const distPositiva = Math.max(0, Number(trip.distance || 0));
+                    await Promise.all(rangosSemanales.map(async (rango) => {
+                        const fInicio = new Date(`${mesActual}-${String(rango.d1).padStart(2, '0')}T00:00:00-05:00`);
+                        const fFin = new Date(`${mesActual}-${String(rango.d2).padStart(2, '0')}T23:59:59-05:00`);
+                        if (fInicio > toDateConsulta) return;
+                        const fFinReal = fFin > toDateConsulta ? toDateConsulta : fFin;
+                        
+                        const url = `${serverUrl}/api/reports/trips?${deviceIdsParam}&from=${encodeURIComponent(fInicio.toISOString())}&to=${encodeURIComponent(fFinReal.toISOString())}`;
+                        try {
+                            const resTrips = await fetchConTimeout(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } }, 8500);
+                            if (resTrips.ok) {
+                                const trips = await resTrips.json();
+                                trips.forEach(trip => {
+                                    const dev = traccarOnlyQuery.find(d => d.id === trip.deviceId);
+                                    const placaNombre = dev ? dev.name.toUpperCase() : placaSeleccionada.toUpperCase();
+                                    const clavePlaca = limpiarPlaca(placaNombre);
+                                    const tStart = new Date(trip.startTime); const tEnd = new Date(trip.endTime);
+                                    const dateStr = obtenerFechaColombiaYYYYMMDD(tStart);
+                                    const distPositiva = Math.max(0, Number(trip.distance || 0));
 
-                                if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: placaNombre, dias: {} };
-                                if (!traccarDays[clavePlaca].dias[dateStr]) {
-                                    traccarDays[clavePlaca].dias[dateStr] = { inicio: tStart, fin: tEnd, distancia: distPositiva, duracion: Math.max(0, Number(trip.duration || 0)), deviceId: dev ? dev.id : '', viajes: [trip] };
-                                } else {
-                                    if (tStart < traccarDays[clavePlaca].dias[dateStr].inicio) traccarDays[clavePlaca].dias[dateStr].inicio = tStart;
-                                    if (tEnd > traccarDays[clavePlaca].dias[dateStr].fin) traccarDays[clavePlaca].dias[dateStr].fin = tEnd;
-                                    traccarDays[clavePlaca].dias[dateStr].distancia += distPositiva;
-                                    traccarDays[clavePlaca].dias[dateStr].duracion += Math.max(0, Number(trip.duration || 0));
-                                    traccarDays[clavePlaca].dias[dateStr].viajes.push(trip);
-                                }
-                            });
-                        }
-                    } catch (e) {}
-                }));
+                                    if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: placaNombre, dias: {} };
+                                    if (!traccarDays[clavePlaca].dias[dateStr]) {
+                                        traccarDays[clavePlaca].dias[dateStr] = { inicio: tStart, fin: tEnd, distancia: distPositiva, duracion: Math.max(0, Number(trip.duration || 0)), deviceId: dev ? dev.id : '', viajes: [trip] };
+                                    } else {
+                                        if (tStart < traccarDays[clavePlaca].dias[dateStr].inicio) traccarDays[clavePlaca].dias[dateStr].inicio = tStart;
+                                        if (tEnd > traccarDays[clavePlaca].dias[dateStr].fin) traccarDays[clavePlaca].dias[dateStr].fin = tEnd;
+                                        traccarDays[clavePlaca].dias[dateStr].distancia += distPositiva;
+                                        traccarDays[clavePlaca].dias[dateStr].duracion += Math.max(0, Number(trip.duration || 0));
+                                        traccarDays[clavePlaca].dias[dateStr].viajes.push(trip);
+                                    }
+                                });
+                            }
+                        } catch (e) {}
+                    }));
+                }
 
-                // RESCATE PARA VEHÍCULOS TRACCAR (INCLUYE DÍAS SIN INSPECCIÓN)
+                // RESCATE PARA TODOS LOS VEHICULOS SELECCIONADOS (DÍAS SIN APP)
                 if (placaSeleccionada !== 'TODOS') {
                     const devPrincipal = devicesToQuery.find(d => limpiarPlaca(d.name).includes(placaLimpiaSel)) || devicesToQuery[0];
                     if (devPrincipal) {
@@ -767,39 +785,31 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                             const dStr = diaCheck.toISOString().split('T')[0];
                             if(!traccarDays[clavePlaca]?.dias?.[dStr]) diasAFetch.push(dStr);
                         }
-                        await Promise.all(diasAFetch.map(async (dateStr) => {
-                            const datosRescate = await extraerDiaCompletoTraccar(serverUrl, token, devPrincipal.id, dateStr);
-                            if (datosRescate) {
-                                if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPrincipal.name.toUpperCase(), dias: {} };
-                                traccarDays[clavePlaca].dias[dateStr] = { ...datosRescate, distancia: Math.max(0, Number(datosRescate.distancia || 0)), deviceId: devPrincipal.id };
+
+                        if (devPrincipal.id.toString().startsWith('PLASPY:')) {
+                            const cuentaAlias = devPrincipal.alias;
+                            const cuenta = CUENTAS_PLASPY.find(c => c.alias === cuentaAlias);
+                            if (cuenta) {
+                                const pToken = await obtenerTokenPlaspyUnico(cuenta);
+                                await Promise.all(diasAFetch.map(async (dateStr) => {
+                                    const datosRescate = await extraerDiaCompletoPlaspy(pToken, devPrincipal.rawId, dateStr);
+                                    if (datosRescate) {
+                                        if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPrincipal.name.toUpperCase(), dias: {} };
+                                        traccarDays[clavePlaca].dias[dateStr] = { ...datosRescate, distancia: Math.max(0, Number(datosRescate.distancia || 0)), deviceId: devPrincipal.id };
+                                    }
+                                }));
                             }
-                        }));
+                        } else {
+                            await Promise.all(diasAFetch.map(async (dateStr) => {
+                                const datosRescate = await extraerDiaCompletoTraccar(serverUrl, token, devPrincipal.id, dateStr);
+                                if (datosRescate) {
+                                    if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPrincipal.name.toUpperCase(), dias: {} };
+                                    traccarDays[clavePlaca].dias[dateStr] = { ...datosRescate, distancia: Math.max(0, Number(datosRescate.distancia || 0)), deviceId: devPrincipal.id };
+                                }
+                            }));
+                        }
                     }
                 }
-            }
-        }
-
-        // RESCATE PARA VEHÍCULOS PLASPY (INCLUYE DÍAS SIN INSPECCIÓN)
-        if (placaSeleccionada !== 'TODOS' && plaspyDevices.length > 0) {
-            const clavePlaca = limpiarPlaca(placaSeleccionada);
-            const devPlaspy = plaspyDevices.find(d => limpiarPlaca(d.name) === clavePlaca || limpiarPlaca(d.name).includes(clavePlaca));
-
-            if (devPlaspy) {
-                let diasAFetch = [];
-                for(let i=1; i<=ultimoDiaNum; i++) {
-                    const diaCheck = new Date(year, month, i);
-                    if (diaCheck > toDateConsulta) break;
-                    diasAFetch.push(diaCheck.toISOString().split('T')[0]);
-                }
-                
-                await Promise.all(diasAFetch.map(async (dateStr) => {
-                    if (traccarDays[clavePlaca]?.dias?.[dateStr]) return;
-                    const datosPlaspy = await extraerDiaCompletoPlaspy(devPlaspy.token, devPlaspy.rawId, dateStr);
-                    if (datosPlaspy) {
-                        if (!traccarDays[clavePlaca]) traccarDays[clavePlaca] = { nombreOriginal: devPlaspy.name.toUpperCase(), dias: {} };
-                        traccarDays[clavePlaca].dias[dateStr] = { ...datosPlaspy, deviceId: devPlaspy.id };
-                    }
-                }));
             }
         }
 
@@ -813,7 +823,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
             const infoTraccar = traccarDays[clavePlaca]?.dias || {};
             const infoApp = inspData[clavePlaca]?.dias || {};
             const placaMostrar = inspData[clavePlaca]?.nombreOriginal || traccarDays[clavePlaca]?.nombreOriginal || clavePlaca;
-            const devAsociado = dispositivosCombinados.find(d => limpiarPlaca(d.name) === clavePlaca || limpiarPlaca(d.name).includes(clavePlaca));
+            const devAsociado = traccarDevices.find(d => limpiarPlaca(d.name) === clavePlaca || limpiarPlaca(d.name).includes(clavePlaca));
 
             const todosLosDias = new Set([...Object.keys(infoTraccar), ...Object.keys(infoApp)]);
             const diasOrdenados = Array.from(todosLosDias).sort((a, b) => b.localeCompare(a));
@@ -981,7 +991,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         auditoria.sort((a, b) => b.fecha.localeCompare(a.fecha));
 
         res.render('auditoria-horas', {
-            title: 'Dashboard Auditoría GPS', registros: auditoria, topConductoresMes, mesActual, placaSeleccionada, vehiculos: listaPlacasUnificada, conductores: conductoresDB, traccarDevices: dispositivosCombinados, usuario: req.usuario
+            title: 'Dashboard Auditoría GPS', registros: auditoria, topConductoresMes, mesActual, placaSeleccionada, vehiculos: listaPlacasUnificada, conductores: conductoresDB, traccarDevices, usuario: req.usuario
         });
     } catch (error) {
         res.status(500).send('Error generando análisis: ' + error.message);
@@ -1047,11 +1057,10 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
         let datosDia = null;
 
         if (deviceId && deviceId.toString().startsWith('PLASPY:')) {
-            const rawId = deviceId.toString().replace('PLASPY:', '');
-            const { devices } = await obtenerDispositivosPlaspy();
-            const devPlaspy = devices.find(d => d.rawId == rawId || d.id === deviceId);
-            if (!devPlaspy) return res.json({ success: false, error: 'No se encontró la unidad de Plaspy.' });
-            datosDia = await extraerDiaCompletoPlaspy(devPlaspy.token, devPlaspy.rawId, fecha);
+            const [prefix, alias, rawId] = deviceId.toString().split(':');
+            const cuenta = CUENTAS_PLASPY.find(c => c.alias === alias);
+            const token = await obtenerTokenPlaspyUnico(cuenta);
+            datosDia = await extraerDiaCompletoPlaspy(token, rawId, fecha);
         } else {
             const { serverUrl, token } = await obtenerDispositivosTraccar();
             datosDia = await extraerDiaCompletoTraccar(serverUrl, token, parseInt(deviceId), fecha);
@@ -1076,7 +1085,7 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
     } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 });
 
-// 9.4.1 MAPA TRAMO INTEGRADO PARA TRACCAR (CON TOKEN URL) Y PLASPY
+// MAPA TRAMO INTEGRADO PARA TRACCAR (CON BEARER TOKEN COMO EN EL CÓDIGO ANTIGUO) Y PLASPY
 app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req, res) => {
     try {
         const { deviceId, placa, fecha, desde, hasta } = req.query;
@@ -1091,15 +1100,14 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
         let kmTramo = '0.00';
 
         if (isPlaspy) {
-            const rawId = deviceId.toString().replace('PLASPY:', '');
-            const { devices } = await obtenerDispositivosPlaspy();
-            const devPlaspy = devices.find(d => d.rawId == rawId);
-            
-            if (!devPlaspy) throw new Error('Unidad Plaspy no encontrada.');
+            const [prefix, alias, rawId] = deviceId.toString().split(':');
+            const cuenta = CUENTAS_PLASPY.find(c => c.alias === alias);
+            if (!cuenta) throw new Error('Cuenta Plaspy no encontrada.');
+            const token = await obtenerTokenPlaspyUnico(cuenta);
 
-            const locRes = await fetchConTimeout(`https://api.plaspy.com/api/devices/${encodeURIComponent(devPlaspy.rawId)}/locations`, {
+            const locRes = await fetchConTimeout(`https://api.plaspy.com/api/devices/${encodeURIComponent(rawId)}/locations`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${devPlaspy.token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ from: fromISO.replace('.000Z', ''), to: toISO.replace('.000Z', '') })
             }, 10000);
 
@@ -1110,7 +1118,7 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
             puntosValidos = puntosValidos.filter(p => p.latitude || p.Latitude);
             puntosValidos.sort((a, b) => new Date(a.dateTime || a.DateTime) - new Date(b.dateTime || b.DateTime));
             
-            if (puntosValidos.length === 0) return res.json({ success: false, error: 'Sin coordenadas en ese horario.' });
+            if (puntosValidos.length === 0) return res.json({ success: false, error: 'Sin coordenadas en ese horario en Plaspy.' });
 
             const odoIni = puntosValidos[0].milleage || puntosValidos[0].mileage || 0;
             const odoFin = puntosValidos[puntosValidos.length - 1].milleage || puntosValidos[puntosValidos.length - 1].mileage || 0;
@@ -1143,6 +1151,7 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
                 if (durMin >= 2) paradas.push({ lat: inicioParada.latitude || inicioParada.Latitude, lng: inicioParada.longitude || inicioParada.Longitude, desde: formatearHora12Colombia(inicioParada.dateTime || inicioParada.DateTime), hasta: formatearHora12Colombia(ultimoPuntoParada.dateTime || ultimoPuntoParada.DateTime), duracionMin: durMin });
             }
         } else {
+            // LÓGICA TRACCAR IDÉNTICA A LA VERSIÓN ANTIGUA (code6nov_2)
             const { devices, serverUrl, token } = await obtenerDispositivosTraccar();
             let idDispositivo = deviceId ? parseInt(deviceId) : null;
             if (!idDispositivo && placa) {
@@ -1151,13 +1160,15 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
             }
             if (!idDispositivo) throw new Error('Unidad Traccar no encontrada.');
 
-            const posUrl = `${serverUrl}/api/positions?deviceId=${idDispositivo}&from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}&token=${token}`;
-            const posRes = await fetchConTimeout(posUrl, { headers: { 'Accept': 'application/json' } }, 10000);
+            const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
+            const posUrl = `${serverUrl}/api/positions?deviceId=${idDispositivo}&from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`;
+            const posRes = await fetchConTimeout(posUrl, { headers }, 10000);
+            
             if (!posRes.ok) throw new Error(`Traccar HTTP ${posRes.status}`);
 
             const positions = await posRes.json();
             let puntosValidos = positions.filter(p => p.latitude && p.longitude);
-            if (puntosValidos.length === 0) return res.json({ success: false, error: 'Sin coordenadas en ese horario.' });
+            if (puntosValidos.length === 0) return res.json({ success: false, error: 'Sin coordenadas en ese horario en Traccar.' });
 
             puntosValidos.sort((a, b) => new Date(a.fixTime || a.deviceTime) - new Date(b.fixTime || b.deviceTime));
             const conOdo = puntosValidos.filter(p => p.attributes && typeof p.attributes.totalDistance === 'number' && p.attributes.totalDistance > 0);
@@ -1203,6 +1214,7 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
     }
 });
 
+// 9.5 RUTA LABORATORIO TRACCAR 
 app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
     const placaSeleccionada = req.query.placa || '';
     const fechaFiltro = req.query.fecha || new Date().toISOString().split('T')[0];
@@ -1226,6 +1238,7 @@ app.get('/test-traccar', verificarRol(['admin']), async (req, res) => {
     res.render('test-traccar', { errorConexion, devices, placaSeleccionada, fechaFiltro, resultado });
 });
 
+// 9.6 RUTA LABORATORIO PLASPY
 app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
     const fecha_viaje = req.query.fecha_viaje || new Date().toISOString().split('T')[0];
     const dispositivo_id = req.query.dispositivo_id || '';
