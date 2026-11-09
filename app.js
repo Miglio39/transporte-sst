@@ -1677,13 +1677,20 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     const devPrincipal = devicesToQuery.find(d => limpiarPlaca(d.name).includes(placaLimpiaSel)) || devicesToQuery[0];
                     if (devPrincipal) {
                         const clavePlaca = limpiarPlaca(placaSeleccionada);
-                        const diasConInspeccion = Object.keys(inspData[clavePlaca]?.dias || {});
-
-                        const diasFaltantes = diasConInspeccion.filter(dateStr => {
-                            const regTr = traccarDays[clavePlaca]?.dias?.[dateStr];
-                            if (!regTr) return true;
-                            return formatearHora24Colombia(regTr.inicio) === formatearHora24Colombia(regTr.fin);
-                        });
+                        
+                        // Generar el rescate para los días que no tienen registro
+                        const inicioMes = 1;
+                        let diasFaltantes = [];
+                        for(let i=inicioMes; i<=ultimoDiaNum; i++) {
+                            const diaCheck = new Date(year, month, i);
+                            if (diaCheck > toDateConsulta) break;
+                            const dStr = diaCheck.toISOString().split('T')[0];
+                            
+                            const tieneTraccar = !!(traccarDays[clavePlaca]?.dias?.[dStr]);
+                            if(!tieneTraccar) {
+                                diasFaltantes.push(dStr);
+                            }
+                        }
 
                         await Promise.all(diasFaltantes.map(async (dateStr) => {
                             const datosRescate = await extraerDiaCompletoTraccar(serverUrl, token, devPrincipal.id, dateStr);
@@ -1726,6 +1733,8 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
 
         let auditoria = [];
         let promesasGuardarCacheGps = [];
+        
+        // Unir placas de Traccar y BD (inspData)
         const clavesPlacasTabla = new Set([...Object.keys(traccarDays), ...Object.keys(inspData)]);
 
         clavesPlacasTabla.forEach(clavePlaca => {
@@ -1737,6 +1746,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
 
             const devAsociado = dispositivosCombinados.find(d => limpiarPlaca(d.name) === clavePlaca || limpiarPlaca(d.name).includes(clavePlaca));
 
+            // Unir todos los días registrados (Traccar y BD)
             const todosLosDias = new Set([...Object.keys(infoTraccar), ...Object.keys(infoApp)]);
             const diasOrdenados = Array.from(todosLosDias).sort((a, b) => b.localeCompare(a));
 
@@ -1784,6 +1794,7 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     }
                 }
 
+                // Asignar siempre un DeviceId
                 const traccarDevIdFinal = datosJSON.traccar_device_id || (trData ? trData.deviceId : (devAsociado ? devAsociado.id : ''));
 
                 if (inData && (!datosJSON.inicio_gps || !datosJSON.fin_gps) && inicioGPS24 && finGPS24) {
@@ -2045,7 +2056,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         res.status(500).send('Error generando análisis: ' + error.message);
     }
 });
-
 // 9.2 CREAR UN REGISTRO MANUAL (PARA VEHÍCULOS SIN GPS NI INSPECCIÓN)
 app.post('/admin/auditoria-horas/crear-manual', verificarRol(['admin']), async (req, res) => {
     try {
