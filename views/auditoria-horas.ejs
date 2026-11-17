@@ -491,29 +491,37 @@
                                         </div>
                                     <% } %>
                                 </td>
+<!-- DISTANCIA TOTAL, HORAS MOTOR, KILOMETRAJE EXTRA Y BOTÓN DE MAPA -->
+<td class="text-center border-start p-2">
+    <div class="input-group input-group-sm mb-1">
+        <input type="number" step="0.1" class="form-control text-center fw-bold input-distancia" value="<%= reg.distancia %>" onchange="guardarFila(this)">
+        <span class="input-group-text px-1 small">km</span>
+    </div>
+    <small class="text-muted fw-bold d-block"><i class="fas fa-stopwatch text-success"></i> <%= reg.horasMotor %></small>
 
-                                <!-- DISTANCIA TOTAL, HORAS MOTOR, KILOMETRAJE EXTRA Y BOTÓN DE MAPA -->
-                                <td class="text-center border-start p-2">
-                                    <div class="input-group input-group-sm mb-1">
-                                        <input type="number" step="0.1" class="form-control text-center fw-bold input-distancia" value="<%= reg.distancia %>" onchange="guardarFila(this)">
-                                        <span class="input-group-text px-1 small">km</span>
-                                    </div>
-                                    <small class="text-muted fw-bold d-block"><i class="fas fa-stopwatch text-success"></i> <%= reg.horasMotor %></small>
-
-                                    <% if (reg.diffFinMin > 0) { %>
-                                        <div class="mt-2 p-1 rounded border border-danger bg-danger bg-opacity-10 text-danger shadow-sm" style="font-size: 0.74rem; line-height: 1.25;">
-                                            <div class="fw-bold">
-                                                <i class="fas fa-route me-1"></i> +<%= reg.kmExtra %> km fuera de planilla
-                                            </div>
-                                            <div class="text-dark fw-semibold mt-1" style="font-size: 0.68rem;">
-                                                <i class="far fa-clock me-1"></i><%= reg.rangoExtra12h %>
-                                            </div>
-                                            <button type="button" class="btn btn-danger btn-sm w-100 mt-1 py-1 fw-bold shadow-sm" style="font-size: 0.7rem;" onclick="abrirMapaTramo(this, 'EXTRA')">
-                                                <i class="fas fa-map-marked-alt me-1"></i> Ver Recorrido Extra
-                                            </button>
-                                        </div>
-                                    <% } %>
-                                </td>
+    <% if (reg.diffFinMin > 0) { %>
+        <div class="mt-2 p-1 rounded border border-danger bg-danger bg-opacity-10 text-danger shadow-sm" style="font-size: 0.74rem; line-height: 1.25;">
+            <div class="fw-bold">
+                <i class="fas fa-route me-1"></i> +<%= reg.kmExtra %> km fuera de planilla
+            </div>
+            <div class="text-dark fw-semibold mt-1" style="font-size: 0.68rem;">
+                <i class="far fa-clock me-1"></i><%= reg.rangoExtra12h %>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm w-100 mt-1 py-1 fw-bold shadow-sm" style="font-size: 0.7rem;" onclick="abrirMapaTramo(this, 'EXTRA')">
+                <i class="fas fa-map-marked-alt me-1"></i> Ver Recorrido Extra
+            </button>
+        </div>
+    <% } else if (reg.estadoNumero === 4 && reg.inicioGPS && reg.finGPS) { %>
+        <div class="mt-2 p-1 rounded border border-dark bg-dark bg-opacity-10 text-dark shadow-sm" style="font-size: 0.74rem; line-height: 1.25;">
+            <div class="fw-bold text-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i> <%= reg.distancia %> km sin planilla
+            </div>
+            <button type="button" class="btn btn-dark btn-sm w-100 mt-1 py-1 fw-bold shadow-sm" style="font-size: 0.7rem;" onclick="abrirMapaTramo(this, 'DIA_COMPLETO')">
+                <i class="fas fa-map-marked-alt me-1"></i> Ver Recorrido del Día
+            </button>
+        </div>
+    <% } %>
+</td>
 
                                 <!-- ESTADO AUDITORÍA (DIFERENCIA DE INICIO EN MINUTOS + EXCESO AL CIERRE) -->
                                 <td class="text-center pe-3 border-start">
