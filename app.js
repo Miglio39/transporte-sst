@@ -128,7 +128,7 @@ app.get('/setup-admin', async (req, res) => {
     await prisma.usuario.upsert({
         where: { documento: '1000723660' },
         update: { password: hash },
-        create: { nombre: 'Laura Camila Quintero', documento: '1000723660', password: hash, rol: 'admin' } // <-- Corregido aquí
+        create: { nombre: 'Laura Camila Quintero', documento: '1000723660', password: hash, rol: 'admin' }
     });
 
     res.send(`
@@ -184,15 +184,15 @@ app.get('/admin', verificarRol(['admin']), async (req, res) => {
             };
         });
 
-      res.render('admin', {
-    title: 'Panel Administrativo',
-    inspecciones: inspeccionesProcesadas,
-    usuario: req.usuario
-});
-} catch (error) {
-    console.error(error);
-    res.status(500).send('Error al cargar el panel de administración');
-}
+        res.render('admin', {
+            title: 'Panel Administrativo',
+            inspecciones: inspeccionesProcesadas,
+            usuario: req.usuario
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al cargar el panel de administración');
+    }
 });
 
 app.get('/admin/conductores', verificarRol(['admin']), async (req, res) => {
@@ -270,7 +270,7 @@ app.post('/admin/conductores/eliminar/:id', verificarRol(['admin']), async (req,
 
 /**
  * ============================================================================
- * 4. MÓDULO CONDUCTOR: PANEL E INSPECCIÓN
+ * 4. MÓDULO CONDUCTOR: PANEL E INSPECCIÓN (CON PANTALLAS RESPONSIVE)
  * ============================================================================
  */
 app.get('/panel-conductor', verificarRol(['conductor', 'admin']), async (req, res) => {
@@ -311,7 +311,30 @@ app.post('/inspeccion/inicio', verificarRol(['conductor', 'admin']), async (req,
         let conductor = await prisma.usuario.findUnique({ where: { documento: cc_conductor } });
         
         if (!conductor) {
-            return res.status(400).send(`<div style="text-align:center; padding:50px; font-family:Arial;"><h1 style="color:#e74c3c;">Conductor no encontrado</h1></div>`);
+            const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
+            return res.status(400).send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Conductor no encontrado | OmegaGroup</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px 16px; }
+        .card { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; border-top: 6px solid #e50914; box-shadow: 0 14px 32px rgba(15,23,42,0.10); padding: 34px 24px 26px; text-align: center; }
+        h1 { margin: 0 0 10px; font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+        p { margin: 0 0 22px; font-size: 0.95rem; color: #64748b; line-height: 1.45; }
+        .btn-back { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; background: #0f172a; color: #fff; text-decoration: none; font-weight: 700; font-size: 1rem; border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Conductor no encontrado</h1>
+        <p>No existe un conductor registrado con el documento <strong>${cc_conductor || ''}</strong>. Verifica el número e intenta de nuevo.</p>
+        <a href="${urlDestino}" class="btn-back">Volver a Mi Panel</a>
+    </div>
+</body>
+</html>`);
         }
 
         const nuevaInspeccion = await prisma.inspeccion.create({
@@ -325,7 +348,7 @@ app.post('/inspeccion/inicio', verificarRol(['conductor', 'admin']), async (req,
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-res.send(`<!DOCTYPE html>
+        res.send(`<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -429,6 +452,7 @@ res.send(`<!DOCTYPE html>
     }
 });
 
+// MOSTRAR FORMULARIO DE CIERRE DE JORNADA (GET)
 app.get('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (req, res) => {
     try {
         const idInspeccion = parseInt(req.params.id);
@@ -438,9 +462,36 @@ app.get('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (r
         });
 
         if (!inspeccion) return res.status(404).send('Inspección no encontrada');
-        if (inspeccion.estado === 'Finalizada') return res.redirect('/panel-conductor');
+        if (inspeccion.estado === 'Finalizada') {
+            return res.redirect(req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor');
+        }
 
-res.send(`<!DOCTYPE html>
+        res.render('cierre', { title: 'Cierre de Jornada', appName: 'Transporte SST', inspeccion });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al cargar la inspección');
+    }
+});
+
+// PROCESAR CIERRE DE JORNADA Y MOSTRAR PANTALLA RESPONSIVE (POST)
+app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (req, res) => {
+    try {
+        const idInspeccion = parseInt(req.params.id);
+        const { kilometraje_final, novedades } = req.body;
+        const inspeccionActual = await prisma.inspeccion.findUnique({ where: { id: idInspeccion } });
+
+        if (!inspeccionActual) return res.status(404).send('Inspección no encontrada');
+
+        let datosChequeoActualizados = inspeccionActual.datos_chequeo || {};
+        datosChequeoActualizados.kilometraje_final = parseFloat(kilometraje_final);
+
+        await prisma.inspeccion.update({
+            where: { id: idInspeccion },
+            data: { estado: 'Finalizada', fecha_cierre: new Date(), novedades_cierre: novedades || 'Sin novedades', datos_chequeo: datosChequeoActualizados }
+        });
+
+        const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
+        res.send(`<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -539,26 +590,7 @@ res.send(`<!DOCTYPE html>
 </body>
 </html>`);
     } catch (error) {
-        res.status(500).send('Error al cargar la inspección');
-    }
-});
-
-app.post('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (req, res) => {
-    try {
-        const idInspeccion = parseInt(req.params.id);
-        const { kilometraje_final, novedades } = req.body;
-        const inspeccionActual = await prisma.inspeccion.findUnique({ where: { id: idInspeccion } });
-        let datosChequeoActualizados = inspeccionActual.datos_chequeo || {};
-        datosChequeoActualizados.kilometraje_final = parseFloat(kilometraje_final);
-
-        await prisma.inspeccion.update({
-            where: { id: idInspeccion },
-            data: { estado: 'Finalizada', fecha_cierre: new Date(), novedades_cierre: novedades || 'Sin novedades', datos_chequeo: datosChequeoActualizados }
-        });
-
-        const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Jornada Cerrada!</h1><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);
-    } catch (error) {
+        console.error(error);
         res.status(500).send('Error al cerrar la jornada');
     }
 });
@@ -1559,10 +1591,8 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
             if (posRes.ok) {
                 const positions = await posRes.json();
                 if (Array.isArray(positions) && positions.length > 0) {
-                    // Ordenar cronológicamente
                     positions.sort((a, b) => new Date(a.fixTime || a.deviceTime || a.serverTime) - new Date(b.fixTime || b.deviceTime || b.serverTime));
 
-                    // Calcular distancia por odómetro y respaldo Haversine
                     const conOdo = positions.filter(p => p.attributes && typeof p.attributes.totalDistance === 'number' && p.attributes.totalDistance > 0);
                     let distOdo = 0;
                     if (conOdo.length >= 2) {
@@ -1581,7 +1611,6 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
                     const distCalculada = Math.max(0, distOdo > 0 ? distOdo : metrosHaversine);
                     if (distCalculada > distanciaMetros) distanciaMetros = distCalculada;
 
-                    // Filtrar únicamente puntos donde el vehículo estuvo en movimiento o encendido
                     const activos = positions.filter((p, idx) => {
                         const velActiva = (p.speed && p.speed > 0.5);
                         const ignActiva = p.attributes?.ignition === true || p.attributes?.motion === true;
@@ -1593,7 +1622,6 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
                         return velActiva || ignActiva || movioTramo;
                     });
 
-                    // Si el vehículo tuvo puntos activos o recorrió al menos 50 metros en el día
                     if (activos.length > 0 || distanciaMetros >= 50) {
                         const listaUsar = activos.length > 0 ? activos : positions;
                         const pInicio = new Date(listaUsar[0].fixTime || listaUsar[0].deviceTime || listaUsar[0].serverTime);
@@ -1612,7 +1640,6 @@ async function extraerDiaCompletoTraccar(serverUrl, token, deviceId, fechaYYYYMM
         } catch (e) {}
     }
 
-    // Si después de revisar trips y positions no hubo movimiento real, descartar el día
     if (!inicioDate || (distanciaMetros < 50 && totalEventos === 0)) return null;
 
     return {
@@ -1637,7 +1664,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const { devices: traccarDevices, serverUrl, token } = await obtenerDispositivosTraccar();
         const gruposFlotaActual = obtenerGruposFlota();
 
-        // Unificar placas de BD + Traccar
         const mapaPlacas = new Map();
         vehiculosDB.forEach(v => mapaPlacas.set(limpiarPlaca(v.placa), v.placa.toUpperCase()));
         traccarDevices.forEach(d => {
@@ -1673,7 +1699,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
         const ahora = new Date();
         const toDateConsulta = endDateISO > ahora ? ahora : endDateISO;
 
-        // Generar lista de TODOS los días calendario del mes hasta la fecha actual
         const hoyColombiaStr = obtenerFechaColombiaYYYYMMDD(ahora);
         const todosLosDiasDelMes = [];
         for (let d = 1; d <= ultimoDiaNum; d++) {
@@ -1794,7 +1819,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 }));
 
                 // 3. BARRIDO COMPLETO DEL MES EN BD CRUDA (/api/positions)
-                // Revisa TODOS los días calendario del mes (tengan o no inspección en la App)
                 if (placaSeleccionada !== 'TODOS') {
                     const devPrincipal = devicesToQuery.find(d => limpiarPlaca(d.name) === placaLimpiaSel || limpiarPlaca(d.name).includes(placaLimpiaSel)) || devicesToQuery[0];
                     if (devPrincipal) {
@@ -1807,7 +1831,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                             return mismaHora || (regTr.distancia || 0) < 50;
                         });
 
-                        // Procesar en lotes de 6 días en paralelo para máxima velocidad sin saturar Traccar
                         const TAMANO_LOTE = 6;
                         for (let i = 0; i < diasPorVerificar.length; i += TAMANO_LOTE) {
                             const loteDias = diasPorVerificar.slice(i, i + TAMANO_LOTE);
@@ -1852,7 +1875,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                 const datosJSON = inData?.datos_chequeo || {};
                 const sinAppManual = datosJSON.sin_app === true;
 
-                // Horas App en formato militar exacto HH:mm
                 let inicioApp24 = '';
                 let finApp24 = '';
                 if (inData && !sinAppManual) {
@@ -1867,14 +1889,12 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     }
                 }
 
-                // Horas GPS en formato militar exacto HH:mm
                 let inicioGPS24 = datosJSON.inicio_gps ? formatearHora24Colombia(datosJSON.inicio_gps) : '';
                 let finGPS24 = datosJSON.fin_gps ? formatearHora24Colombia(datosJSON.fin_gps) : '';
 
                 if (!inicioGPS24 && trData) inicioGPS24 = formatearHora24Colombia(trData.inicio);
                 if (!finGPS24 && trData) finGPS24 = formatearHora24Colombia(trData.fin);
 
-                // Distancia total y Horas de Motor
                 let distNum = (datosJSON.distancia_gps !== undefined && datosJSON.distancia_gps !== '' && Number(datosJSON.distancia_gps) > 0)
                     ? parseFloat(datosJSON.distancia_gps)
                     : (trData ? Math.max(0, trData.distancia / 1000) : 0);
@@ -1895,7 +1915,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
 
                 const traccarDevIdFinal = datosJSON.traccar_device_id || (trData ? trData.deviceId : (devAsociado ? devAsociado.id : ''));
 
-                // Guardar en caché de la inspección las horas GPS obtenidas
                 if (inData && (!datosJSON.inicio_gps || !datosJSON.fin_gps) && inicioGPS24 && finGPS24) {
                     const nuevosDatos = {
                         ...datosJSON,
@@ -1914,7 +1933,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     );
                 }
 
-                // Cálculo de Tiempo y Kilometraje Post-Planilla
                 const rangoActual = (finApp24 && finGPS24) ? `${finApp24}-${finGPS24}` : '';
                 const kmGuardadoValido = (datosJSON.km_extra_rango === rangoActual && datosJSON.km_extra_gps !== undefined)
                     ? datosJSON.km_extra_gps
@@ -1928,7 +1946,6 @@ app.get('/admin/auditoria-horas', verificarRol(['admin']), async (req, res) => {
                     kmGuardadoValido
                 );
 
-                // Clasificación de Estados (Semáforo)
                 let diffMinutos = '-';
                 let detalleDiffInicio = '';
                 let estadoNumero = 5;
@@ -2187,7 +2204,6 @@ app.post('/admin/auditoria-horas/actualizar-fila', verificarRol(['admin']), asyn
         const finApp24 = formatearHora24Colombia(fin_app);
         const finGps24 = formatearHora24Colombia(fin_gps);
 
-        // Si hay diferencia al cierre y tenemos unidad Traccar, recalculamos los KM entre fin_app y fin_gps
         let kmExtraCalculado = 0;
         let rangoExtra = `${finApp24}-${finGps24}`;
 
@@ -2296,7 +2312,6 @@ app.post('/admin/auditoria-horas/sincronizar-fila', verificarRol(['admin']), asy
             }
         }
 
-        // Calcular kilometraje exacto recorrido entre Fin Planilla (ej. 17:17) y Fin GPS (ej. 20:46)
         const kmExtraStr = await extraerKmIntervaloTraccar(
             serverUrl,
             token,
@@ -2348,7 +2363,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
         const { devices, serverUrl, token } = await obtenerDispositivosTraccar();
         let idDispositivo = deviceId ? parseInt(deviceId) : null;
 
-        // Si la fila no tenía deviceId seleccionado, buscarlo automáticamente por placa
         if (!idDispositivo && placa) {
             const devEncontrado = devices.find(d => limpiarPlaca(d.name) === limpiarPlaca(placa) || limpiarPlaca(d.name).includes(limpiarPlaca(placa)));
             if (devEncontrado) idDispositivo = devEncontrado.id;
@@ -2362,7 +2376,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
         const toISO = new Date(`${fecha}T${hasta}:59-05:00`).toISOString();
         const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
 
-        // 1. Descargar todas las coordenadas GPS del intervalo (Fin Planilla -> Fin GPS)
         const posUrl = `${serverUrl}/api/positions?deviceId=${idDispositivo}&from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`;
         const posRes = await fetchConTimeout(posUrl, { headers }, 10000);
 
@@ -2378,7 +2391,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
             });
         }
 
-        // Ordenar cronológicamente y filtrar coordenadas válidas
         positions.sort((a, b) => new Date(a.fixTime || a.deviceTime) - new Date(b.fixTime || b.deviceTime));
         const puntosValidos = positions.filter(p => p.latitude && p.longitude && (p.latitude !== 0 || p.longitude !== 0));
 
@@ -2386,7 +2398,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
             return res.json({ success: false, error: 'Las posiciones reportadas en ese horario no contienen coordenadas válidas.' });
         }
 
-        // 2. Calcular distancia del tramo y preparar puntos para la línea azul del mapa
         let metrosOdo = 0;
         const conOdo = puntosValidos.filter(p => p.attributes && typeof p.attributes.totalDistance === 'number' && p.attributes.totalDistance > 0);
         if (conOdo.length >= 2) {
@@ -2403,7 +2414,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
                 const d = distanciaHaversineMetros(prev.latitude, prev.longitude, p.latitude, p.longitude);
                 if (d >= 5 && d < 50000) metrosHaversine += d;
             }
-            // En Traccar la velocidad viene en nudos (knots): 1 nudo = 1.852 km/h
             const velKmh = ((p.speed || 0) * 1.852).toFixed(1);
             coordenadas.push({
                 lat: p.latitude,
@@ -2416,7 +2426,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
 
         const kmTramo = ((metrosOdo > 0 ? metrosOdo : metrosHaversine) / 1000).toFixed(2);
 
-        // 3. Detectar Paradas ("P") en ese intervalo (cuando velocidad = 0 por más de 2 minutos)
         const paradas = [];
         let inicioParada = null;
         let ultimoPuntoParada = null;
@@ -2449,7 +2458,6 @@ app.get('/admin/auditoria-horas/mapa-tramo', verificarRol(['admin']), async (req
             }
         }
 
-        // Si terminó detenido al final del tramo
         if (inicioParada && ultimoPuntoParada) {
             const durMs = new Date(ultimoPuntoParada.fixTime || ultimoPuntoParada.deviceTime) - new Date(inicioParada.fixTime || inicioParada.deviceTime);
             const durMin = Math.round(durMs / 60000);
@@ -2528,7 +2536,6 @@ const CUENTAS_PLASPY = [
     { alias: 'jhonser28', user: 'jhonser28@hotmail.com', apiKey: '9GOpyysGrwWq8/qatFJ02bQoMRC6UyVv4/di0mzKZKs=' }
 ];
 
-// Caché para tokens y lista de vehículos (30 minutos)
 let cacheTokensPlaspy = {}; 
 let cacheDispositivosPlaspy = { lista: [], expira: 0 };
 
@@ -2593,7 +2600,6 @@ async function cargarDispositivosMulticuenta() {
     }
 
     if (listaUnificada.length > 0) {
-        // Ordenar alfabéticamente para que sea fácil buscarlos en el selector
         listaUnificada.sort((a, b) => a.name.localeCompare(b.name));
         cacheDispositivosPlaspy = { lista: listaUnificada, expira: ahora + (30 * 60 * 1000) };
     }
@@ -2631,13 +2637,10 @@ app.get('/test-plaspy', verificarRol(['admin']), async (req, res) => {
         if (devices.length === 0) throw new Error('No se pudieron cargar unidades de ninguna cuenta.');
 
         if (dispositivo_id && fecha_viaje) {
-            // 1. Identificar a qué cuenta pertenece el vehículo
             const devInfo = devices.find(d => d.id === dispositivo_id);
             if (!devInfo) throw new Error('El dispositivo seleccionado no existe en las cuentas conectadas.');
             
             const cuentaPropietaria = CUENTAS_PLASPY.find(c => c.alias === devInfo.cuentaAlias);
-            
-            // 2. Usar únicamente el token de esa cuenta específica
             const token = await obtenerTokenPlaspyUnico(cuentaPropietaria);
 
             const payload = { from: `${fecha_viaje}T00:00:00`, to: `${fecha_viaje}T23:59:59` };
