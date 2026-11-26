@@ -184,11 +184,15 @@ app.get('/admin', verificarRol(['admin']), async (req, res) => {
             };
         });
 
-        res.render('admin', { title: 'Panel Administrativo', inspecciones: inspeccionesProcesadas });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Error al cargar el panel de administración');
-    }
+      res.render('admin', {
+    title: 'Panel Administrativo',
+    inspecciones: inspeccionesProcesadas,
+    usuario: req.usuario
+});
+} catch (error) {
+    console.error(error);
+    res.status(500).send('Error al cargar el panel de administración');
+}
 });
 
 app.get('/admin/conductores', verificarRol(['admin']), async (req, res) => {
