@@ -325,7 +325,104 @@ app.post('/inspeccion/inicio', verificarRol(['conductor', 'admin']), async (req,
         });
 
         const urlDestino = req.usuario.rol === 'admin' ? '/admin' : '/panel-conductor';
-        res.send(`<div style="text-align: center; padding: 50px; font-family: Arial;"><h1 style="color: #27ae60;">¡Inspección Registrada!</h1><p>ID: #${nuevaInspeccion.id}</p><br><a href="${urlDestino}" style="padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;">Volver a Mi Panel</a></div>`);    
+res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Inspección Registrada | OmegaGroup</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px 16px;
+        }
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            border-top: 6px solid #10b981;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.10);
+            padding: 34px 24px 26px;
+            text-align: center;
+            animation: pop 0.35s ease-out;
+        }
+        .icon-wrap {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: #ecfdf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+        }
+        h1 { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
+        p { margin: 0 0 22px; font-size: 0.96rem; color: #64748b; line-height: 1.45; }
+        .info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.92rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row span { color: #64748b; font-weight: 600; }
+        .info-row strong { color: #0f172a; font-weight: 800; }
+        .btn-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 54px;
+            background: #0f172a;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
+        .btn-back:active { transform: scale(0.98); background: #1e293b; }
+        .foot { margin-top: 16px; font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+        @keyframes pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#10b981" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <h1>¡Inspección Registrada!</h1>
+        <p>Tu preoperacional quedó guardada correctamente y la jornada ya se encuentra activa.</p>
+        <div class="info-box">
+            <div class="info-row"><span>Ticket</span><strong>#${String(nuevaInspeccion.id).padStart(4, '0')}</strong></div>
+            <div class="info-row"><span>Vehículo</span><strong>${vehiculo.placa}</strong></div>
+            <div class="info-row"><span>Km Salida</span><strong>${nuevaInspeccion.kilometraje_salida} km</strong></div>
+        </div>
+        <a href="${urlDestino}" class="btn-back">Volver a Mi Panel</a>
+    </div>
+    <div class="foot">OMEGAGROUP SAS · SST</div>
+</body>
+</html>`);
     } catch (error) {
         console.error(error);
         res.status(500).send('Error al guardar inspección');
@@ -343,7 +440,104 @@ app.get('/inspeccion/cierre/:id', verificarRol(['conductor', 'admin']), async (r
         if (!inspeccion) return res.status(404).send('Inspección no encontrada');
         if (inspeccion.estado === 'Finalizada') return res.redirect('/panel-conductor');
 
-        res.render('cierre', { title: 'Cierre de Jornada', appName: 'Transporte SST', inspeccion });
+res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Jornada Cerrada | OmegaGroup</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px 16px;
+        }
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            border-top: 6px solid #f59e0b;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.10);
+            padding: 34px 24px 26px;
+            text-align: center;
+            animation: pop 0.35s ease-out;
+        }
+        .icon-wrap {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: #fffbeb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+        }
+        h1 { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
+        p { margin: 0 0 22px; font-size: 0.96rem; color: #64748b; line-height: 1.45; }
+        .info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.92rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row span { color: #64748b; font-weight: 600; }
+        .info-row strong { color: #0f172a; font-weight: 800; }
+        .btn-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 54px;
+            background: #0f172a;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        }
+        .btn-back:active { transform: scale(0.98); background: #1e293b; }
+        .foot { margin-top: 16px; font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+        @keyframes pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                <line x1="4" y1="22" x2="4" y2="15"></line>
+            </svg>
+        </div>
+        <h1>¡Jornada Cerrada!</h1>
+        <p>El kilometraje de llegada se registró con éxito y tu turno quedó finalizado.</p>
+        <div class="info-box">
+            <div class="info-row"><span>Vehículo</span><strong>${inspeccionActual.vehiculo_placa}</strong></div>
+            <div class="info-row"><span>Km Salida</span><strong>${inspeccionActual.kilometraje_salida} km</strong></div>
+            <div class="info-row"><span>Km Llegada</span><strong>${kilometraje_final} km</strong></div>
+        </div>
+        <a href="${urlDestino}" class="btn-back">Volver a Mi Panel</a>
+    </div>
+    <div class="foot">OMEGAGROUP SAS · SST</div>
+</body>
+</html>`);
     } catch (error) {
         res.status(500).send('Error al cargar la inspección');
     }
